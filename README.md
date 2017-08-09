@@ -1,22 +1,7 @@
 # hascheevos
-An index of game IDs that has cheevos.
+A kind of "cheevos scraper".
 
----
-
-This is about [RetroAchievements](http://retroachievements.org).
-
-The files in this repository have a quite straightforward structure:
-
-```
-game_id:has_cheevos
-```
-
-Where `gameid` is an positive integer, and `has_cheevos` is `true` or `false`. Example for **Sonic the Hedgehog (Mega Drive)**:
-
-```
-1:true
-```
-
+**More info soon...**
 
 ---
 
