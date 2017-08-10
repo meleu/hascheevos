@@ -92,6 +92,8 @@ $ ./hascheevos.sh -u USER -p PASSWORD /path/to/megadrive/* > ~/megadrive-roms-wi
 ```
 
 Don't worry about non-ROM files in the same directory (like `gamelist.xml` or `.srm` files), the script ignores files with invalid extensions. ;-)
+
+
 ---
 
 **What's the point of creating this tool?!**
