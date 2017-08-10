@@ -59,7 +59,7 @@ Checking "/path/to/megadrive/Sonic the Hedgehog (USA, Europe).zip"...
 --- "Sonic the Hedgehog (USA, Europe).zip" HAS CHEEVOS!
 ```
 
-### When there are no cheevos for you ROM/game.
+### When there are no cheevos for your ROM/game.
 ```bash
 $ ./hascheevos.sh -u USER -p PASSWORD /path/to/nes/Qix\ \(USA\).zip 
 Checking "/path/to/nes/Qix (USA).zip"...
