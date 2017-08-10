@@ -48,6 +48,37 @@ The usual way to use it is:
 
 Run it with `--help` to see more options.
 
+## examples
+
+### When there are cheevos for your ROM/game.
+```bash
+$ ./hascheevos.sh -u MY_RA_USER -p MY_RA_PASSWORD /path/to/megadrive/Sonic\ the\ Hedgehog\ \(USA\,\ Europe\).zip 
+Checking "/path/to/megadrive/Sonic the Hedgehog (USA, Europe).zip"...
+--- hash:    2e912d4a3164b529bbe82295970169c6
+--- game ID: 1
+--- "Sonic the Hedgehog (USA, Europe).zip" HAS CHEEVOS!
+```
+
+### When there are no cheevos for you ROM/game.
+```bash
+$ ./hascheevos.sh -u MY_RA_USER -p MY_RA_PASSWORD /path/to/nes/Qix\ \(USA\).zip 
+Checking "/path/to/nes/Qix (USA).zip"...
+--- hash:    40089153660f092b5cbb6e204efce1b7
+--- game ID: 1892
+--- "Qix (USA).zip" has no cheevos. :(
+```
+
+### When your ROM is incompatible.
+```bash
+./hascheevos.sh -u MY_RA_USER -p MY_RA_PASSWORD /path/to/mastersystem/Alex\ Kidd\ in\ Miracle\ World\ \(USA\,\ Europe\).zip 
+Checking "/path/to/mastersystem/Alex Kidd in Miracle World (USA, Europe).zip"...
+--- hash:    1b494dd760aef7929313d6a803c2d003
+--- hash:    50a29e43423cc77564d6f49b289eef1d
+--- checking at RetroAchievements.org server...
+--- hash:    1b494dd760aef7929313d6a803c2d003
+--- hash:    50a29e43423cc77564d6f49b289eef1d
+WARNING: this ROM file doesn't feature achievements.
+```
 
 ---
 
