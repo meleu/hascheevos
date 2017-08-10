@@ -1,6 +1,9 @@
 # hascheevos
 A kind of "cheevos scraper".
 
+## installing
+
+1. Clone the repo
 **More info soon...**
 
 ---
