@@ -3,7 +3,7 @@ A kind of "cheevos scraper".
 
 ## installing
 
-0. Be sure to have all the dependencies installed. On a Debian based system the command below should install everything you need. Probably you already have most of these packages installed and the only new package will be `jq` (it's a tool to parse JSON data):
+0. Be sure to have all the dependencies installed. On a Debian based system the command below should install everything you need. Probably you already have most of these packages installed and the only new one will be `jq` (it's a tool to parse JSON data):
 ```bash
 sudo apt-get install jq unzip gzip p7zip-full curl
 ```
