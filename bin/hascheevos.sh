@@ -12,17 +12,17 @@
 
 # TODO: check dependencies curl, jq, zcat, unzip, 7z, cheevoshash (from this repo).
 
+# globals ####################################################################
+
 readonly USAGE="
 USAGE:
 $0 romfile1 [romfile2 ...]"
 
-readonly GAMEID_REGEX='^[1-9][0-9]{1,9}$'
-
-# the extensions below was taken from RetroPie's configs
+# the extensions below were taken from RetroPie's configs
 readonly EXTENSIONS='zip|7z|nes|fds|gb|gba|gbc|sms|bin|smd|gen|md|sg|smc|sfc|fig|swc|mgd|iso|cue|z64|n64|v64|pce|ccd|cue'
-SCRIPT_DIR="$(dirname $0)"
-SCRIPT_DIR="$(cd "$SCRIPT_DIR" && pwd)"
+readonly SCRIPT_DIR="$(cd "$(dirname $0)" && pwd)"
 readonly DATA_DIR="$SCRIPT_DIR/../data"
+readonly GAMEID_REGEX='^[1-9][0-9]{1,9}$'
 
 RA_USER=
 RA_PASSWORD=
@@ -46,7 +46,12 @@ CONSOLE_NAME[11]=mastersystem
 #CONSOLE_NAME[14]=neogeo
 
 
-# Getting cheevos account info (needed to retrieve achievements list).
+# functions ##################################################################
+
+# Getting the RetroAchievements token
+# input: RA_USER, RA_PASSWORD
+# updates: RA_TOKEN
+# exit if fails
 function get_cheevos_token() {
     if [[ -z "$RA_USER" ]]; then
         echo "ERROR: undefined RetroAchievements.org user (see \"--user\" option)." >&2
@@ -63,22 +68,11 @@ function get_cheevos_token() {
         echo "ERROR: cheevos authentication failed. Aborting..."
         exit 1
     fi
-
-#    if [[ -z "$user" || -z "$password" ]]; then
-#        # just a shortcut for RetroPie users
-#        local retroarchcfg="/opt/retropie/configs/all/retroarch.cfg"
-#        if [[ -f "$retroarchcfg" ]]; then
-##        's/^[ |\t]*cheevos_username[ |\t]*=[ |\t]*"*\([^"|\r]*\)"*.*/\1/p'
-#            local regex1="^[ |\t]*"
-#            local regex2="[ |\t]*=[ |\t]*\"*\([^\"|\r]*\)\"*.*"
-#            user="$(sed -n "s/${regex1}cheevos_username${regex2}/\1/p" "$retroarchcfg")"
-#            password="$(sed -n "s/${regex1}cheevos_password${regex2}/\1/p" "$retroarchcfg")"
-#        fi
-#    fi
-
 }
 
 
+# download hashlibrary for a specific console
+# $1 is the console_id
 function download_hashlibrary() {
     local console_id="$1"
 
@@ -98,6 +92,7 @@ function download_hashlibrary() {
 }
 
 
+# download hashlibrary for all consoles
 function get_hash_libraries() {
     local i
 
@@ -111,8 +106,12 @@ function get_hash_libraries() {
 }
 
 
-# print the game ID of a given rom file
-# XXX: DONE!
+# Print (echo) the game ID of a given rom file
+# This function try to get the game id from local *_hashlibrary.json files, if
+# these files don't exist the script will try to get them from RA server.
+# input:
+# $1 is a rom file (should be previously validated with validate_rom_file())
+# also needs RA_TOKEN
 function get_game_id() {
     local rom="$1"
     local hash
@@ -176,7 +175,8 @@ function game_has_cheevos() {
 
     echo "--- game ID: $gameid" >&2
 
-    # TODO: checar se $DATA_DIR existe, do contrário pode sobrecarregar o servidor
+    # TODO: check if $DATA_DIR exist.
+    #       if does not, download the *_hascheevos.txt files from the repo
     hascheevos_file="$(grep -l "^$gameid:" "$DATA_DIR"/*_hascheevos.txt)"
     if [[ -f "$hascheevos_file" ]]; then
         boolean="$(grep "^$gameid:" "$hascheevos_file" | cut -d: -f2)"
@@ -236,6 +236,7 @@ function get_rom_hash() {
 }
 
 
+# check if the file exists and has a valid extension
 function validate_rom_file() {
     local rom="$1"
 
@@ -271,16 +272,15 @@ function rom_has_cheevos() {
     gameid="$(get_game_id "$rom")" || return 1
 
     if game_has_cheevos "$gameid"; then
-        echo "--- HAS CHEEVOS!" >&2
+        echo "--- \"$(basename "$rom")\" HAS CHEEVOS!" >&2
     else
-        echo "--- no cheevos. :(" >&2
+        echo "--- \"$(basename "$rom")\" has no cheevos. :(" >&2
     fi
     return $?
 }
 
 
-# FUNCTIONS TO DEAL WITH ARGUMENTS ############################################
-
+# helping to deal with command line arguments
 function check_argument() {
     # limitation: the argument 2 can NOT start with '-'
     if [[ -z "$2" || "$2" =~ ^- ]]; then
@@ -330,15 +330,16 @@ while [[ -n "$1" ]]; do
             exit
             ;;
 
-#H --check-false            Check at RetroAchievements.org server even if the
+#H -f|--check-false         Check at RetroAchievements.org server even if the
 #H                          game ID is marked as "has no cheevos" (false) in the
 #H                          local *_hascheevos.txt files.
 #H 
-        --check-false)
+        -f|--check-false)
             CHECK_FALSE_FLAG=1
             ;;
 
 # TODO: --repo-compare
+
         *)  break
             ;;
     esac
