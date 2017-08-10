@@ -3,6 +3,14 @@ A kind of "cheevos scraper".
 
 ## installing
 
+0. Be sure to have all the dependencies installed. On a Debian based system the command below should install everything you need. Probably you already have most of these packages installed and the only new package will be `jq` (it's a tool to parse JSON data):
+```bash
+sudo apt-get install jq unzip gzip p7zip-full curl
+```
+
+If you're using another Linux distro (or even Cygwin on Windows), the script is still useful for you. Just be sure to install the equivalent packages on your system.
+
+
 1. Go to the directory where you want to "install" the tool (if unsure, your home directory can be the easiest choice):
 ```bash
 cd # /path/to/the/chosen/directory
