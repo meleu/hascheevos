@@ -1,5 +1,5 @@
 #!/bin/bash
-# rom_has_cheevos.sh
+# hascheevos.sh
 ####################
 #
 # A tool to check if your ROMs have cheevos (RetroAchievements.org).
@@ -22,7 +22,7 @@ $0 romfile1 [romfile2 ...]"
 readonly EXTENSIONS='zip|7z|nes|fds|gb|gba|gbc|sms|bin|smd|gen|md|sg|smc|sfc|fig|swc|mgd|iso|cue|z64|n64|v64|pce|ccd|cue'
 readonly SCRIPT_DIR="$(cd "$(dirname $0)" && pwd)"
 readonly DATA_DIR="$SCRIPT_DIR/../data"
-readonly GAMEID_REGEX='^[1-9][0-9]{1,9}$'
+readonly GAMEID_REGEX='^[1-9][0-9]{0,9}$'
 
 RA_USER=
 RA_PASSWORD=
@@ -271,12 +271,7 @@ function rom_has_cheevos() {
     local gameid
     gameid="$(get_game_id "$rom")" || return 1
 
-    if game_has_cheevos "$gameid"; then
-        echo "--- \"$(basename "$rom")\" HAS CHEEVOS!" >&2
-    else
-        echo "--- \"$(basename "$rom")\" has no cheevos. :(" >&2
-    fi
-    return $?
+    game_has_cheevos "$gameid"
 }
 
 
@@ -347,4 +342,13 @@ while [[ -n "$1" ]]; do
 done
 
 get_cheevos_token
-rom_has_cheevos "$1" || exit 1
+
+for f in "$@"; do
+    if rom_has_cheevos "$f"; then
+        echo -n "$f"
+        echo -n " HAS CHEEVOS!" >&2
+        echo
+    else
+        echo "\"$f\" has no cheevos. :(" >&2
+    fi
+done
