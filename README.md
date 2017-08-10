@@ -85,12 +85,13 @@ WARNING: this ROM file doesn't feature achievements.
 
 ### Create a list of all ROMs that have cheevos in a directory.
 
-The only thing the script puts on stdout are the ROMs file name that have cheevos. Everything else are printed in stderr. Then if you want a list of all ROMs that have cheevos in a directory, do something like this:
+The only thing the script puts on stdout are file names of ROMs that have cheevos. Everything else are printed in stderr. Then if you want a list of all ROMs that have cheevos in a directory, do something like this:
 
 ```bash
 $ ./hascheevos.sh -u USER -p PASSWORD /path/to/megadrive/* > ~/megadrive-roms-with-cheevos.txt
 ```
 
+Don't worry about non-ROM files in the same directory (like `gamelist.xml` or `.srm` files), the script ignores files with invalid extensions. ;-)
 ---
 
 **What's the point of creating this tool?!**
