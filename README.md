@@ -3,7 +3,7 @@ A kind of "cheevos scraper".
 
 ## installing
 
-1. Go to the directory where you want to "install" the tool (if unsure, your home directory can be the easier choice):
+1. Go to the directory where you want to "install" the tool (if unsure, your home directory can be the easiest choice):
 ```bash
 cd # /path/to/the/chosen/directory
 ```
@@ -18,6 +18,7 @@ cd hascheevos
 ```bash
 make
 ```
+(yes, the command is right: just `make` and nothing more! This compiles the `src/cheevoshash.c` and creats the executable `bin/cheevoshash`.)
 
 4. **[OPTIONAL]** Include the tool's directory on your PATH:
 ```bash
