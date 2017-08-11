@@ -177,7 +177,7 @@ function game_has_cheevos() {
 
     # TODO: check if $DATA_DIR exist.
     #       if does not, download the *_hascheevos.txt files from the repo
-    hascheevos_file="$(grep -l "^$gameid:" "$DATA_DIR"/*_hascheevos.txt)"
+    hascheevos_file="$(grep -l "^$gameid:" "$DATA_DIR"/*_hascheevos.txt 2> /dev/null)"
     if [[ -f "$hascheevos_file" ]]; then
         boolean="$(grep "^$gameid:" "$hascheevos_file" | cut -d: -f2)"
         [[ "$boolean" == true ]] && return 0
@@ -198,8 +198,8 @@ function game_has_cheevos() {
     local console_id="$(echo "$patch_json" | jq '.PatchData.ConsoleID')"
     hascheevos_file="${CONSOLE_NAME[console_id]}_hascheevos.txt"
 
-    sed -i "s/^${gameid}:.*/${gameid}:true/" "$hascheevos_file"
-    grep -q "^${gameid}:true" "$hascheevos_file" || echo "${gameid}:true" >> "$hascheevos_file"
+    sed -i "s/^${gameid}:.*/${gameid}:true/" "$hascheevos_file" 2> /dev/null
+    grep -q "^${gameid}:true" "$hascheevos_file" 2> /dev/null || echo "${gameid}:true" >> "$hascheevos_file"
     sort -un "$hascheevos_file" -o "$hascheevos_file"
 
     sleep 1 # XXX: a small delay to not stress the server
@@ -345,10 +345,11 @@ get_cheevos_token
 
 for f in "$@"; do
     if rom_has_cheevos "$f"; then
+        echo -n "--- \"" >&2
         echo -n "$f"
-        echo -n " HAS CHEEVOS!" >&2
+        echo "\" HAS CHEEVOS!" >&2
         echo
     else
-        echo "\"$f\" has no cheevos. :(" >&2
+        echo -e "\"$f\" has no cheevos. :(\n" >&2
     fi
 done
