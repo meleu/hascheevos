@@ -4,19 +4,13 @@
 #
 # A tool to check if your ROMs have cheevos (RetroAchievements.org).
 #
-# valid ROM extensions for:
-# nes, snes, megadrive, mastersystem, gb, gba, gbc, n64, pcengine
-# zip 7z nes fds gb gba gbc sms bin smd gen md sg smc sfc fig swc mgd iso cue z64 n64 v64 pce ccd cue
-
-        
-
 # TODO: check dependencies curl, jq, zcat, unzip, 7z, cheevoshash (from this repo).
 
 # globals ####################################################################
 
 readonly USAGE="
 USAGE:
-$0 romfile1 [romfile2 ...]"
+$(basename "$0") [OPTIONS] romfile1 [romfile2 ...]"
 
 # the extensions below were taken from RetroPie's configs
 readonly EXTENSIONS='zip|7z|nes|fds|gb|gba|gbc|sms|bin|smd|gen|md|sg|smc|sfc|fig|swc|mgd|iso|cue|z64|n64|v64|pce|ccd|cue'
@@ -28,6 +22,11 @@ RA_USER=
 RA_PASSWORD=
 RA_TOKEN=
 CHECK_FALSE_FLAG=0
+COPY_ROMS_FLAG=0
+COPY_ROMS_DIR=
+TMP_DIR="/tmp/hascheevos-$$"
+mkdir -p "$TMP_DIR"
+GAME_CONSOLE_NAME="$(mktemp -p "$TMP_DIR")"
 
 CONSOLE_NAME=()
 CONSOLE_NAME[1]=megadrive
@@ -48,10 +47,17 @@ CONSOLE_NAME[11]=mastersystem
 
 # functions ##################################################################
 
+function safe_exit() {
+    rm -rf "$TMP_DIR"
+    exit $1
+}
+
+
 # Getting the RetroAchievements token
 # input: RA_USER, RA_PASSWORD
 # updates: RA_TOKEN
 # exit if fails
+# TODO: cache the token in some file
 function get_cheevos_token() {
     if [[ -z "$RA_USER" ]]; then
         echo "ERROR: undefined RetroAchievements.org user (see \"--user\" option)." >&2
@@ -114,18 +120,23 @@ function get_hash_libraries() {
 # also needs RA_TOKEN
 function get_game_id() {
     local rom="$1"
+    local line
     local hash
     local hash_i
     local gameid
     local console_id=0
+    echo -n > "$GAME_CONSOLE_NAME"
 
     hash="$(get_rom_hash "$rom")" || return 1
 
-    for hash_i in $(echo "$hash" | sed 's/^\(SNES\|NES\|Genesis\|plain MD5\): //'); do
-        echo "--- hash:    $hash_i" >&2
-        gameid="$(grep -h "\"$hash_i\"" "$DATA_DIR"/*_hashlibrary.json 2> /dev/null | cut -d: -f2 | tr -d ' ,')"
+    while read -r line; do
+        echo "--- $line" >&2
+        hash_i="$(echo "$line" | sed 's/^\(SNES\|NES\|Genesis\|plain MD5\): //')"
+        line="$(grep "\"$hash_i\"" "$DATA_DIR"/*_hashlibrary.json 2> /dev/null)"
+        echo -n "$(basename "${line%_hashlibrary.json*}")" > "$GAME_CONSOLE_NAME"
+        gameid="$(echo ${line##*: } | tr -d ' ,')"
         [[ $gameid =~ $GAMEID_REGEX ]] && break
-    done
+    done <<< "$hash"
 
     if [[ ! $gameid =~ $GAMEID_REGEX ]]; then
         echo "--- checking at RetroAchievements.org server..." >&2
@@ -138,6 +149,7 @@ function get_game_id() {
                     curl -s "http://retroachievements.org/dorequest.php?r=patch&u=${RA_USER}&g=${gameid}&f=3&l=1&t=${RA_TOKEN}" \
                         | jq '.PatchData.ConsoleID'
                 )"
+                echo -n "${CONSOLE_NAME[console_id]}" > "$GAME_CONSOLE_NAME"
                 break
             fi
         done
@@ -216,13 +228,13 @@ function get_rom_hash() {
     case "$rom" in
         # TODO: check if "inflating" and "Extracting" are really OK for any locale config
         *.zip|*.ZIP)
-            uncompressed_rom="$(unzip -o -d /tmp "$rom" | sed -e '/\/tmp/!d; s/.*inflating: //; s/ *$//')"
+            uncompressed_rom="$(unzip -o -d "$TMP_DIR" "$rom" | sed -e '/\/tmp/!d; s/.*inflating: //; s/ *$//')"
             validate_rom_file "$uncompressed_rom" || return 1
             hash="$($SCRIPT_DIR/cheevoshash "$uncompressed_rom")"
             rm -f "$uncompressed_rom"
             ;;
         *.7z|*.7Z)
-            uncompressed_rom="/tmp/$(7z e -y -bd -o/tmp "$rom" | sed -e '/Extracting/!d; s/Extracting  //')"
+            uncompressed_rom="$TMP_DIR/$(7z e -y -bd -o"$TMP_DIR" "$rom" | sed -e '/Extracting/!d; s/Extracting  //')"
             validate_rom_file "$uncompressed_rom" || return 1
             hash="$($SCRIPT_DIR/cheevoshash "$uncompressed_rom")"
             rm -f "$uncompressed_rom"
@@ -288,6 +300,8 @@ function check_argument() {
 
 # START HERE ##################################################################
 
+trap safe_exit SIGHUP SIGINT SIGQUIT SIGKILL SIGTERM
+
 while [[ -n "$1" ]]; do
     case "$1" in
 
@@ -295,6 +309,8 @@ while [[ -n "$1" ]]; do
 #H 
         -h|--help)
             echo "$USAGE"
+            echo
+            echo "Where [OPTIONS] are:"
             echo
             # getting the help message from the comments in this source code
             sed -n 's/^#H //p' "$0"
@@ -333,6 +349,17 @@ while [[ -n "$1" ]]; do
             CHECK_FALSE_FLAG=1
             ;;
 
+#H -d|--copy-roms-to DIR    Create a copy of the ROMs that has cheevos and put
+#H                          them at "DIR/ROM_CONSOLE_NAME/". There's no need to
+#H                          specify the console name, the script detects it.
+#H 
+        -d|--copy-roms-to)
+            check_argument "$1" "$2" || exit 1
+            shift
+            COPY_ROMS_FLAG=1
+            COPY_ROMS_DIR="$1"
+            ;;
+
 # TODO: --repo-compare
 
         *)  break
@@ -348,8 +375,15 @@ for f in "$@"; do
         echo -n "--- \"" >&2
         echo -n "$f"
         echo "\" HAS CHEEVOS!" >&2
+        if [[ "$COPY_ROMS_FLAG" -eq 1 ]]; then
+            console_name="$(cat "$GAME_CONSOLE_NAME")"
+            mkdir -p "$COPY_ROMS_DIR/$console_name"
+            cp -v "$f" "$COPY_ROMS_DIR/$console_name"
+        fi
         echo
     else
         echo -e "\"$f\" has no cheevos. :(\n" >&2
     fi
 done
+
+safe_exit
