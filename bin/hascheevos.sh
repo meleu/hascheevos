@@ -59,6 +59,8 @@ function safe_exit() {
 # exit if fails
 # TODO: cache the token in some file
 function get_cheevos_token() {
+    [[ -n "$RA_TOKEN" ]] && return 0
+
     if [[ -z "$RA_USER" ]]; then
         echo "ERROR: undefined RetroAchievements.org user (see \"--user\" option)." >&2
         exit 1
@@ -331,6 +333,14 @@ while [[ -n "$1" ]]; do
             check_argument "$1" "$2" || exit 1
             shift
             RA_PASSWORD="$1"
+            ;;
+
+#H -t|--token TOKEN         TOKEN is your RetroAchievements.org token.
+#H 
+        -t|--token)
+            check_argument "$1" "$2" || exit 1
+            shift
+            RA_TOKEN="$1"
             ;;
 
 #H --get-hashlibs           Download JSON hash libraries for all supported
