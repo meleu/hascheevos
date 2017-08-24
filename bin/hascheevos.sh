@@ -18,11 +18,14 @@ readonly SCRIPT_DIR="$(cd "$(dirname $0)" && pwd)"
 readonly DATA_DIR="$SCRIPT_DIR/../data"
 readonly GAMEID_REGEX='^[1-9][0-9]{0,9}$'
 
+# flags
+CHECK_FALSE_FLAG=0
+COPY_ROMS_FLAG=0
+CHECK_RA_SERVER_FLAG=0
+
 RA_USER=
 RA_PASSWORD=
 RA_TOKEN=
-CHECK_FALSE_FLAG=0
-COPY_ROMS_FLAG=0
 COPY_ROMS_DIR=
 TMP_DIR="/tmp/hascheevos-$$"
 mkdir -p "$TMP_DIR"
@@ -140,7 +143,7 @@ function get_game_id() {
         [[ $gameid =~ $GAMEID_REGEX ]] && break
     done <<< "$hash"
 
-    if [[ ! $gameid =~ $GAMEID_REGEX ]]; then
+    if [[ CHECK_RA_SERVER_FLAG -eq 1 && ! $gameid =~ $GAMEID_REGEX ]]; then
         echo "--- checking at RetroAchievements.org server..." >&2
         for hash_i in $(echo "$hash" | sed 's/^\(SNES\|NES\|Genesis\|plain MD5\): //'); do
             echo "--- hash:    $hash_i" >&2
@@ -200,11 +203,12 @@ function game_has_cheevos() {
     
     [[ -z "$RA_TOKEN" ]] && get_cheevos_token
 
-    echo "--- checking at RetroAchievements.org server..." >&2
-
-    local patch_json="$(curl -s "http://retroachievements.org/dorequest.php?r=patch&u=${RA_USER}&g=${gameid}&f=3&l=1&t=${RA_TOKEN}")"
-    local number_of_cheevos="$(echo "$patch_json" | jq '.PatchData.Achievements | length')"
-    [[ -z "$number_of_cheevos" || "$number_of_cheevos" -lt 1 ]] && return 1
+    if [[ CHECK_RA_SERVER_FLAG -eq 1 ]]; then
+        echo "--- checking at RetroAchievements.org server..." >&2
+        local patch_json="$(curl -s "http://retroachievements.org/dorequest.php?r=patch&u=${RA_USER}&g=${gameid}&f=3&l=1&t=${RA_TOKEN}")"
+        local number_of_cheevos="$(echo "$patch_json" | jq '.PatchData.Achievements | length')"
+        [[ -z "$number_of_cheevos" || "$number_of_cheevos" -lt 1 ]] && return 1
+    fi
 
     # if the logic reaches this point, the game has cheevos
 
@@ -380,6 +384,12 @@ while [[ -n "$1" ]]; do
             CHECK_FALSE_FLAG=1
             ;;
 
+#H -r|--check-ra-server     Check at RetroAchievements.org remote server if fail
+#H                           to find info locally.
+#H 
+        -r|--check-ra-server)
+            CHECK_RA_SERVER_FLAG=1
+            ;;
 #H -d|--copy-roms-to DIR    Create a copy of the ROMs that has cheevos and put
 #H                          them at "DIR/ROM_CONSOLE_NAME/". There's no need to
 #H                          specify the console name, the script detects it.
