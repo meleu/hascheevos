@@ -267,32 +267,19 @@ function get_rom_hash() {
     local rom="$1"
     local hash
     local uncompressed_rom
-#    local ret=0
+    local ret=0
 
     case "$rom" in
         *.zip|*.ZIP)
             uncompressed_rom="$TMP_DIR/$(unzip -Z1 file.zip | head -1)"
             unzip -o -d "$TMP_DIR" "$rom"
             validate_rom_file "$uncompressed_rom" || ret=1
-            # previous version
-            #uncompressed_rom="$(unzip -o -d "$TMP_DIR" "$rom" | sed -e '/\/tmp/!d; s/.*inflating: //; s/ *$//')"
-            #validate_rom_file "$uncompressed_rom" || return 1
-            #hash="$($SCRIPT_DIR/cheevoshash "$uncompressed_rom")"
-            #rm -f "$uncompressed_rom"
             ;;
         *.7z|*.7Z)
             uncompressed_rom="$TMP_DIR/$(7z l -slt file.zip | sed -n 's/^Path = //p' | sed '2q;d')"
             7z e -y -bd -o"$TMP_DIR" "$rom"
             validate_rom_file "$uncompressed_rom" || ret=1
-            # previous approach
-            #uncompressed_rom="$TMP_DIR/$(7z e -y -bd -o"$TMP_DIR" "$rom" | sed -e '/Extracting/!d; s/Extracting  //')"
-            #validate_rom_file "$uncompressed_rom" || return 1
-            #hash="$($SCRIPT_DIR/cheevoshash "$uncompressed_rom")"
-            #rm -f "$uncompressed_rom"
             ;;
-#        *)
-#            hash="$($SCRIPT_DIR/cheevoshash "$rom")"
-#            ;;
     esac
     if [[ $ret -ne 0 ]]; then
         rm -f "$uncompressed_rom"
