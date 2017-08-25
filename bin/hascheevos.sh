@@ -258,15 +258,15 @@ function game_has_cheevos() {
         [[ "$boolean" == true ]] && return 0
         [[ "$boolean" == false && "$CHECK_FALSE_FLAG" -eq 0 ]] && return 1
     fi
-    
+
+    [[ "$CHECK_RA_SERVER_FLAG" -ne 1 ]] && return 1
+
     [[ -z "$RA_TOKEN" ]] && get_cheevos_token
 
-    if [[ "$CHECK_RA_SERVER_FLAG" -eq 1 ]]; then
-        echo "--- checking at RetroAchievements.org server..." >&2
-        local patch_json="$(curl -s "http://retroachievements.org/dorequest.php?r=patch&u=${RA_USER}&g=${gameid}&f=3&l=1&t=${RA_TOKEN}")"
-        local number_of_cheevos="$(echo "$patch_json" | jq '.PatchData.Achievements | length')"
-        [[ -z "$number_of_cheevos" || "$number_of_cheevos" -lt 1 ]] && return 1
-    fi
+    echo "--- checking at RetroAchievements.org server..." >&2
+    local patch_json="$(curl -s "http://retroachievements.org/dorequest.php?r=patch&u=${RA_USER}&g=${gameid}&f=3&l=1&t=${RA_TOKEN}")"
+    local number_of_cheevos="$(echo "$patch_json" | jq '.PatchData.Achievements | length')"
+    [[ -z "$number_of_cheevos" || "$number_of_cheevos" -lt 1 ]] && return 1
 
     # if the logic reaches this point, the game has cheevos
 
@@ -418,6 +418,20 @@ while [[ -n "$1" ]]; do
             check_argument "$1" "$2" || safe_exit 1
             shift
             RA_TOKEN="$1"
+            ;;
+
+#H -g|--game-id GAME_ID     Check if there are cheevos for a given GAME_ID and 
+#H                          exit. Note: this option should be the last argument.
+#H 
+        -g|--game-id)
+            check_argument "$1" "$2" || safe_exit 1
+            if game_has_cheevos "$2"; then
+                echo "--- Game ID $2 HAS CHEEVOS!" >&2
+                safe_exit 1
+            else
+                echo "--- Game ID $2 has no cheevos. :(" >&2
+                safe_exit 0
+            fi
             ;;
 
 #H --get-hashlibs           Download JSON hash libraries for all supported
