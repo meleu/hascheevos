@@ -5,6 +5,7 @@
 # A tool to check if your ROMs have cheevos (RetroAchievements.org).
 #
 # TODO: check dependencies curl, jq, zcat, unzip, 7z, cheevoshash (from this repo).
+# TODO: check if the *_hashlibrary.json files is old (maybe one day?). If yes, get a new one.
 
 # globals ####################################################################
 
@@ -12,17 +13,24 @@ readonly USAGE="
 USAGE:
 $(basename "$0") [OPTIONS] romfile1 [romfile2 ...]"
 
-# the extensions below were taken from RetroPie's configs
-readonly EXTENSIONS='zip|7z|nes|fds|gb|gba|gbc|sms|bin|smd|gen|md|sg|smc|sfc|fig|swc|mgd|iso|cue|z64|n64|v64|pce|ccd|cue'
+readonly SCRIPT_URL="https://raw.githubusercontent.com/meleu/hascheevos/master/bin/hascheevos.sh"
 readonly SCRIPT_DIR="$(cd "$(dirname $0)" && pwd)"
+readonly SCRIPT_NAME="$(basename "$0")"
+readonly SCRIPT_FULL="$SCRIPT_DIR/$SCRIPT_NAME"
 readonly DATA_DIR="$SCRIPT_DIR/../data"
 readonly GAMEID_REGEX='^[1-9][0-9]{0,9}$'
+
+# the extensions below were taken from RetroPie's configs
+readonly EXTENSIONS='zip|7z|nes|fds|gb|gba|gbc|sms|bin|smd|gen|md|sg|smc|sfc|fig|swc|mgd|iso|cue|z64|n64|v64|pce|ccd|cue'
+
+# flags
+CHECK_FALSE_FLAG=0
+COPY_ROMS_FLAG=0
+CHECK_RA_SERVER_FLAG=0
 
 RA_USER=
 RA_PASSWORD=
 RA_TOKEN=
-CHECK_FALSE_FLAG=0
-COPY_ROMS_FLAG=0
 COPY_ROMS_DIR=
 TMP_DIR="/tmp/hascheevos-$$"
 mkdir -p "$TMP_DIR"
@@ -53,6 +61,34 @@ function safe_exit() {
 }
 
 
+function update_script() {
+    local err_flag=0
+    local err_msg
+
+    if err_msg=$(curl "$SCRIPT_URL" -o "/tmp/$SCRIPT_NAME" 2>&1); then
+        if diff -q "$SCRIPT_FULL" "/tmp/$SCRIPT_NAME" >/dev/null; then
+            echo "You already have the latest version. Nothing changed."
+            rm -f "/tmp/$SCRIPT_NAME"
+            safe_exit 0
+        fi
+        err_msg=$(mv "/tmp/$SCRIPT_NAME" "$SCRIPT_FULL" 2>&1) \
+        || err_flag=1
+    else
+        err_flag=1
+    fi
+
+    if [[ $err_flag -ne 0 ]]; then
+        err_msg=$(echo "$err_msg" | tail -1)
+        echo "Failed to update \"$SCRIPT_NAME\": $err_msg" >&2
+        safe_exit 1
+    fi
+    
+    chmod a+x "$SCRIPT_FULL"
+    echo "The script has been successfully updated. You can run it again."
+    safe_exit 0
+}
+
+
 # Getting the RetroAchievements token
 # input: RA_USER, RA_PASSWORD
 # updates: RA_TOKEN
@@ -63,18 +99,18 @@ function get_cheevos_token() {
 
     if [[ -z "$RA_USER" ]]; then
         echo "ERROR: undefined RetroAchievements.org user (see \"--user\" option)." >&2
-        exit 1
+        safe_exit 1
     fi
 
     if [[ -z "$RA_PASSWORD" ]]; then
         echo "ERROR: undefined RetroAchievements.org password (see \"--password\" option)." >&2
-        exit 1
+        safe_exit 1
     fi
 
     RA_TOKEN="$(curl -s "http://retroachievements.org/dorequest.php?r=login&u=${RA_USER}&p=${RA_PASSWORD}" | jq -r .Token)"
     if [[ "$RA_TOKEN" == null || -z "$RA_TOKEN" ]]; then
         echo "ERROR: cheevos authentication failed. Aborting..."
-        exit 1
+        safe_exit 1
     fi
 }
 
@@ -86,7 +122,7 @@ function download_hashlibrary() {
 
     if [[ "$console_id" -le 0 || "$console_id" -gt "${#CONSOLE_NAME[@]}" ]]; then
         echo "ERROR: invalid console ID: $console_id" >&2
-        exit 1
+        safe_exit 1
     fi
 
     local json_file="$DATA_DIR/${CONSOLE_NAME[console_id]}_hashlibrary.json"
@@ -101,7 +137,7 @@ function download_hashlibrary() {
 
 
 # download hashlibrary for all consoles
-function get_hash_libraries() {
+function download_hash_libraries() {
     local i
 
     echo "Getting hash libraries..."
@@ -140,7 +176,7 @@ function get_game_id() {
         [[ $gameid =~ $GAMEID_REGEX ]] && break
     done <<< "$hash"
 
-    if [[ ! $gameid =~ $GAMEID_REGEX ]]; then
+    if [[ CHECK_RA_SERVER_FLAG -eq 1 && ! $gameid =~ $GAMEID_REGEX ]]; then
         echo "--- checking at RetroAchievements.org server..." >&2
         for hash_i in $(echo "$hash" | sed 's/^\(SNES\|NES\|Genesis\|plain MD5\): //'); do
             echo "--- hash:    $hash_i" >&2
@@ -189,8 +225,14 @@ function game_has_cheevos() {
 
     echo "--- game ID: $gameid" >&2
 
-    # TODO: check if $DATA_DIR exist.
-    #       if does not, download the *_hascheevos.txt files from the repo
+    # check if $DATA_DIR exist.
+    if [[ ! -d "$DATA_DIR" ]]; then
+        echo "ERROR: \"$DATA_DIR\": directory not found!" >&2
+        echo "Looks like this tool wasn't installed as instructed in repo's README." >&2
+        echo "Aborting..." >&2
+        safe_exit 1
+    fi
+
     hascheevos_file="$(grep -l "^$gameid:" "$DATA_DIR"/*_hascheevos.txt 2> /dev/null)"
     if [[ -f "$hascheevos_file" ]]; then
         boolean="$(grep "^$gameid:" "$hascheevos_file" | cut -d: -f2)"
@@ -200,11 +242,12 @@ function game_has_cheevos() {
     
     [[ -z "$RA_TOKEN" ]] && get_cheevos_token
 
-    echo "--- checking at RetroAchievements.org server..." >&2
-
-    local patch_json="$(curl -s "http://retroachievements.org/dorequest.php?r=patch&u=${RA_USER}&g=${gameid}&f=3&l=1&t=${RA_TOKEN}")"
-    local number_of_cheevos="$(echo "$patch_json" | jq '.PatchData.Achievements | length')"
-    [[ -z "$number_of_cheevos" || "$number_of_cheevos" -lt 1 ]] && return 1
+    if [[ CHECK_RA_SERVER_FLAG -eq 1 ]]; then
+        echo "--- checking at RetroAchievements.org server..." >&2
+        local patch_json="$(curl -s "http://retroachievements.org/dorequest.php?r=patch&u=${RA_USER}&g=${gameid}&f=3&l=1&t=${RA_TOKEN}")"
+        local number_of_cheevos="$(echo "$patch_json" | jq '.PatchData.Achievements | length')"
+        [[ -z "$number_of_cheevos" || "$number_of_cheevos" -lt 1 ]] && return 1
+    fi
 
     # if the logic reaches this point, the game has cheevos
 
@@ -226,45 +269,31 @@ function get_rom_hash() {
     local rom="$1"
     local hash
     local uncompressed_rom
-#    local ret=0
+    local ret=0
 
     case "$rom" in
-        # TODO: check if "inflating" and "Extracting" are really OK for any locale config
         *.zip|*.ZIP)
-            # TODO: maybe a better approach would be:
-            # uncompressed_rom="$TMP_DIR/$(unzip -Z1 file.zip | head -1)"
-            # unzip -o -d "$TMP_DIR" "$rom"
-            # validate_rom_file "$uncompressed_rom" || ret=1
-            uncompressed_rom="$(unzip -o -d "$TMP_DIR" "$rom" | sed -e '/\/tmp/!d; s/.*inflating: //; s/ *$//')"
-            validate_rom_file "$uncompressed_rom" || return 1
-            hash="$($SCRIPT_DIR/cheevoshash "$uncompressed_rom")"
-            rm -f "$uncompressed_rom"
+            uncompressed_rom="$TMP_DIR/$(unzip -Z1 "$rom" | head -1)"
+            unzip -o -d "$TMP_DIR" "$rom" >/dev/null
+            validate_rom_file "$uncompressed_rom" || ret=1
             ;;
         *.7z|*.7Z)
-            # TODO: maybe a better approach would be:
-            # uncompressed_rom="$TMP_DIR/$(7z l -slt file.zip | sed -n 's/^Path = //p' | sed '2q;d')"
-            # 7z e -y -bd -o"$TMP_DIR" "$rom"
-            # validate_rom_file "$uncompressed_rom" || ret=1
-            uncompressed_rom="$TMP_DIR/$(7z e -y -bd -o"$TMP_DIR" "$rom" | sed -e '/Extracting/!d; s/Extracting  //')"
-            validate_rom_file "$uncompressed_rom" || return 1
-            hash="$($SCRIPT_DIR/cheevoshash "$uncompressed_rom")"
-            rm -f "$uncompressed_rom"
-            ;;
-        *)  # TODO: maybe delete this case
-            hash="$($SCRIPT_DIR/cheevoshash "$rom")"
+            uncompressed_rom="$TMP_DIR/$(7z l -slt "$rom" | sed -n 's/^Path = //p' | sed '2q;d')"
+            7z e -y -bd -o"$TMP_DIR" "$rom" >/dev/null
+            validate_rom_file "$uncompressed_rom" || ret=1
             ;;
     esac
-#    if [[ $ret -ne 0 ]]; then
-#        rm -f "$uncompressed_rom"
-#        return $ret
-#    fi
-#
-#    if [[ -n "$uncompressed_rom" ]]; then
-#        hash="$($SCRIPT_DIR/cheevoshash "$uncompressed_rom")"
-#        rm -f "$uncompressed_rom"
-#    else
-#        hash="$($SCRIPT_DIR/cheevoshash "$rom")"
-#    fi
+    if [[ $ret -ne 0 ]]; then
+        rm -f "$uncompressed_rom"
+        return $ret
+    fi
+
+    if [[ -n "$uncompressed_rom" ]]; then
+        hash="$($SCRIPT_DIR/cheevoshash "$uncompressed_rom")"
+        rm -f "$uncompressed_rom"
+    else
+        hash="$($SCRIPT_DIR/cheevoshash "$rom")"
+    fi
 
     [[ "$hash" =~ :\ [^\ ]{32} ]] || return 1
     echo "$hash"
@@ -337,13 +366,19 @@ while [[ -n "$1" ]]; do
             echo
             # getting the help message from the comments in this source code
             sed -n 's/^#H //p' "$0"
-            exit
+            safe_exit
+            ;;
+
+#H --update                 Update the script and exit.
+#H 
+        --update)
+            update_script
             ;;
 
 #H -u|--user USER           USER is your RetroAchievements.org username.
 #H 
         -u|--user)
-            check_argument "$1" "$2" || exit 1
+            check_argument "$1" "$2" || safe_exit 1
             shift
             RA_USER="$1"
             ;;
@@ -351,7 +386,7 @@ while [[ -n "$1" ]]; do
 #H -p|--password PASSWORD   PASSWORD is your RetroAchievements.org password.
 #H 
         -p|--password)
-            check_argument "$1" "$2" || exit 1
+            check_argument "$1" "$2" || safe_exit 1
             shift
             RA_PASSWORD="$1"
             ;;
@@ -359,7 +394,7 @@ while [[ -n "$1" ]]; do
 #H -t|--token TOKEN         TOKEN is your RetroAchievements.org token.
 #H 
         -t|--token)
-            check_argument "$1" "$2" || exit 1
+            check_argument "$1" "$2" || safe_exit 1
             shift
             RA_TOKEN="$1"
             ;;
@@ -368,16 +403,24 @@ while [[ -n "$1" ]]; do
 #H                          consoles and exit.
 #H 
         --get-hashlibs)
-            get_hash_libraries
-            exit
+            download_hash_libraries
+            safe_exit
             ;;
 
-#H -f|--check-false         Check at RetroAchievements.org server even if the
-#H                          game ID is marked as "has no cheevos" (false) in the
-#H                          local *_hascheevos.txt files.
+#H -f|--check-false         Check at RetroAchievements.org server even if the game
+#H                          ID is marked as "has no cheevos" (false) in the local
+#H                          *_hascheevos.txt files. Implies --check-ra-server.
 #H 
         -f|--check-false)
             CHECK_FALSE_FLAG=1
+            CHECK_RA_SERVER_FLAG=1
+            ;;
+
+#H -r|--check-ra-server     Check at RetroAchievements.org remote server if fail
+#H                          to find info locally.
+#H 
+        -r|--check-ra-server)
+            CHECK_RA_SERVER_FLAG=1
             ;;
 
 #H -d|--copy-roms-to DIR    Create a copy of the ROMs that has cheevos and put
@@ -385,7 +428,7 @@ while [[ -n "$1" ]]; do
 #H                          specify the console name, the script detects it.
 #H 
         -d|--copy-roms-to)
-            check_argument "$1" "$2" || exit 1
+            check_argument "$1" "$2" || safe_exit 1
             shift
             COPY_ROMS_FLAG=1
             COPY_ROMS_DIR="$1"
