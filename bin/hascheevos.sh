@@ -5,6 +5,7 @@
 # A tool to check if your ROMs have cheevos (RetroAchievements.org).
 #
 # TODO: check dependencies curl, jq, zcat, unzip, 7z, cheevoshash (from this repo).
+# TODO: check if the *_hashlibrary.json files is old (maybe one day?). If yes, get a new one.
 
 # globals ####################################################################
 
@@ -12,14 +13,15 @@ readonly USAGE="
 USAGE:
 $(basename "$0") [OPTIONS] romfile1 [romfile2 ...]"
 
-# the extensions below were taken from RetroPie's configs
-readonly EXTENSIONS='zip|7z|nes|fds|gb|gba|gbc|sms|bin|smd|gen|md|sg|smc|sfc|fig|swc|mgd|iso|cue|z64|n64|v64|pce|ccd|cue'
-readonly DATA_DIR="$SCRIPT_DIR/../data"
-readonly GAMEID_REGEX='^[1-9][0-9]{0,9}$'
 readonly SCRIPT_URL="https://raw.githubusercontent.com/meleu/hascheevos/master/bin/hascheevos.sh"
 readonly SCRIPT_DIR="$(cd "$(dirname $0)" && pwd)"
 readonly SCRIPT_NAME="$(basename "$0")"
 readonly SCRIPT_FULL="$SCRIPT_DIR/$SCRIPT_NAME"
+readonly DATA_DIR="$SCRIPT_DIR/../data"
+readonly GAMEID_REGEX='^[1-9][0-9]{0,9}$'
+
+# the extensions below were taken from RetroPie's configs
+readonly EXTENSIONS='zip|7z|nes|fds|gb|gba|gbc|sms|bin|smd|gen|md|sg|smc|sfc|fig|swc|mgd|iso|cue|z64|n64|v64|pce|ccd|cue'
 
 # flags
 CHECK_FALSE_FLAG=0
@@ -224,7 +226,7 @@ function game_has_cheevos() {
     echo "--- game ID: $gameid" >&2
 
     # check if $DATA_DIR exist.
-    if [[ -d "$DATA_DIR" ]]; then
+    if [[ ! -d "$DATA_DIR" ]]; then
         echo "ERROR: \"$DATA_DIR\": directory not found!" >&2
         echo "Looks like this tool wasn't installed as instructed in repo's README." >&2
         echo "Aborting..." >&2
@@ -271,13 +273,13 @@ function get_rom_hash() {
 
     case "$rom" in
         *.zip|*.ZIP)
-            uncompressed_rom="$TMP_DIR/$(unzip -Z1 file.zip | head -1)"
-            unzip -o -d "$TMP_DIR" "$rom"
+            uncompressed_rom="$TMP_DIR/$(unzip -Z1 "$rom" | head -1)"
+            unzip -o -d "$TMP_DIR" "$rom" >/dev/null
             validate_rom_file "$uncompressed_rom" || ret=1
             ;;
         *.7z|*.7Z)
-            uncompressed_rom="$TMP_DIR/$(7z l -slt file.zip | sed -n 's/^Path = //p' | sed '2q;d')"
-            7z e -y -bd -o"$TMP_DIR" "$rom"
+            uncompressed_rom="$TMP_DIR/$(7z l -slt "$rom" | sed -n 's/^Path = //p' | sed '2q;d')"
+            7z e -y -bd -o"$TMP_DIR" "$rom" >/dev/null
             validate_rom_file "$uncompressed_rom" || ret=1
             ;;
     esac
