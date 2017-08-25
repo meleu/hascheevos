@@ -5,7 +5,6 @@
 # A tool to check if your ROMs have cheevos (RetroAchievements.org).
 #
 # TODO: check dependencies curl, jq, zcat, unzip, 7z, cheevoshash (from this repo).
-# TODO: check if the *_hashlibrary.json files is old (maybe one day?). If yes, get a new one.
 
 # globals ####################################################################
 
@@ -150,6 +149,26 @@ function download_hash_libraries() {
 }
 
 
+# update hashlibraries older than 1 day
+function update_hash_libraries() {
+    local line
+    local system
+    local i
+
+    echo "Checking old hash libraries..."
+
+    while read -r line; do
+        system="$(basename "${line%_hashlibrary.json*}")"
+        for i in "${!CONSOLE_NAME[@]}"; do
+            if [[ "${CONSOLE_NAME[i]}" == "$system" ]]; then
+                download_hashlibrary "$i"
+                break
+            fi
+        done
+    done < <(find "$DATA_DIR" -type f -name '*_hashlibrary.json' -mtime +1)
+}
+
+
 # Print (echo) the game ID of a given rom file
 # This function try to get the game id from local *_hashlibrary.json files, if
 # these files don't exist the script will try to get them from RA server.
@@ -176,7 +195,7 @@ function get_game_id() {
         [[ $gameid =~ $GAMEID_REGEX ]] && break
     done <<< "$hash"
 
-    if [[ CHECK_RA_SERVER_FLAG -eq 1 && ! $gameid =~ $GAMEID_REGEX ]]; then
+    if [[ "$CHECK_RA_SERVER_FLAG" -eq 1 && ! $gameid =~ $GAMEID_REGEX ]]; then
         echo "--- checking at RetroAchievements.org server..." >&2
         for hash_i in $(echo "$hash" | sed 's/^\(SNES\|NES\|Genesis\|plain MD5\): //'); do
             echo "--- hash:    $hash_i" >&2
@@ -242,7 +261,7 @@ function game_has_cheevos() {
     
     [[ -z "$RA_TOKEN" ]] && get_cheevos_token
 
-    if [[ CHECK_RA_SERVER_FLAG -eq 1 ]]; then
+    if [[ "$CHECK_RA_SERVER_FLAG" -eq 1 ]]; then
         echo "--- checking at RetroAchievements.org server..." >&2
         local patch_json="$(curl -s "http://retroachievements.org/dorequest.php?r=patch&u=${RA_USER}&g=${gameid}&f=3&l=1&t=${RA_TOKEN}")"
         local number_of_cheevos="$(echo "$patch_json" | jq '.PatchData.Achievements | length')"
@@ -253,11 +272,13 @@ function game_has_cheevos() {
 
     # updating the _hascheevos.txt file
     local console_id="$(echo "$patch_json" | jq '.PatchData.ConsoleID')"
-    hascheevos_file="${CONSOLE_NAME[console_id]}_hascheevos.txt"
+    hascheevos_file="$DATA_DIR/${CONSOLE_NAME[console_id]}_hascheevos.txt"
 
     sed -i "s/^${gameid}:.*/${gameid}:true/" "$hascheevos_file" 2> /dev/null
-    grep -q "^${gameid}:true" "$hascheevos_file" 2> /dev/null || echo "${gameid}:true" >> "$hascheevos_file"
-    sort -un "$hascheevos_file" -o "$hascheevos_file"
+    if ! grep -q "^${gameid}:true" "$hascheevos_file" 2> /dev/null; then
+        echo "${gameid}:true" >> "$hascheevos_file"
+        sort -un "$hascheevos_file" -o "$hascheevos_file"
+    fi
 
     sleep 1 # XXX: a small delay to not stress the server
     return 0
@@ -434,7 +455,7 @@ while [[ -n "$1" ]]; do
             COPY_ROMS_DIR="$1"
             ;;
 
-# TODO: --repo-compare
+# TODO: compare *_hascheevos.txt files with github ones and suggest a PR
 
         *)  break
             ;;
@@ -443,6 +464,7 @@ while [[ -n "$1" ]]; do
 done
 
 get_cheevos_token
+update_hash_libraries
 
 for f in "$@"; do
     if rom_has_cheevos "$f"; then
