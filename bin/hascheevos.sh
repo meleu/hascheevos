@@ -1,6 +1,6 @@
 #!/bin/bash
 # hascheevos.sh
-####################
+###############
 #
 # A tool to check if your ROMs have cheevos (RetroAchievements.org).
 #
@@ -19,7 +19,7 @@ readonly SCRIPT_FULL="$SCRIPT_DIR/$SCRIPT_NAME"
 readonly DATA_DIR="$SCRIPT_DIR/../data"
 readonly GAMEID_REGEX='^[1-9][0-9]{0,9}$'
 
-# the extensions below were taken from RetroPie's configs
+# the extensions below were taken from RetroPie's configs (es_systems.cfg)
 readonly EXTENSIONS='zip|7z|nes|fds|gb|gba|gbc|sms|bin|smd|gen|md|sg|smc|sfc|fig|swc|mgd|iso|cue|z64|n64|v64|pce|ccd|cue'
 
 # flags
@@ -60,6 +60,7 @@ function safe_exit() {
 }
 
 
+# TODO: the update function should be a git pull.
 function update_script() {
     local err_flag=0
     local err_msg
