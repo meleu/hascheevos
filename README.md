@@ -1,5 +1,5 @@
 # hascheevos
-A kind of "cheevos scraper".
+A way to check if you ROM is OK for RetroAchievements.
 
 ## installing
 
