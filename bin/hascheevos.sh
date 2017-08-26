@@ -371,6 +371,17 @@ function check_argument() {
 }
 
 
+function uncompress_hascheevos_txt() {
+    local file_gz
+    local uncompressed_file
+
+    while read -r file_gz ; do
+        uncompressed_file="${file_gz%.gz}"
+        [[ -s "$uncompressed_file" ]] && continue
+        gunzip -kf "$file_gz"
+    done < <(find "$DATA_DIR" -type f -name '*_hascheevos.txt.gz')
+}
+
 
 # START HERE ##################################################################
 
@@ -480,6 +491,7 @@ done
 
 get_cheevos_token
 update_hash_libraries
+uncompress_hascheevos_txt
 
 for f in "$@"; do
     if rom_has_cheevos "$f"; then
