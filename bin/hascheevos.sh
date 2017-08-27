@@ -370,6 +370,42 @@ function check_argument() {
     fi
 }
 
+function copy_hascheevos_txt() {
+    local original_file
+    local local_file
+
+    while read -r original_file ; do
+        local_file="${original_file%-orig}"
+        [[ -s "$local_file" ]] && continue
+        cp -pf "$original_file" "$local_file"
+    done < <(find "$DATA_DIR" -type f -name '*_hascheevos.txt-orig')
+}
+
+
+function compare_hascheevos_files() {
+    local original_file
+    local local_file
+    local diff_flag=0
+    local diff_msg
+
+    copy_hascheevos_txt
+
+    while read -r original_file ; do
+        local_file="${original_file%-orig}"
+        diff_msg="$(zdiff -q "$local_file" "$original_file")" && continue
+        diff_flag=1
+        echo "WARNING: The \"$local_file\" differs from the \"$original_file\" obtained from hascheevos' repository." >&2
+        echo "=============" >&2
+        echo "diff message:" >&2
+        echo "=============" >&2
+        echo "$diff_msg" >&2
+        echo "=============" >&2
+    done < <(find "$DATA_DIR" -type f -name '*_hascheevos.txt-orig')
+    
+    [[ $diff_flag -eq 0 ]] || return 1
+
+    echo "The \"hascheevos\" files are fine!" >&2
+}
 
 
 # START HERE ##################################################################
@@ -391,10 +427,11 @@ while [[ -n "$1" ]]; do
             safe_exit
             ;;
 
-#H --update                 Update the script and exit.
+#H --update                 Update hascheevos files and exit.
 #H 
         --update)
-            update_script
+            update_files
+            safe_exit $?
             ;;
 
 #H -u|--user USER           USER is your RetroAchievements.org username.
@@ -470,7 +507,14 @@ while [[ -n "$1" ]]; do
             COPY_ROMS_DIR="$1"
             ;;
 
-# TODO: compare *_hascheevos.txt files with github ones and suggest a PR
+#H -c|--repo-compare        Compare your local "hascheevos" files with the ones
+#H                          obtained from github repository, print a report
+#H                          and exit.
+#H 
+        -c|--repo-compare)
+            compare_hascheevos_files
+            safe_exit $?
+            ;;
 
         *)  break
             ;;
@@ -480,6 +524,7 @@ done
 
 get_cheevos_token
 update_hash_libraries
+copy_hascheevos_txt
 
 for f in "$@"; do
     if rom_has_cheevos "$f"; then
