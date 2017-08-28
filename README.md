@@ -1,5 +1,5 @@
 # hascheevos
-A way to check if you ROM is OK for RetroAchievements.
+A way to check if your ROM is OK for RetroAchievements.
 
 ## installing
 
