@@ -5,6 +5,8 @@
 # A tool to check if your ROMs have cheevos (RetroAchievements.org).
 #
 # TODO: check dependencies curl, jq, zcat, unzip, 7z, cheevoshash (from this repo).
+# TODO: add the RA game name in *_hascheevos entries.
+#       It will be "game id:boolean:game name"
 
 # globals ####################################################################
 
@@ -265,7 +267,9 @@ function game_has_cheevos() {
         safe_exit 1
     fi
 
-    hascheevos_file="$(grep -l "^$gameid:" "$DATA_DIR"/*_hascheevos.txt 2> /dev/null)"
+    hascheevos_file="$(grep -l "^$gameid:" "$DATA_DIR"/*_hascheevos-local.txt 2> /dev/null)"
+    [[ -f "$hascheevos_file" ]] || hascheevos_file="$(grep -l "^$gameid:" "$DATA_DIR"/*_hascheevos.txt 2> /dev/null)"
+
     if [[ -f "$hascheevos_file" ]]; then
         boolean="$(grep "^$gameid:" "$hascheevos_file" | cut -d: -f2)"
         [[ "$boolean" == true ]] && return 0
@@ -285,7 +289,7 @@ function game_has_cheevos() {
 
     # updating the _hascheevos.txt file
     local console_id="$(echo "$patch_json" | jq '.PatchData.ConsoleID')"
-    hascheevos_file="$DATA_DIR/${CONSOLE_NAME[console_id]}_hascheevos.txt"
+    hascheevos_file="$DATA_DIR/${CONSOLE_NAME[console_id]}_hascheevos-local.txt"
 
     sed -i "s/^${gameid}:.*/${gameid}:true/" "$hascheevos_file" 2> /dev/null
     if ! grep -q "^${gameid}:true" "$hascheevos_file" 2> /dev/null; then
