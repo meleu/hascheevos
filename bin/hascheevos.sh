@@ -61,30 +61,32 @@ function safe_exit() {
 
 
 # TODO: the update function should be a git pull.
-function update_script() {
+function update_files() {
     local err_flag=0
-    local err_msg
+    local dir="$SCRIPT_DIR/.."
 
-    if err_msg=$(curl "$SCRIPT_URL" -o "/tmp/$SCRIPT_NAME" 2>&1); then
-        if diff -q "$SCRIPT_FULL" "/tmp/$SCRIPT_NAME" >/dev/null; then
-            echo "You already have the latest version. Nothing changed."
-            rm -f "/tmp/$SCRIPT_NAME"
-            safe_exit 0
+    if [[ -d "$dir/.git" ]]; then
+        pushd "$dir" > /dev/null
+        if ! git pull --rebase ; then
+            git merge --abort && git pull -X theirs || err_flag=1
         fi
-        err_msg=$(mv "/tmp/$SCRIPT_NAME" "$SCRIPT_FULL" 2>&1) \
-        || err_flag=1
+        if [[ $err_flag -eq 0 ]]; then
+            git submodule update --init --recursive || err_flag=1
+        fi
+        popd > /dev/null
     else
+        echo "ERROR: \"$dir/.git\": directory not found!" >&2
+        echo "Looks like this tool wasn't installed as instructed in repo's README." >&2
+        echo "Aborting..." >&2
         err_flag=1
     fi
 
     if [[ $err_flag -ne 0 ]]; then
-        err_msg=$(echo "$err_msg" | tail -1)
-        echo "Failed to update \"$SCRIPT_NAME\": $err_msg" >&2
+        echo "UPDATE: Failed to update \"$SCRIPT_NAME\"." >&2
         safe_exit 1
     fi
     
-    chmod a+x "$SCRIPT_FULL"
-    echo "The script has been successfully updated. You can run it again."
+    echo "UPDATE: The files have been successfully updated."
     safe_exit 0
 }
 
@@ -391,10 +393,10 @@ while [[ -n "$1" ]]; do
             safe_exit
             ;;
 
-#H --update                 Update the script and exit.
+#H --update                 Update hascheevos files and exit.
 #H 
         --update)
-            update_script
+            update_files
             ;;
 
 #H -u|--user USER           USER is your RetroAchievements.org username.
