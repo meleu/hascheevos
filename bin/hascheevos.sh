@@ -404,22 +404,18 @@ function check_hascheevos_files() {
     local bool_local
     local bool_orig
     local ret=0
-
-    is_updated
-    if [[ $? -eq 1 ]]; then
-        echo "WARNING: your hascheevos files are outdated. Running an '--update' is recommended."
-        ret=1
-    fi
+    local updated
 
     while read -r file_local; do
         file_orig="${file_local/-local/}"
+        echo "Checking \"$(basename "$file_orig")\"..."
 
         while read -r line_local; do
             gameid=$(echo "$line_local" | cut -d: -f1)
 
             line_orig=$(grep "^$gameid:" "$file_orig")
             if [[ -z "$line_orig" ]]; then
-                echo "There's no Game ID #$gameid on your \"$(basename "$file_orig")\"."
+                echo "* there's no Game ID #$gameid on your \"$(basename "$file_orig")\"."
                 ret=1
             elif [[ "$line_local" == "$line_orig" ]]; then
                 sed -i "/$line_local/d" "$file_local"
@@ -427,12 +423,22 @@ function check_hascheevos_files() {
             else
                 bool_local=$(echo "$line_local" | cut -d: -f2)
                 bool_orig=$( echo "$line_orig"  | cut -d: -f2)
-                echo "The Game ID #$gameid is marked as \"$bool_local\" in \"$(basename "$file_local")\" and as \"$bool_orig\" in \"$(basename "$file_orig")\"."
+                echo "* Game ID #$gameid is marked as \"$bool_local\" locally but it's \"$bool_orig\" in the original file."
                 ret=1
             fi
 
         done < "$file_local"
     done < <(find "$DATA_DIR" -type f -name '*_hascheevos-local.txt')
+
+    is_updated
+    updated="$?"
+    if [[ "$updated" -eq 0 && "$ret" -ne 0 ]]; then
+        echo -e "\n-----"
+        echo "Consider helping to keep the hascheevos files synchronized with RetroAchievements.org data."
+        echo "Please, copy the output's content above and paste it in a new issue at https://github.com/meleu/hascheevos/issues"
+    elif [[ "$updated" -eq 1 ]]; then
+        echo "WARNING: your hascheevos files are outdated. Try to '--update' and then '--check-hascheevos' again."
+    fi
 
     safe_exit "$ret"
 }
