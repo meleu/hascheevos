@@ -60,7 +60,17 @@ function safe_exit() {
 }
 
 
-# TODO: the update function should be a git pull.
+function help_message() {
+    echo "$USAGE"
+    echo
+    echo "Where [OPTIONS] are:"
+    echo
+    # getting the help message from the comments in this source code
+    sed -n 's/^#H //p' "$0"
+    safe_exit
+}
+
+
 function update_files() {
     local err_flag=0
     local dir="$SCRIPT_DIR/.."
@@ -378,19 +388,15 @@ function check_argument() {
 
 trap safe_exit SIGHUP SIGINT SIGQUIT SIGKILL SIGTERM
 
+[[ -z "$1" ]] && help_message
+
 while [[ -n "$1" ]]; do
     case "$1" in
 
 #H -h|--help                Print the help message and exit.
 #H 
         -h|--help)
-            echo "$USAGE"
-            echo
-            echo "Where [OPTIONS] are:"
-            echo
-            # getting the help message from the comments in this source code
-            sed -n 's/^#H //p' "$0"
-            safe_exit
+            help_message
             ;;
 
 #H --update                 Update hascheevos files and exit.
