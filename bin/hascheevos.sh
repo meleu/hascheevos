@@ -14,6 +14,7 @@ readonly USAGE="
 USAGE:
 $(basename "$0") [OPTIONS] romfile1 [romfile2 ...]"
 
+readonly GIT_REPO="https://github.com/meleu/hascheevos.git"
 readonly SCRIPT_URL="https://raw.githubusercontent.com/meleu/hascheevos/master/bin/hascheevos.sh"
 readonly SCRIPT_DIR="$(cd "$(dirname $0)" && pwd)"
 readonly SCRIPT_NAME="$(basename "$0")"
@@ -377,6 +378,66 @@ function rom_has_cheevos() {
 }
 
 
+# check if the local hascheevos repository is synchronized with the remote one.
+# returns
+#   0 if yes
+#   1 if no
+#   2 if unable to check
+function is_updated() {
+    local version_local
+    local version_remote
+
+    version_local=$(git -C "$SCRIPT_DIR" log -1 --format="%H") || return 2
+    version_remote=$(git ls-remote "$GIT_REPO" | head -1 | cut -f1) || return 2
+
+    [[ "$version_local" == "$version_remote" ]]
+}
+
+
+
+function check_hascheevos_files() {
+    local file_local
+    local file_orig
+    local line_local
+    local line_orig
+    local gameid
+    local bool_local
+    local bool_orig
+    local ret=0
+
+    is_updated
+    if [[ $? -eq 1 ]]; then
+        echo "WARNING: your hascheevos files are outdated. Running an '--update' is recommended."
+        ret=1
+    fi
+
+    while read -r file_local; do
+        file_orig="${file_local/-local/}"
+
+        while read -r line_local; do
+            gameid=$(echo "$line_local" | cut -d: -f1)
+
+            line_orig=$(grep "^$gameid:" "$file_orig")
+            if [[ -z "$line_orig" ]]; then
+                echo "There's no Game ID #$gameid on your \"$(basename "$file_orig")\"."
+                ret=1
+            elif [[ "$line_local" == "$line_orig" ]]; then
+                sed -i "/$line_local/d" "$file_local"
+                [[ -s "$file_local" ]] || rm "$file_local"
+            else
+                bool_local=$(echo "$line_local" | cut -d: -f2)
+                bool_orig=$( echo "$line_orig"  | cut -d: -f2)
+                echo "The Game ID #$gameid is marked as \"$bool_local\" in \"$(basename "$file_local")\" and as \"$bool_orig\" in \"$(basename "$file_orig")\"."
+                ret=1
+            fi
+
+        done < "$file_local"
+    done < <(find "$DATA_DIR" -type f -name '*_hascheevos-local.txt')
+
+    safe_exit "$ret"
+}
+
+
 # helping to deal with command line arguments
 function check_argument() {
     # limitation: the argument 2 can NOT start with '-'
@@ -438,6 +499,7 @@ while [[ -n "$1" ]]; do
 #H 
         -g|--game-id)
             check_argument "$1" "$2" || safe_exit 1
+            # TODO: accept multiple game ids separated by comma
             if game_has_cheevos "$2"; then
                 echo "--- Game ID $2 HAS CHEEVOS!" >&2
                 safe_exit 1
@@ -456,7 +518,7 @@ while [[ -n "$1" ]]; do
             ;;
 
 #H -f|--check-false         Check at RetroAchievements.org server even if the game
-#H                          ID is marked as "has no cheevos" (false) in the local
+#H                          ID is marked as "has no cheevos" (false) in the
 #H                          *_hascheevos.txt files. Implies --check-ra-server.
 #H 
         -f|--check-false)
@@ -482,7 +544,13 @@ while [[ -n "$1" ]]; do
             COPY_ROMS_DIR="$1"
             ;;
 
-# TODO: compare *_hascheevos.txt files with github ones and suggest a PR
+#H -c|--check-hascheevos    Check if the *_hascheevos.txt files are outdated
+#H                          comparing them with the respective *_hascheevos-local.txt
+#H                          and exit.
+#H 
+        -c|--check-hascheevos)
+            check_hascheevos_files
+            ;;
 
         *)  break
             ;;
