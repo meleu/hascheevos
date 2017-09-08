@@ -171,7 +171,11 @@ function update_hash_libraries() {
     local system
     local i
 
-    echo "Checking old hash libraries..."
+    echo "Checking JSON hash libraries..."
+
+    for i in "${!CONSOLE_NAME[@]}"; do
+        [[ -f "$DATA_DIR/${CONSOLE_NAME[i]}_hashlibrary.json" ]] || download_hashlibrary "$i"
+    done
 
     while read -r line; do
         system="$(basename "${line%_hashlibrary.json*}")"
