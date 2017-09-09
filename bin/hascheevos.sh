@@ -562,6 +562,14 @@ while [[ -n "$1" ]]; do
             check_hascheevos_files
             ;;
 
+#H --print-token            Print the user's RetroAchievements.org token and exit.
+#H 
+        --print-token)
+            get_cheevos_token
+            echo "$RA_TOKEN"
+            safe_exit
+            ;;
+
         *)  break
             ;;
     esac
