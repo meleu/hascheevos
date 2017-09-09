@@ -1,18 +1,19 @@
-10061:false
-10062:false
-10064:false
-10065:false
-10067:false
-10068:false
-10069:false
-10070:false
-10071:false
-10084:false
-10096:false
-10099:false
-10222:false
-10338:false
-10563:false
-10564:false
-10569:false
-10583:false
+10061:false:"Prince of Persia"
+10062:false:"Sonic CD"
+10064:false:"Batman Returns"
+10065:false:"Secret of Monkey Island"
+10067:false:"Snatcher"
+10068:false:"Robo Aleste"
+10069:false:"Keio Flying Squadron"
+10070:false:"Final Fight CD"
+10071:false:"The Terminator"
+10074:false:"RENAME ME"
+10084:false:"Popful Mail"
+10096:false:"Penn and Tellers Smoke and Mirrors"
+10099:false:"Crime Patrol"
+10222:false:"You MUST Rename a Game After Adding It"
+10338:false:"Sega Classics"
+10563:false:" Â¬ÂLÂÂÂ©\u0004  âin âÃÂ "
+10564:false:" ÃÂ¬ÃÂLÃÂÃÂÃÂ©\u0004  Ã¢ÂÂin Ã¢ÂÂÃÂ"
+10569:false:"<New Title>"
+10583:false:"Sonic the Hedgehog Megamix"

@@ -1,289 +1,306 @@
-30:false
-10003:true
-10024:true
-10073:true
-10075:false
-10077:false
-10078:false
-10079:false
-10080:true
-10081:false
-10082:true
-10083:true
-10085:false
-10086:false
-10087:false
-10088:false
-10089:false
-10090:false
-10091:false
-10092:false
-10093:true
-10094:false
-10100:false
-10101:false
-10102:false
-10108:false
-10110:false
-10113:true
-10114:false
-10115:false
-10116:false
-10118:false
-10119:false
-10120:false
-10121:false
-10124:false
-10125:false
-10126:false
-10127:false
-10128:false
-10129:true
-10131:false
-10133:false
-10135:false
-10136:false
-10137:false
-10138:false
-10139:false
-10140:false
-10141:false
-10142:false
-10143:false
-10144:false
-10145:false
-10146:false
-10147:false
-10148:false
-10149:false
-10150:false
-10151:false
-10152:false
-10153:false
-10154:true
-10155:false
-10156:false
-10157:false
-10158:true
-10159:false
-10160:false
-10161:false
-10162:true
-10163:false
-10164:false
-10165:false
-10166:false
-10167:false
-10168:false
-10169:false
-10170:false
-10171:false
-10172:false
-10173:false
-10181:false
-10182:true
-10186:false
-10198:false
-10199:true
-10200:false
-10202:true
-10206:false
-10208:false
-10210:true
-10211:false
-10216:true
-10223:true
-10232:false
-10238:false
-10246:false
-10247:false
-10248:true
-10255:false
-10256:false
-10258:false
-10259:false
-10263:true
-10264:true
-10265:false
-10266:false
-10268:false
-10269:false
-10270:false
-10271:false
-10272:true
-10273:false
-10275:false
-10276:false
-10277:true
-10281:false
-10282:false
-10283:false
-10284:false
-10285:false
-10286:false
-10287:false
-10288:false
-10298:true
-10307:false
-10308:false
-10309:false
-10310:false
-10313:false
-10315:false
-10317:false
-10318:false
-10325:false
-10326:false
-10327:false
-10328:false
-10329:true
-10330:true
-10331:false
-10332:false
-10333:false
-10337:false
-10347:false
-10348:false
-10360:false
-10382:false
-10383:false
-10384:false
-10385:false
-10386:false
-10387:false
-10390:false
-10392:false
-10393:false
-10394:false
-10407:false
-10420:false
-10429:false
-10430:false
-10435:false
-10436:false
-10448:false
-10451:false
-10452:false
-10453:false
-10454:false
-10455:false
-10456:false
-10457:false
-10458:false
-10459:false
-10460:false
-10461:false
-10462:false
-10463:false
-10464:false
-10465:false
-10466:false
-10467:false
-10468:false
-10469:false
-10470:false
-10471:false
-10472:false
-10473:false
-10474:false
-10475:false
-10476:false
-10477:false
-10478:false
-10479:false
-10480:false
-10481:false
-10482:false
-10483:false
-10484:false
-10485:false
-10486:false
-10487:false
-10488:false
-10489:false
-10490:false
-10491:false
-10492:false
-10493:false
-10494:false
-10495:false
-10496:false
-10497:false
-10498:false
-10499:false
-10500:false
-10501:false
-10502:false
-10503:false
-10504:false
-10505:false
-10506:false
-10507:false
-10508:false
-10509:false
-10510:false
-10511:false
-10512:false
-10513:false
-10514:false
-10515:false
-10516:false
-10517:false
-10518:false
-10519:false
-10520:false
-10521:false
-10522:false
-10523:false
-10524:false
-10525:false
-10526:false
-10527:false
-10528:false
-10529:false
-10530:false
-10531:false
-10532:false
-10533:false
-10534:false
-10535:false
-10536:false
-10538:false
-10546:true
-10547:false
-10555:false
-10559:false
-10561:false
-10562:false
-10574:false
-10586:false
-10587:false
-10589:false
-10590:false
-10591:false
-10592:false
-10593:false
-10594:false
-10595:false
-10607:false
-10608:false
-10609:false
-10613:false
-10614:false
-10615:false
-10616:false
-10617:false
-10619:false
-10630:false
-10636:false
-10646:false
-10647:false
-10648:false
-10649:false
-10650:false
-10651:false
-10652:false
-10660:false
-10667:false
-10671:false
-10677:false
+30:false:"Jet Force Gemini"
+10003:true:"Super Mario 64"
+10024:true:"Mario Tennis"
+10073:true:"GoldenEye 007"
+10075:false:"Donkey Kong 64"
+10077:false:"Resident Evil 2"
+10078:false:"Mario Kart 64"
+10079:false:"Bakuretsu Muteki Bangaioh"
+10080:true:"Doom 64"
+10081:false:"Mystical Ninja Starring Goemon"
+10082:true:"Super Smash Bros."
+10083:true:"Mischief Makers"
+10085:false:"Cruis'n USA"
+10086:false:"Nuclear Strike 64"
+10087:false:"Rampage - World Tour"
+10088:false:"Top Gear Overdrive"
+10089:false:"Vigilante 8"
+10090:false:"Vigilante 8 - 2nd Offense"
+10091:false:"World Driver Championship"
+10092:false:"Worms Armageddon"
+10093:true:"Hexen"
+10094:false:"Roadsters Trophy"
+10100:false:"Penny Racers"
+10101:false:"Gex 64 - Enter the Gecko"
+10102:false:"International Superstar Soccer"
+10108:false:"Mario Party 3"
+10110:false:"Perfect Dark"
+10113:true:"The Legend of Zelda - Ocarina of Time"
+10114:false:"Mortal Kombat Trilogy"
+10115:false:"Mega Man 64"
+10116:false:"Mortal Kombat 4"
+10118:false:"Toy Story 2: Buzz Lightyear to the Rescue"
+10119:false:"Sin and Punishment"
+10120:false:"Bomberman 64"
+10121:false:"Duke Nukem 64"
+10124:false:"Tony Hawks Pro Skater"
+10125:false:"Tony Hawks Pro Skater 2"
+10126:false:"Tony Hawks Pro Skater 3"
+10127:false:"Duke Nukem: ZER0 H0UR"
+10128:false:"Quake II"
+10129:true:"Fighting Force 64"
+10131:false:"Wonder Project J2: Koruro no Mori no Jozet"
+10133:false:"F-Zero X"
+10135:false:"007: The World is not Enough"
+10136:false:"1080: TenEighty Snowboarding"
+10137:false:"A Bug&#39;s Life"
+10138:false:"Aero Fighters Assault"
+10139:false:"AeroGauge"
+10140:false:"Aidyn Chronicles: The First Mage"
+10141:false:"Air Boarder 64"
+10142:false:"All Star Tennis ''99"
+10143:false:"All-Star Baseball 99"
+10144:false:"All-Star Baseball 2000"
+10145:false:"All-Star Baseball 2001"
+10146:false:"Armorines: Project S.W.A.R.M."
+10147:false:"Army Men: Air Combat"
+10148:false:"Army Men: Sarge''s Heroes"
+10149:false:"Army Men: Sarge''s Heroes 2"
+10150:false:"Asteroids Hyper 64"
+10151:false:"Automobili Lamborghini"
+10152:false:"Donald Duck - Goin'' Quackers"
+10153:false:"Star Wars - Shadows of the Empire"
+10154:true:"Paper Mario"
+10155:false:"Pokemon Snap"
+10156:false:"BattleTanx - Global Assault"
+10157:false:"Harvest Moon 64"
+10158:true:"Destruction Derby 64"
+10159:false:"Castlevania - Legacy of Darkness"
+10160:false:"Star Wars - Rogue Squadron"
+10161:false:"Star Wars Episode 1 - Racer"
+10162:true:"Blast Corps"
+10163:false:"Star Wars Episode I - Battle for Naboo"
+10164:false:"Conker''s Bad Fur Day"
+10165:false:"Indiana Jones and the Infernal Machine"
+10166:false:"Cruis&#39;n World"
+10167:false:"Ken Griffey Jr.''s Slugfest"
+10168:false:"LEGO Racers"
+10169:false:"In-Fisherman - Bass Hunter 64"
+10170:false:"Beetle Adventure Racing!"
+10171:false:"Tetris 64"
+10172:false:"Tetrisphere"
+10173:false:"Yoshi&#039;s Story"
+10181:false:"Pokemon Stadium"
+10182:true:"Turok - Dinosaur Hunter"
+10186:false:"Ridge Racer"
+10198:false:"Goemon's Great Adventure"
+10199:true:"Snowboard Kids"
+10200:false:"FIFA - Road to World Cup 98"
+10202:true:"Diddy Kong Racing"
+10206:false:"Super Mario Star Road"
+10208:false:"Blast Corps Wrong Version, use (U) (1.1)"
+10210:true:"Banjo-Kazooie"
+10211:false:"Banjo-Tooie"
+10216:true:"Quest 64"
+10223:true:"Gex 3 - Deep Cover Gecko"
+10232:false:"Jeopardy!"
+10238:false:"Road Rash 64"
+10246:false:"Kirby 64 - The Crystal Shards"
+10247:false:"Snowboard Kids 2"
+10248:true:"Star Fox 64"
+10255:false:"Shadow Man"
+10256:false:"Mickey's Speedway USA"
+10258:false:"Pokemon Stadium 2"
+10259:false:"Mario Golf"
+10263:true:"Mario Party"
+10264:true:"Mario Party 2"
+10265:true:"Body Harvest"
+10266:false:"Star Fox 64 Wrong Rom, use (U) (1.0)"
+10268:false:"Gauntlet Legends"
+10269:false:"Rayman 2 : The Great Escape"
+10270:false:"Pokemon Puzzle League"
+10271:false:"Re-Volt"
+10272:true:"StarCraft 64"
+10273:false:"Virtual Chess 64"
+10275:false:"The Legend of Zelda - Majoras Mask [EU 1.0]"
+10276:false:"The Legend of Zelda - Majoras Mask [WRONG ROM, USE EU 1.0]"
+10277:true:"Pilotwings 64"
+10281:false:"Super Mario 64 - Last Impact"
+10282:false:"Mischief Makers Wrong Rom, use (U) (1.0)"
+10283:false:"Chameleon Twist 2"
+10284:false:"Super Robot Spirits"
+10285:false:"Bomberman Hero"
+10287:false:"GoldenEye 007 Wrong Rom, use (U)"
+10288:false:"Turok 2"
+10298:true:"Tarzan"
+10307:false:"Space Station Silicon Valley"
+10308:false:"Tonic Trouble"
+10309:false:"Glover"
+10310:false:"Superman"
+10313:false:"Diddy Kong Racing Wrong Version, use (USA) (1.0)"
+10315:false:"Virtual Pro Wrestling 2: Oudou Keishou"
+10317:false:"The Legend of Zelda - Ocarina of Time Wrong Rom, use (U) (V1.0)"
+10318:false:"Off Road Challenge"
+10325:false:"WWF War Zone"
+10326:false:"Bust-a-Move '99"
+10327:false:"Bust-a-Move 2 - Arcade Edition"
+10328:false:"South Park"
+10329:true:"Rampage 2: Universal Tour"
+10330:true:"Bomberman 64: The Second Attack"
+10331:false:"WWF No Mercy"
+10332:false:"WWF WrestleMania 2000"
+10333:false:"San Francisco Rush 2049 "
+10337:false:"Spider-Man"
+10347:false:"Quake 64"
+10348:false:"Earthworm Jim 3D"
+10360:false:"San Francisco Rush - Extreme Racing"
+10382:false:"Ogre Battle 64 - Person of Lordly Caliber"
+10383:false:"Hydro Thunder"
+10384:false:"Knockout Kings"
+10385:false:"Carmageddon 64"
+10386:false:"Command and Conquer"
+10387:false:"Triple Play 2000"
+10390:false:"Wave Race 64 v1.1"
+10392:false:"South Park Rally"
+10393:false:"Monster Truck Madness"
+10394:false:"International Track "
+10407:false:"Buck Bumble (USA)"
+10420:false:"master quest"
+10429:false:"Fighters Destiny (USA)"
+10430:false:"Rugrats: Scavenger Hunt"
+10435:false:"Doubutsu no Mori"
+10436:false:"SimCity 64"
+10448:false:"WCW vs. NWO Revenge"
+10451:false:"Batman Beyond: Return of the Joker"
+10452:false:"Bio F.R.E.A.K.S."
+10453:false:"Blues Brothers 2000"
+10454:false:"Bottom of the 9th"
+10455:false:"Brunswick Pro Circuit Bowling"
+10456:false:"Chopper Attack"
+10457:false:"Cruis'n Exotica"
+10458:false:"Dual Heroes"
+10459:false:"Elmo's Number Journey"
+10460:false:"Extreme-G XG2"
+10461:false:"F1 Pole Position 64"
+10462:false:"F-1 World Grand Prix"
+10463:false:"FIFA 99"
+10464:false:"FIFA Soccer 64"
+10465:false:"Flying Dragon"
+10466:false:"Forsaken 64"
+10467:false:"FOX Sports College Hoops 99"
+10468:false:"Hercules: The Legendary Journeys"
+10469:false:"Hey You, Pikachu!"
+10470:false:"Indy Racing 2000"
+10471:false:"International Superstar Soccer 64"
+10472:false:"Jeremy McGrath Supercross 2000"
+10473:false:"Killer Instinct Gold"
+10474:false:"Knife Edge: Nose Gunner"
+10475:false:"Kobe Bryant's NBA Courtside"
+10476:false:"Lode Runner 3-D"
+10477:false:"Madden Football 64"
+10478:false:"Madden NFL 99"
+10479:false:"Madden NFL 2000"
+10480:false:"Madden NFL 2001"
+10481:false:"Madden NFL 2002"
+10482:false:"Major League Baseball featuring Ken Griffey Jr."
+10483:false:"Micro Machines 64 Turbo"
+10484:false:"Mike Piazza's StrikeZone"
+10485:false:"Milo's Astro Lanes"
+10486:false:"Mission Impossible"
+10487:false:"MRC - Multi Racing Championship"
+10488:false:"Nagano Winter Olympics '98"
+10489:false:"Namco Museum 64"
+10490:false:"NASCAR 99"
+10491:false:"NASCAR 2000"
+10492:false:"NBA Courtside 2 featuring Kobe Bryant"
+10493:false:"NBA Hang Time"
+10494:false:"NBA in the Zone '98"
+10495:false:"NBA Jam 99"
+10496:false:"NBA Jam 2000"
+10497:false:"NBA Live 99"
+10498:false:"NBA Live 2000"
+10499:false:"NBA Showtime: NBA on NBC"
+10500:false:"NFL Blitz"
+10501:false:"NFL Blitz 2000"
+10502:false:"NFL Quarterback Club 98"
+10503:false:"NFL Quarterback Club 99"
+10504:false:"NFL Quarterback Club 2000"
+10505:false:"NFL Quarterback Club 2001"
+10506:false:"NHL 99"
+10507:false:"NHL Blades of Steel '99"
+10508:false:"NHL Breakaway '98"
+10509:false:"NHL Breakaway '99"
+10510:false:"Olympic Hockey Nagano '98"
+10511:false:"Rugrats in Paris - The Movie"
+10512:false:"Shadow Gate 64 - The Trials of the Four Towers"
+10513:false:"Supercross 2000"
+10514:false:"Tigger's Honey Hunt"
+10515:false:"Tom and Jerry in Fists of Furry"
+10516:false:"Tom Clancy's Rainbow Six"
+10517:false:"Top Gear Rally"
+10518:false:"Top Gear Rally 2"
+10519:false:"Turok - Rage Wars"
+10520:false:"Turok 2 - Seeds of Evil"
+10521:false:"Twisted Edge - Extreme Snowboarding"
+10522:false:"Virtual Pool 64"
+10523:false:"Waialae Country Club - True Golf Classics"
+10524:false:"War Gods"
+10525:false:"Wayne Gretzky's 3D Hockey"
+10526:false:"Wayne Gretzky's 3D Hockey '98"
+10527:false:"WCW Backstage Assault"
+10528:false:"WCW Mayhem"
+10529:false:"WCW Nitro"
+10530:false:"WCW vs. nWo - World Tour"
+10531:false:"Wetrix"
+10532:false:"Wipeout 64"
+10533:false:"World Cup 98"
+10534:false:"WWF Attitude"
+10535:false:"Xena - Warrior Princess: The Talisman of Fate"
+10536:false:"Castlevania"
+10538:false:"Paper Mario Wrong Rom, use (U)"
+10546:true:"Super Mario 74"
+10547:false:"Super Mario 74 Extreme Edition"
+10555:false:"Tsumi to Batsu (U)"
+10559:false:"The Legend of Banjo-Kazooie: The Jiggies of Time"
+10561:false:"Super Mario 64 StarRevenge"
+10562:false:"SM64 Star Revenge Redone v2.0"
+10574:false:"Custom Robo"
+10586:false:"Clay Fighters - Sculptor's Cut"
+10587:false:"Monopoly"
+10589:false:"Super Mario 64 Wrong Rom, use U"
+10590:false:"StarCraft 64 Wrong Rom, use U"
+10591:false:"Hexen Wrong Rom, use (U)"
+10592:false:"Quest 64 Wrong Rom, use (U)"
+10593:false:"Doom 64 Wrong Version, use (U) (1.0)"
+10594:false:"Banjo-Kazooie Wrong Rom, use (U) (1.0)"
+10595:false:"Banjo-Tooie Wrong Rom, use (U)"
+10607:false:"Chameleon Twist"
+10608:false:"Duck Dodgers Starring Daffy Duck"
+10609:false:"Extreme-G"
+10613:false:"International Track and Field 2000"
+10614:false:"Shadowgate 64 - The Trials of the Four Towers"
+10615:false:"Turok 3 - Shadow of Oblivion"
+10616:false:"Yoshi's Story"
+10617:false:"Wave Race 64"
+10619:false:"Rename Me"
+10630:false:"zelda"
+10636:false:"Rename Me 2"
+10646:false:"Scooby-Doo! Classic Creep Capers"
+10648:false:"Star Wars Rogue Squadron"
+10649:false:"Pokemon Stadium Wrong Rom, use (U) (V1.1)"
+10650:false:"Pokemon Stadium (Japan exclusive)"
+10651:false:"Pokemon Stadium 2 Wrong Rom, use (U)"
+10652:false:"Paper Mario PRO Mode"
+10660:false:"Paperboy 64"
+10667:false:"Castlevania 64"
+10671:false:"Operation WinBack"
+10677:false:"Neon Genesis Evangelion"
+10679:false:"The Legend of Zelda - Majoras Mask [U]"
+10683:false:"Hybrid Heaven"
+10685:false:"Elmo's Letter Adventure"
+10702:false:"SM64: Shining Stars 1"
+10781:false:"Super Mario 64 odissey"
+10785:false:"Star Revenge 7: Park of Time"
+10795:false:"Shining Stars 1"
+10811:false:"Star Wars Episode 1 Racer"
+10812:false:"Shining Stars 2"
+10819:false:"SM64 Relax your Life"
+10821:false:"Shining Stars 2: Mirror Madness"
+10824:false:"Aidyn Chronicles - The First Mage"
+10835:false:"Animal Crossing Dobutsu no Mori"
+10846:false:"SM64"
+10869:false:"Excitebike 64"
+10871:false:"Magical Tetris Challenge"
+10875:false:"Nightmare Creatures"
+10887:false:"Bomberman 64 - Arcade edition"
+10888:false:"Ruinous Shards"

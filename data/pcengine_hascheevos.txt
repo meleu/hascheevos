@@ -1,164 +1,165 @@
-2145:true
-2151:false
-2176:false
-2189:false
-2242:true
-2260:true
-2269:false
-2270:false
-2271:false
-2272:false
-2273:false
-2274:false
-2275:false
-2276:false
-2277:false
-2278:false
-2279:false
-2280:false
-2281:false
-2282:false
-2283:false
-2284:false
-2285:false
-2286:false
-2287:false
-2288:false
-2289:false
-2290:false
-2291:false
-2292:false
-2293:true
-2294:false
-2295:false
-2296:false
-2297:false
-2298:false
-2299:false
-2300:false
-2301:false
-2302:false
-2303:true
-2304:false
-2305:false
-2306:false
-2307:false
-2308:false
-2309:false
-2310:false
-2311:false
-2312:false
-2313:false
-2314:false
-2315:false
-2316:true
-2317:false
-2318:false
-2319:false
-2320:false
-2321:false
-2322:true
-2323:false
-2324:false
-2325:false
-2326:false
-2327:false
-2328:true
-2329:false
-2330:false
-2331:false
-2332:false
-2333:false
-2334:false
-2335:false
-2336:false
-2337:false
-2338:false
-2339:true
-2340:false
-2341:false
-2342:false
-2417:false
-2600:false
-2603:false
-4706:false
-4855:true
-5087:false
-5109:false
-5206:false
-5207:false
-5268:true
-5467:false
-5515:false
-5558:false
-5768:false
-5912:false
-5951:false
-6026:false
-6076:false
-6205:false
-6373:false
-6374:false
-6379:false
-6668:false
-6700:true
-6799:false
-7053:false
-7098:false
-7178:false
-7193:false
-7205:false
-7222:false
-7388:true
-7444:false
-7554:false
-7801:false
-7885:false
-7902:false
-7903:false
-7961:false
-7962:false
-8049:false
-8213:false
-8360:false
-8465:false
-8472:false
-8502:false
-8554:false
-8557:false
-8660:false
-8708:false
-8716:false
-8717:false
-8718:false
-8838:false
-8839:false
-8841:false
-8851:false
-8864:false
-8865:false
-8866:false
-8867:false
-8868:false
-8872:false
-8877:false
-8907:false
-8979:false
-8994:false
-9021:false
-9165:false
-9166:false
-9171:false
-9174:false
-9212:false
-9271:false
-9445:false
-9531:false
-9565:false
-9709:false
-9871:false
-9874:false
-9882:false
-9955:false
-10197:false
-10213:false
+2145:true:"R-Type"
+2151:false:"After Burner II"
+2176:false:"The NewZealand Story"
+2189:false:"Parodius Da!"
+2242:true:"Dragon Spirit"
+2260:true:"Columns"
+2269:false:"Aero Blasters"
+2270:false:"Air Zonk"
+2271:false:"Alien Crush"
+2272:false:"Ballistix"
+2273:false:"Battle Royale"
+2274:false:"Blazing Lazers"
+2275:false:"Bloody Wolf"
+2276:false:"Bomberman"
+2277:false:"Bomberman '93"
+2278:false:"Bonk III - Bonk's Big Adventure"
+2279:false:"Bonk's Adventure"
+2280:false:"Bonk's Revenge"
+2281:false:"Boxyboy"
+2282:false:"Bravoman"
+2283:false:"Cadash"
+2284:false:"Chew Man Fu"
+2285:false:"China Warrior"
+2286:false:"Cratermaze"
+2287:false:"Cyber Core"
+2288:false:"Darkwing Duck"
+2289:false:"Dead Moon"
+2290:false:"Deep Blue"
+2291:false:"Devil's Crush: Naxat Pinball"
+2292:false:"Double Dungeons - W"
+2293:true:"Dragon's Curse"
+2294:false:"Drop.Off"
+2295:false:"Dungeon Explorer"
+2296:false:"Fantasy Zone"
+2297:false:"Final Lap Twin"
+2298:false:"Galaga '90"
+2299:false:"Ghost Manor"
+2300:false:"Impossamole"
+2301:false:"Keith Courage in Alpha Zones"
+2302:false:"Klax"
+2303:true:"Legend of Hero Tonma"
+2304:false:"Legendary Axe II, The"
+2305:false:"The Legendary Axe"
+2306:false:"Magical Chase"
+2307:false:"Military Madness"
+2308:false:"Moto Roader"
+2309:false:"Neutopia"
+2310:false:"Neutopia II"
+2311:false:"New Adventure Island"
+2312:false:"Night Creatures"
+2313:false:"Ninja Spirit"
+2314:false:"Order of the Griffon"
+2315:false:"Ordyne"
+2316:true:"Pac-Land"
+2317:false:"Panza Kick Boxing"
+2318:false:"Parasol Stars: The Story Of Bubble Bobble III"
+2319:false:"Psychosis"
+2320:false:"Raiden"
+2321:false:"Samurai-Ghost"
+2322:true:"ShockMan"
+2323:false:"SideArms - Hyper Dyne"
+2324:false:"Silent Debuggers"
+2325:false:"Sinistron"
+2326:false:"Soldier Blade"
+2327:false:"Space Harrier"
+2328:true:"Super Star Soldier"
+2329:false:"Super Volleyball"
+2330:false:"Taito Chase H.Q."
+2331:false:"TaleSpin"
+2332:false:"Tiger Road"
+2333:false:"Time Cruise"
+2334:false:"Timeball"
+2335:false:"Tricky Kick"
+2336:false:"Turrican"
+2337:false:"Veigues - Tactical Gladiator"
+2338:false:"Victory Run"
+2339:true:"Vigilante"
+2340:false:"World Court Tennis"
+2341:false:"World Sports Competition"
+2342:false:"Yo, Bro"
+2417:false:"Street Fighter II Champion Edition (Japan)"
+2600:false:"Batman"
+2603:false:"Wonderboy in Monsterland"
+4706:false:"5_in_1_Fami_Collection_(J)."
+4855:true:"Akumajou Dracula X - Chi no Rondo (CD)"
+5087:false:"Somer Assault"
+5109:false:"Genji Tsushin Agedama"
+5206:false:"Bomberman '93 Special"
+5207:false:"PC Genjin - Pithecanthropus Computerurus"
+5268:true:"Splatterhouse"
+5467:false:"Shiawase Usagi 2"
+5515:false:"Ninja Ryuuken Den"
+5558:false:"LEGO MARVEL"
+5768:false:"Adventure Island (J)"
+5912:false:"PC Genjin 2 - Pithecanthropus Computerurus"
+5951:false:"PC Genjin 3 Special"
+6026:false:"Shinobi"
+6076:false:"Out Run"
+6205:false:"1941 - Counter Attack"
+6373:false:"jim power"
+6374:false:"KiKi KaiKai"
+6379:false:"salamander"
+6668:false:"Momotarou Katsugeki"
+6700:true:"Ys I: Ancient Ys Vanished (CD)"
+6799:false:"1943 Kai"
+7053:false:"Moraff's World"
+7098:false:"Advanced Variable Geo"
+7178:false:"21 Emon - Mezase Hotel Ou!!"
+7193:false:"Alice"
+7205:false:"Bomberman '94"
+7222:false:"Valkyrie no Densetsu"
+7388:true:"Strip Fighter II"
+7444:false:"J.J. "
+7554:false:"Final Soldier"
+7801:false:"Atomic Robo Kid"
+7885:false:"Kaizou Choujin Shubibinman "
+7902:false:"Coryoon: Child of Dragon"
+7903:false:"Paranoia"
+7961:false:"Final Fight"
+7962:false:"megaman x"
+8049:false:"Ys II: Ancient Ys Vanished - The Final Chapter (CD)"
+8213:false:"R-Type II"
+8360:false:"Wonder Momo"
+8465:false:"Genpei Touma Den"
+8472:false:"Battle Lode Runner"
+8502:false:"Image Fight"
+8554:false:"Toilet Kids"
+8557:false:"Star Parodier "
+8660:false:"Pac-Land (Japan)"
+8708:false:"Jackie Chan's Action Kung Fu"
+8716:false:"The Ninja Warriors"
+8717:false:"darius"
+8718:false:"Maison Ikkoku"
+8742:false:"_Rename Me 097"
+8838:false:"Ys III: Wanderers from Ys (CD)"
+8839:false:"Ys IV: The Dawn Of Ys (CD)"
+8841:false:"[BIOS] Super CD-ROM System (Japan) (v3.0)"
+8851:false:"La Boîte à bidules de l'oncle Ernest"
+8864:false:"R-Type Complete CD"
+8865:false:"Gradius II - Gofer no Yabou (CD)"
+8866:false:"Gate of Thunder (CD)"
+8867:false:"Lords of Thunder (CD)"
+8868:false:"Ginga Fukei Densetsu Sapphire (CD)"
+8872:false:"Somari"
+8877:false:"Ankoku Densetsu"
+8907:false:"galaga"
+8979:false:"Gradius (PC Engine)"
+8994:false:"Mario(1st game)"
+9021:false:"Prince of Persia"
+9165:false:"Fighting Street (CD)"
+9166:false:"Forgotten Worlds (CD)"
+9171:false:"City Hunter"
+9174:false:"Cotton: Fantastic Night Dreams (CD)"
+9212:false:"Daimakai Mura"
+9271:false:"Darius Alpha (J)"
+9445:false:"Rastan Saga II (Japan)"
+9531:false:"Loom (CD)"
+9565:false:"Lady Sword"
+9709:false:"hellfire"
+9871:false:"override"
+9874:false:"Gunhead"
+9882:false:"dfs"
+9955:false:"Hit The Ice"
+10197:false:"<New Title>"
+10213:false:"Test"

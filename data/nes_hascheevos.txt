@@ -1,1836 +1,1838 @@
-1446:true
-1447:true
-1448:true
-1449:true
-1451:true
-1452:true
-1453:true
-1454:true
-1455:false
-1456:true
-1457:false
-1458:true
-1459:true
-1460:true
-1461:true
-1462:true
-1463:true
-1464:true
-1465:true
-1466:true
-1467:true
-1468:false
-1469:true
-1470:true
-1471:true
-1472:true
-1473:true
-1474:true
-1475:true
-1476:true
-1477:true
-1478:true
-1479:true
-1480:true
-1481:false
-1482:true
-1483:true
-1484:true
-1485:true
-1486:false
-1487:true
-1488:false
-1489:true
-1490:true
-1491:true
-1492:true
-1493:false
-1494:false
-1495:false
-1496:true
-1497:true
-1498:true
-1499:false
-1500:true
-1501:true
-1502:true
-1503:true
-1504:true
-1505:true
-1506:false
-1509:true
-1510:false
-1511:true
-1512:true
-1513:false
-1514:false
-1515:true
-1516:true
-1517:true
-1518:false
-1519:false
-1520:true
-1521:false
-1522:false
-1523:false
-1524:true
-1525:true
-1526:true
-1527:true
-1528:true
-1529:true
-1530:false
-1531:true
-1532:false
-1533:true
-1534:false
-1535:false
-1536:true
-1537:false
-1539:false
-1540:true
-1541:false
-1542:false
-1543:false
-1544:false
-1545:true
-1546:false
-1547:true
-1548:false
-1549:false
-1550:false
-1551:false
-1552:true
-1553:true
-1554:false
-1555:true
-1556:true
-1557:false
-1558:false
-1559:false
-1560:false
-1561:false
-1562:false
-1563:false
-1564:true
-1565:false
-1566:false
-1567:false
-1568:false
-1569:false
-1570:false
-1571:true
-1572:false
-1573:false
-1574:true
-1575:true
-1576:false
-1577:false
-1578:false
-1579:false
-1580:true
-1581:false
-1582:true
-1583:true
-1584:false
-1585:false
-1586:true
-1588:false
-1589:false
-1590:false
-1591:false
-1592:false
-1593:false
-1594:true
-1596:false
-1597:true
-1598:true
-1599:false
-1600:true
-1601:false
-1602:false
-1603:true
-1604:false
-1605:false
-1606:false
-1607:false
-1608:false
-1609:false
-1610:false
-1611:false
-1612:false
-1613:false
-1614:false
-1615:false
-1616:true
-1617:false
-1618:false
-1619:false
-1620:false
-1621:false
-1622:false
-1623:true
-1624:false
-1625:false
-1626:true
-1627:true
-1628:true
-1629:false
-1630:false
-1631:false
-1632:true
-1633:false
-1634:false
-1635:false
-1636:true
-1637:false
-1638:false
-1639:false
-1640:false
-1641:false
-1642:false
-1643:false
-1644:false
-1645:false
-1646:false
-1647:false
-1648:true
-1649:false
-1650:false
-1651:false
-1652:true
-1653:false
-1654:true
-1655:false
-1656:false
-1657:true
-1658:false
-1659:false
-1660:false
-1661:true
-1662:true
-1663:true
-1664:true
-1665:false
-1666:true
-1667:true
-1668:true
-1669:true
-1670:true
-1671:false
-1672:false
-1673:false
-1674:true
-1675:false
-1676:false
-1677:false
-1678:false
-1679:false
-1680:false
-1681:false
-1682:true
-1683:true
-1684:false
-1685:true
-1686:true
-1687:false
-1688:false
-1689:false
-1690:false
-1691:false
-1692:true
-1693:true
-1694:false
-1695:false
-1696:true
-1697:false
-1698:false
-1699:false
-1700:true
-1701:true
-1702:false
-1704:false
-1705:true
-1706:false
-1707:false
-1708:false
-1709:false
-1710:true
-1711:true
-1712:false
-1713:false
-1714:true
-1715:false
-1716:false
-1717:true
-1718:false
-1719:true
-1720:false
-1721:false
-1722:true
-1723:false
-1724:false
-1725:true
-1726:true
-1727:true
-1728:true
-1729:true
-1730:false
-1731:false
-1732:true
-1733:true
-1734:false
-1735:false
-1736:true
-1737:true
-1738:true
-1739:false
-1740:false
-1741:false
-1742:false
-1743:true
-1744:true
-1745:false
-1746:false
-1747:false
-1748:false
-1749:false
-1750:false
-1751:false
-1752:true
-1753:false
-1754:false
-1755:false
-1756:true
-1757:true
-1758:true
-1759:false
-1760:true
-1761:false
-1762:false
-1763:false
-1764:true
-1765:false
-1766:false
-1767:false
-1768:true
-1769:true
-1770:true
-1771:true
-1772:true
-1773:false
-1774:true
-1775:false
-1776:true
-1777:true
-1778:false
-1779:true
-1781:false
-1782:false
-1783:true
-1784:true
-1785:false
-1786:false
-1787:true
-1788:false
-1790:false
-1791:false
-1792:false
-1793:false
-1794:true
-1795:false
-1796:false
-1797:false
-1798:true
-1799:false
-1800:true
-1801:false
-1802:true
-1803:true
-1804:false
-1805:true
-1806:false
-1807:false
-1808:false
-1809:false
-1810:true
-1811:false
-1812:true
-1813:true
-1814:false
-1815:true
-1816:false
-1817:false
-1818:true
-1819:true
-1820:true
-1821:false
-1822:false
-1823:true
-1824:true
-1825:false
-1826:false
-1827:false
-1828:false
-1829:true
-1830:true
-1831:false
-1832:true
-1833:false
-1834:false
-1835:false
-1836:false
-1837:false
-1838:true
-1839:false
-1840:false
-1841:false
-1842:false
-1843:true
-1844:false
-1845:false
-1846:true
-1847:true
-1848:false
-1849:false
-1850:false
-1851:false
-1852:false
-1853:false
-1854:false
-1855:false
-1856:false
-1857:true
-1858:true
-1859:true
-1860:false
-1861:true
-1862:false
-1863:false
-1864:false
-1865:false
-1866:false
-1867:false
-1868:false
-1870:false
-1871:true
-1872:false
-1873:false
-1874:false
-1875:false
-1876:false
-1877:true
-1878:false
-1879:false
-1880:true
-1881:true
-1882:false
-1883:true
-1884:false
-1885:true
-1886:false
-1887:false
-1888:false
-1889:true
-1890:true
-1891:false
-1892:false
-1893:false
-1894:false
-1895:false
-1896:true
-1897:false
-1898:false
-1899:false
-1900:true
-1901:false
-1902:false
-1903:true
-1904:false
-1905:false
-1906:false
-1907:false
-1908:true
-1909:false
-1910:false
-1911:false
-1912:false
-1913:true
-1914:true
-1915:false
-1916:false
-1917:false
-1918:false
-1919:false
-1920:true
-1921:true
-1922:false
-1923:false
-1924:false
-1925:true
-1926:false
-1927:false
-1928:false
-1929:true
-1930:false
-1931:false
-1932:false
-1933:true
-1934:false
-1935:false
-1936:false
-1937:false
-1938:false
-1939:false
-1940:true
-1941:false
-1942:false
-1943:false
-1944:false
-1945:false
-1946:true
-1947:true
-1949:false
-1950:false
-1951:false
-1952:false
-1953:true
-1954:false
-1955:false
-1956:false
-1957:false
-1958:true
-1959:true
-1960:false
-1961:true
-1962:true
-1963:true
-1964:false
-1965:false
-1966:false
-1967:false
-1968:true
-1969:false
-1970:false
-1971:true
-1972:false
-1973:true
-1974:false
-1975:false
-1976:false
-1977:true
-1978:true
-1979:false
-1980:false
-1981:false
-1982:false
-1983:false
-1984:true
-1985:true
-1986:false
-1987:false
-1988:false
-1989:true
-1990:false
-1991:true
-1992:false
-1993:false
-1994:true
-1995:true
-1996:false
-1997:false
-1998:false
-1999:false
-2000:false
-2001:false
-2002:true
-2003:false
-2004:true
-2005:false
-2006:true
-2007:false
-2008:true
-2009:true
-2010:false
-2011:false
-2012:false
-2013:false
-2014:false
-2015:false
-2016:true
-2017:true
-2018:true
-2019:false
-2020:false
-2021:false
-2022:true
-2023:false
-2024:false
-2025:true
-2026:false
-2027:false
-2028:true
-2029:false
-2030:false
-2031:true
-2032:true
-2033:false
-2034:true
-2035:true
-2036:false
-2037:false
-2038:false
-2039:false
-2040:false
-2041:true
-2042:false
-2043:false
-2044:true
-2045:true
-2046:false
-2047:false
-2048:false
-2049:false
-2050:false
-2051:false
-2052:false
-2053:false
-2054:false
-2055:false
-2056:false
-2057:false
-2058:true
-2059:false
-2060:true
-2061:false
-2062:true
-2063:false
-2064:false
-2065:false
-2066:false
-2067:false
-2068:false
-2069:false
-2070:false
-2071:false
-2072:false
-2073:false
-2074:false
-2075:true
-2076:false
-2077:true
-2078:true
-2079:false
-2080:false
-2081:false
-2082:false
-2083:false
-2084:true
-2085:false
-2086:false
-2087:true
-2088:false
-2089:false
-2090:true
-2091:false
-2092:false
-2093:true
-2094:false
-2095:false
-2096:false
-2097:false
-2098:true
-2099:true
-2100:false
-2101:true
-2102:false
-2103:true
-2104:true
-2105:false
-2108:false
-2109:false
-2110:false
-2111:false
-2113:false
-2114:true
-2115:true
-2129:false
-2137:true
-2139:true
-2140:true
-2142:true
-2175:true
-2178:false
-2200:false
-2208:true
-2221:true
-2222:false
-2225:true
-2230:true
-2232:false
-2238:true
-2248:true
-2359:false
-2360:true
-2361:true
-2362:false
-2406:false
-2420:true
-2432:true
-2444:true
-2604:false
-2615:false
-2616:false
-2752:false
-2863:false
-2963:false
-3578:true
-3614:true
-3677:false
-3682:false
-3709:false
-3710:false
-3711:false
-3712:false
-3715:false
-3814:true
-3820:false
-4030:true
-4031:true
-4034:false
-4035:false
-4036:true
-4041:false
-4051:false
-4094:true
-4101:false
-4103:false
-4105:true
-4122:false
-4152:false
-4185:false
-4220:false
-4333:false
-4541:false
-4542:true
-4543:true
-4544:false
-4545:false
-4546:false
-4547:false
-4548:true
-4549:false
-4550:false
-4552:false
-4553:false
-4557:false
-4558:false
-4559:true
-4560:false
-4561:false
-4562:false
-4563:false
-4564:false
-4568:true
-4569:false
-4570:false
-4579:false
-4580:false
-4581:false
-4582:false
-4583:false
-4584:false
-4585:false
-4586:false
-4598:false
-4599:true
-4600:false
-4601:false
-4602:false
-4605:true
-4607:false
-4608:false
-4609:false
-4610:false
-4611:false
-4612:false
-4613:false
-4614:false
-4615:false
-4616:false
-4617:false
-4618:false
-4620:false
-4621:false
-4622:false
-4623:false
-4625:false
-4627:false
-4628:false
-4629:true
-4630:false
-4641:true
-4649:false
-4650:true
-4651:false
-4653:false
-4654:false
-4655:false
-4658:true
-4663:false
-4666:false
-4680:true
-4681:true
-4684:false
-4687:true
-4694:true
-4704:false
-4705:false
-4718:false
-4720:true
-4754:false
-4755:false
-4756:true
-4757:false
-4758:false
-4759:false
-4760:false
-4761:false
-4762:false
-4763:false
-4764:false
-4765:false
-4766:false
-4767:false
-4769:false
-4770:false
-4771:false
-4772:false
-4773:false
-4774:false
-4777:false
-4778:false
-4779:true
-4780:false
-4781:false
-4782:false
-4783:false
-4784:false
-4786:false
-4787:false
-4788:true
-4789:false
-4790:false
-4791:false
-4792:false
-4793:true
-4794:false
-4796:false
-4797:false
-4798:false
-4799:false
-4800:false
-4803:false
-4804:true
-4805:false
-4806:false
-4807:false
-4808:true
-4809:false
-4810:false
-4811:false
-4812:true
-4813:false
-4814:false
-4815:false
-4816:true
-4818:true
-4819:false
-4820:false
-4821:false
-4822:false
-4823:false
-4824:true
-4825:false
-4826:false
-4827:false
-4828:false
-4829:true
-4830:false
-4831:false
-4832:false
-4833:false
-4834:false
-4835:false
-4837:false
-4838:true
-4839:true
-4840:true
-4841:true
-4842:false
-4843:false
-4844:false
-4846:false
-4847:false
-4848:false
-4849:false
-4850:false
-4851:false
-4852:false
-4856:false
-4857:false
-4858:false
-4859:false
-4860:false
-4861:false
-4865:false
-4866:true
-4867:false
-4869:false
-4870:false
-4875:false
-4876:true
-4877:false
-4878:false
-4883:false
-4884:false
-4885:false
-4886:false
-4888:false
-4889:false
-4891:false
-4892:false
-4896:false
-4897:false
-4899:false
-4900:false
-4901:false
-4902:false
-4903:false
-4904:false
-4905:false
-4911:false
-4914:false
-4953:true
-4958:false
-4961:false
-4966:false
-4971:false
-4976:false
-4977:false
-4978:false
-4979:false
-4980:false
-4986:true
-4988:false
-4989:false
-4990:false
-4992:false
-4993:true
-4994:false
-4997:false
-4998:false
-4999:false
-5001:true
-5002:false
-5003:true
-5005:true
-5014:false
-5046:false
-5047:false
-5051:true
-5052:false
-5053:false
-5054:false
-5058:false
-5059:false
-5060:true
-5063:false
-5064:false
-5073:false
-5074:false
-5076:false
-5082:false
-5083:true
-5088:false
-5090:true
-5091:true
-5092:false
-5095:false
-5096:false
-5097:false
-5099:false
-5101:false
-5102:true
-5104:false
-5107:true
-5115:false
-5120:false
-5124:false
-5125:false
-5126:false
-5134:false
-5135:false
-5136:false
-5140:false
-5141:false
-5142:false
-5144:true
-5146:false
-5147:false
-5149:false
-5150:false
-5152:false
-5153:false
-5154:false
-5156:false
-5157:false
-5158:false
-5159:false
-5160:false
-5161:false
-5162:false
-5163:false
-5164:false
-5166:false
-5167:false
-5168:true
-5169:false
-5170:false
-5171:false
-5172:true
-5173:false
-5175:true
-5183:true
-5186:true
-5189:false
-5191:true
-5193:false
-5196:false
-5197:true
-5198:false
-5199:false
-5200:false
-5201:false
-5202:true
-5218:true
-5230:false
-5231:false
-5232:false
-5236:false
-5239:false
-5241:true
-5242:true
-5249:false
-5256:false
-5261:false
-5264:false
-5266:false
-5270:false
-5272:false
-5273:false
-5274:false
-5275:false
-5276:false
-5277:false
-5278:false
-5279:false
-5288:true
-5296:false
-5297:false
-5298:false
-5299:true
-5300:true
-5303:false
-5305:false
-5316:false
-5317:false
-5318:false
-5319:true
-5327:false
-5328:false
-5333:true
-5346:true
-5347:true
-5350:true
-5352:true
-5353:false
-5358:false
-5359:false
-5363:false
-5375:true
-5382:true
-5391:false
-5395:false
-5396:false
-5398:false
-5399:false
-5402:false
-5403:false
-5404:false
-5405:false
-5406:false
-5408:false
-5409:false
-5410:false
-5426:false
-5429:false
-5431:false
-5432:false
-5433:false
-5434:false
-5437:false
-5438:true
-5445:false
-5448:false
-5450:false
-5456:false
-5457:false
-5458:false
-5460:false
-5461:false
-5468:false
-5470:false
-5471:false
-5473:true
-5481:false
-5485:false
-5503:false
-5516:false
-5526:true
-5527:true
-5533:false
-5534:false
-5536:false
-5538:false
-5539:true
-5541:false
-5542:false
-5543:false
-5547:false
-5550:true
-5553:true
-5555:false
-5556:false
-5565:false
-5567:false
-5575:false
-5576:false
-5580:false
-5582:false
-5583:false
-5584:false
-5585:false
-5586:false
-5587:false
-5588:false
-5589:false
-5599:false
-5600:false
-5608:true
-5609:false
-5610:false
-5611:false
-5615:false
-5621:false
-5633:false
-5634:false
-5649:false
-5650:false
-5660:false
-5661:false
-5665:false
-5666:false
-5667:true
-5668:false
-5671:false
-5672:false
-5674:false
-5675:false
-5678:false
-5683:false
-5684:false
-5688:false
-5757:false
-5759:false
-5760:false
-5769:false
-5774:false
-5777:true
-5781:false
-5782:false
-5783:false
-5784:false
-5785:false
-5787:false
-5788:false
-5789:false
-5790:true
-5791:false
-5795:false
-5797:false
-5799:false
-5801:false
-5804:false
-5806:false
-5807:false
-5808:true
-5809:false
-5811:false
-5813:false
-5814:false
-5815:false
-5817:false
-5818:false
-5819:false
-5820:false
-5821:false
-5822:false
-5823:false
-5824:false
-5825:false
-5826:false
-5827:false
-5828:false
-5829:false
-5830:false
-5831:false
-5832:false
-5833:false
-5834:false
-5835:false
-5836:false
-5837:false
-5839:false
-5841:false
-5842:false
-5844:false
-5845:false
-5848:false
-5849:false
-5850:false
-5851:false
-5857:false
-5863:false
-5888:false
-5893:false
-5896:false
-5897:false
-5925:false
-5935:false
-5944:true
-5948:true
-5949:false
-5950:false
-5968:false
-5992:false
-5998:false
-6016:false
-6017:false
-6024:false
-6027:false
-6034:false
-6035:false
-6036:false
-6037:false
-6038:false
-6039:false
-6040:false
-6044:false
-6045:false
-6057:false
-6064:false
-6068:false
-6070:true
-6071:false
-6072:false
-6096:true
-6098:false
-6099:false
-6108:false
-6110:false
-6111:false
-6113:false
-6119:false
-6139:false
-6147:true
-6157:false
-6166:false
-6174:false
-6180:false
-6186:false
-6191:false
-6207:false
-6208:false
-6214:false
-6215:true
-6216:false
-6230:false
-6254:false
-6255:false
-6258:false
-6259:false
-6260:false
-6262:false
-6264:false
-6280:false
-6281:false
-6282:false
-6283:false
-6284:false
-6293:false
-6294:false
-6295:false
-6296:false
-6305:false
-6307:false
-6308:false
-6309:false
-6310:false
-6311:false
-6324:false
-6327:false
-6329:false
-6330:false
-6334:false
-6344:false
-6351:false
-6352:false
-6355:false
-6370:false
-6380:false
-6381:false
-6391:false
-6392:false
-6394:false
-6398:false
-6416:false
-6422:false
-6423:false
-6424:false
-6425:false
-6427:false
-6428:true
-6429:false
-6599:false
-6608:false
-6624:false
-6625:false
-6626:false
-6641:false
-6645:false
-6654:false
-6656:false
-6657:false
-6658:false
-6659:false
-6672:false
-6673:false
-6680:false
-6681:false
-6682:false
-6692:false
-6709:false
-6710:false
-6711:false
-6729:false
-6736:false
-6737:false
-6740:false
-6741:false
-6742:false
-6746:false
-6747:false
-6748:false
-6749:false
-6760:false
-6761:false
-6762:false
-6764:false
-6778:false
-6779:false
-6780:false
-6781:false
-6784:false
-6794:false
-6795:false
-6796:false
-6797:false
-6808:false
-6810:false
-6821:false
-6822:false
-6823:false
-6824:false
-6827:false
-6831:false
-6832:true
-6833:false
-6836:true
-6837:false
-6855:false
-6857:false
-6858:false
-6860:false
-6861:false
-6869:true
-6883:false
-6891:false
-6894:false
-6895:false
-6896:false
-6897:false
-6898:false
-6899:false
-6900:false
-6901:false
-6907:false
-6908:false
-6909:false
-6913:false
-6919:false
-6935:false
-6937:false
-6954:false
-6961:false
-6962:false
-6963:false
-6964:false
-6974:true
-6979:false
-6989:false
-6991:false
-6995:false
-7004:true
-7011:false
-7012:false
-7013:false
-7026:false
-7033:false
-7035:false
-7037:false
-7045:false
-7048:false
-7052:false
-7055:false
-7056:false
-7057:false
-7067:false
-7070:false
-7076:false
-7117:false
-7118:false
-7127:false
-7131:true
-7135:false
-7153:false
-7156:false
-7161:false
-7163:false
-7165:false
-7169:false
-7170:false
-7187:false
-7188:false
-7200:false
-7201:false
-7209:false
-7227:false
-7228:false
-7234:false
-7237:false
-7238:false
-7241:false
-7242:true
-7247:false
-7248:false
-7264:false
-7276:false
-7277:false
-7279:false
-7287:false
-7301:false
-7302:false
-7308:false
-7309:false
-7339:false
-7345:false
-7346:false
-7348:false
-7352:false
-7353:false
-7354:false
-7355:false
-7356:false
-7360:false
-7389:false
-7426:false
-7445:false
-7463:false
-7467:false
-7468:false
-7476:false
-7494:false
-7512:false
-7513:false
-7514:false
-7516:false
-7519:false
-7521:false
-7522:false
-7527:false
-7528:false
-7540:false
-7541:false
-7547:false
-7549:false
-7550:false
-7551:false
-7565:false
-7569:false
-7586:false
-7587:false
-7588:false
-7597:false
-7602:false
-7607:false
-7611:false
-7612:false
-7632:false
-7635:false
-7652:false
-7655:false
-7656:false
-7657:false
-7661:false
-7662:false
-7663:false
-7664:false
-7665:false
-7667:false
-7672:false
-7699:false
-7700:false
-7704:false
-7710:false
-7711:false
-7712:false
-7716:false
-7726:false
-7737:false
-7763:false
-7769:false
-7777:false
-7778:false
-7793:false
-7803:false
-7810:false
-7829:false
-7869:false
-7876:false
-7889:false
-7890:false
-7891:false
-7892:false
-7904:false
-7905:false
-7906:false
-7907:false
-7923:false
-7924:false
-7932:false
-7946:false
-7947:false
-7981:false
-7985:false
-7992:false
-7994:false
-8011:false
-8029:false
-8031:false
-8035:false
-8036:false
-8057:false
-8058:false
-8072:false
-8073:false
-8074:false
-8077:false
-8087:false
-8089:false
-8090:false
-8092:true
-8094:false
-8095:false
-8096:false
-8097:false
-8105:false
-8112:false
-8113:false
-8115:false
-8116:false
-8120:false
-8130:false
-8132:false
-8152:false
-8154:false
-8156:false
-8157:false
-8158:false
-8159:false
-8160:false
-8161:false
-8164:false
-8168:false
-8170:false
-8178:false
-8179:false
-8180:false
-8181:false
-8182:true
-8189:false
-8190:false
-8192:false
-8215:false
-8218:false
-8233:false
-8262:false
-8302:false
-8344:false
-8345:false
-8353:false
-8355:false
-8356:false
-8372:false
-8373:false
-8392:false
-8407:false
-8411:false
-8412:false
-8414:true
-8420:true
-8425:false
-8435:false
-8443:false
-8450:false
-8451:false
-8452:false
-8484:false
-8487:false
-8493:true
-8494:false
-8506:false
-8527:false
-8528:false
-8529:false
-8540:false
-8541:false
-8543:false
-8548:false
-8551:false
-8552:false
-8553:false
-8562:false
-8563:false
-8564:false
-8565:false
-8566:false
-8567:false
-8568:false
-8572:false
-8573:false
-8577:false
-8591:false
-8600:false
-8601:false
-8617:false
-8620:false
-8631:false
-8634:false
-8635:false
-8647:false
-8653:false
-8654:false
-8655:false
-8656:false
-8683:false
-8684:false
-8723:true
-8735:false
-8750:false
-8751:true
-8752:false
-8754:false
-8759:false
-8760:false
-8764:false
-8765:false
-8801:false
-8810:true
-8815:false
-8918:false
-8930:false
-8933:true
-8940:false
-8964:true
-8991:false
-9015:false
-9077:false
-9105:false
-9112:true
-9113:false
-9119:false
-9127:false
-9136:false
-9138:false
-9167:false
-9168:false
-9225:false
-9236:false
-9254:false
-9255:false
-9264:false
-9265:false
-9268:false
-9270:false
-9340:false
-9373:false
-9379:false
-9380:true
-9425:false
-9433:false
-9434:false
-9456:false
-9468:false
-9476:false
-9477:false
-9494:false
-9497:false
-9499:false
-9521:false
-9523:false
-9547:false
-9548:false
-9549:false
-9551:false
-9557:false
-9575:false
-9583:false
-9590:false
-9597:true
-9604:false
-9613:false
-9628:false
-9632:false
-9638:false
-9639:false
-9642:false
-9645:false
-9648:false
-9655:false
-9657:false
-9672:false
-9677:false
-9678:false
-9685:false
-9686:false
-9696:false
-9706:false
-9707:false
-9721:false
-9728:false
-9730:false
-9731:false
-9732:false
-9761:false
-9770:false
-9773:false
-9774:false
-9775:false
-9776:false
-9777:false
-9778:false
-9806:false
-9840:false
-9841:false
-9861:false
-9869:false
-9883:false
-9898:false
-9899:false
-9900:false
-9903:false
-9904:false
-9916:false
-9922:false
-9924:false
-9940:false
-9944:false
-9961:false
-9971:false
-9972:false
-10107:false
-10183:true
-10195:false
-10220:false
-10234:false
-10292:false
-10295:false
-10296:false
-10311:false
-10336:false
-10341:false
-10342:false
-10343:false
-10349:false
-10350:false
-10351:false
-10352:false
-10353:false
-10354:false
-10355:false
-10361:false
-10362:false
-10363:false
-10365:false
-10366:false
-10367:false
-10368:false
-10369:false
-10370:false
-10371:false
-10372:false
-10373:false
-10374:false
-10375:false
-10376:false
-10377:false
-10378:false
-10379:false
-10380:false
-10381:false
-10388:false
-10389:false
-10395:false
-10396:false
-10397:false
-10398:false
-10399:false
-10400:false
-10401:false
-10402:false
-10403:false
-10404:false
-10405:false
-10408:false
-10410:false
-10411:false
-10413:false
-10414:false
-10415:false
-10417:false
-10418:false
-10419:false
-10641:false
-10645:false
-10654:false
+1446:true:"Super Mario Bros"
+1447:true:"Contra"
+1448:true:"Mega Man"
+1449:true:"Final Fantasy"
+1451:true:"Mega Man 2"
+1452:true:"River City Ransom"
+1453:true:"Zelda II: The Adventure Of Link"
+1454:true:"The Legend of Zelda"
+1455:false:"Al Unser Jr. Turbo Racing"
+1456:true:"Alpha Mission"
+1457:false:"Base Wars"
+1458:true:"Batman: The Video Game"
+1459:true:"Blaster Master"
+1460:true:"Bubble Bobble"
+1461:true:"Castlevania II - Simon''s Quest"
+1462:true:"Castlevania"
+1463:true:"Chip 'N Dale: Rescue Rangers"
+1464:true:"Darkwing Duck"
+1465:true:"Donkey Kong Jr."
+1466:true:"Donkey Kong"
+1467:true:"Double Dragon"
+1468:false:"Double Dribble"
+1469:true:"Dr. Mario"
+1470:true:"Dragon Warrior II"
+1471:true:"Dragon Warrior"
+1472:true:"Duck Tales"
+1473:true:"Excitebike"
+1474:true:"Friday the 13th"
+1475:true:"Gyromite"
+1476:true:"Gyruss"
+1477:true:"Jackal"
+1478:true:"Kid Icarus"
+1479:true:"Kirby's Adventure"
+1480:true:"Kung Fu"
+1481:false:"Lode Runner"
+1482:true:"Maniac Mansion"
+1483:true:"Mega Man 3"
+1484:true:"Mega Man 5"
+1485:true:"Mega Man 6"
+1486:false:"Metal Gear"
+1487:true:"Metroid"
+1488:false:"Mickey Mousecapade"
+1489:true:"Mike Tyson's Punch-Out!!"
+1490:true:"Monster Party"
+1491:true:"Pac-Man (Namco)"
+1492:true:"Pinball Quest"
+1493:true:"Pro Wrestling"
+1494:false:"Q*bert"
+1495:false:"Rambo"
+1496:true:"R.C. Pro-Am"
+1497:true:"Robocop"
+1498:true:"Rygar"
+1499:false:"Shadowgate"
+1500:true:"Stinger"
+1501:true:"Street Fighter 2010: The Final Fight "
+1502:true:"Super Pitfall"
+1503:true:"Tecmo Bowl"
+1504:true:"Tiger-Heli"
+1505:true:"Trojan"
+1506:false:"Wizards & Warriors"
+1509:true:"Battletoads"
+1510:false:"2-in-1 Super Spike V'Ball - World Cup Soccer"
+1511:true:"The 3-D Battles of World Runner"
+1512:true:"8 Eyes"
+1513:false:"10 Yard Fight"
+1514:false:"720°"
+1515:true:"1942"
+1516:true:"1943: The Battle of Midway"
+1517:true:"A Nightmare on Elm Street"
+1518:false:"Abadox - The Deadly Inner War"
+1519:false:"The Addams Family - Pugsley's Scavenger Hunt"
+1520:true:"The Addams Family"
+1521:false:"Advanced Dungeons and Dragons - Dragonstrike"
+1522:false:"Advanced Dungeons and Dragons - Hillsfar"
+1523:false:"Advanced Dungeons and Dragons - Pool of Radiance"
+1524:true:"Adventure Island II"
+1525:true:"Adventure Island III"
+1526:true:"Adventure Island"
+1527:true:"Adventures In The Magic Kingdom"
+1528:true:"The Adventures of Bayou Billy"
+1529:true:"The Adventures of Dino Riki"
+1530:false:"The Adventures of Gilligan's Island"
+1531:true:"Adventures of Lolo II"
+1532:false:"Adventures of Lolo III"
+1533:true:"Adventures of Lolo"
+1534:false:"The Adventures of Rad Gravity"
+1535:false:"Air Fortress"
+1536:true:"Airwolf"
+1537:false:"Alfred Chicken"
+1539:false:"All-Pro Basketball"
+1540:true:"Amagon"
+1541:false:"American Gladiators"
+1542:false:"Anticipation"
+1543:false:"Arch Rivals"
+1544:true:"Archon"
+1545:true:"Arkanoid"
+1546:false:"Arkista's Ring"
+1547:true:"Astyanax"
+1548:false:"Athena"
+1549:false:"Athletic World"
+1550:false:"Attack of the Killer Tomatoes"
+1551:false:"Back to the Future II and III"
+1552:true:"Back to the Future"
+1553:true:"Bad Dudes"
+1554:false:"Bad News Baseball"
+1555:true:"Bad Street Brawler"
+1556:true:"Balloon Fight"
+1557:false:"Bandai Golf - Challenge Pebble Beach"
+1558:false:"Barbie"
+1559:false:"Bard's Tale"
+1560:false:"Barker Bill's Trick Shooting"
+1561:false:"Baseball Simulator 1.000"
+1562:false:"Baseball Stars II"
+1563:false:"Baseball Stars"
+1564:true:"Baseball"
+1565:false:"Bases Loaded II"
+1566:false:"Bases Loaded III"
+1567:false:"Bases Loaded IV"
+1568:false:"Bases Loaded"
+1569:false:"Batman Returns"
+1570:false:"Battle Chess"
+1571:true:"The Battle Of Olympus"
+1572:false:"Battle Tank"
+1573:false:"Battleship"
+1574:true:"Battletoads and Double Dragon - The Ultimate Team"
+1575:true:"Beetlejuice"
+1576:false:"Best of the Best - Championship Karate"
+1577:false:"Bigfoot"
+1578:false:"Bill and Ted's Excellent Video Game Adventure"
+1579:false:"Bill Elliott's NASCAR Challenge"
+1580:true:"Bionic Commando"
+1581:false:"Black Bass"
+1582:true:"Blades of Steel"
+1583:true:"The Blue Marlin"
+1584:false:"The Blues Brothers"
+1585:false:"Bo Jackson Baseball"
+1586:true:"Bomberman II"
+1588:false:"Bonk's Adventure"
+1589:false:"Boulder Dash"
+1590:false:"David Crane's A Boy and His Blob: Trouble on Blobolonia"
+1591:false:"Bram Stoker's Dracula"
+1592:false:"Break Time - The National Pool Tour"
+1593:false:"BreakThru"
+1594:true:"Bubble Bobble - Part 2"
+1596:false:"The Bugs Bunny Birthday Blowout"
+1597:true:"The Bugs Bunny Crazy Castle"
+1598:true:"Bump 'n' Jump"
+1599:false:"Burai Fighter"
+1600:true:"Burger Time"
+1601:false:"Cabal"
+1602:false:"Caesar's Palace"
+1603:true:"California Games"
+1604:false:"Captain America and the Avengers"
+1605:false:"Captain Planet"
+1606:false:"Captain Skyhawk"
+1607:false:"Casino Kid 2"
+1608:false:"Casino Kid"
+1609:false:"Castelian"
+1610:false:"Castle of Dragon"
+1611:false:"Castlequest"
+1612:false:"Caveman Games"
+1613:false:"Championship Bowling (Famicom version)"
+1614:false:"Championship Pool"
+1615:false:"The Chessmaster"
+1616:true:"Chip 'N Dale: Rescue Rangers 2"
+1617:false:"Chubby Cherub"
+1618:false:"Circus Caper"
+1619:false:"City Connection"
+1620:false:"Clash at Demonhead"
+1621:false:"Classic Concentration"
+1622:false:"Cliffhanger"
+1623:true:"Clu Clu Land"
+1624:false:"Cobra Command"
+1625:false:"Cobra Triangle"
+1626:true:"Code Name - Viper"
+1627:true:"Color a Dinosaur"
+1628:true:"Commando"
+1629:false:"Conan"
+1630:false:"Conflict"
+1631:false:"Conquest of the Crystal Palace"
+1632:true:"Contra Force"
+1633:false:"Cool World"
+1634:false:"Cowboy Kid"
+1635:false:"Crash 'N' The Boys: Street Challenge"
+1636:true:"Crystalis"
+1637:false:"Cybernoid - The Fighting Machine"
+1638:false:"Dance Aerobics"
+1639:false:"Danny Sullivan's Indy Heat"
+1640:false:"Darkman"
+1641:false:"Dash Galaxy in the Alien Asylum"
+1642:false:"Day Dreamin' Davey"
+1643:false:"Days of Thunder"
+1644:false:"Defender II"
+1645:false:"Defender of the Crown"
+1646:false:"Defenders of Dynatron City"
+1647:false:"Deja Vu"
+1648:true:"Demon Sword"
+1649:false:"Desert Commander"
+1650:false:"Destination Earth Star"
+1651:false:"Destiny of an Emperor"
+1652:true:"Dick Tracy"
+1653:false:"Die Hard"
+1654:true:"Dig Dug II: Trouble In Paradise"
+1655:false:"Digger - Legend of the Lost City"
+1656:false:"Dirty Harry"
+1657:true:"Donkey Kong 3"
+1658:false:"Donkey Kong Classics"
+1659:false:"Donkey Kong Jr. Math"
+1660:false:"Double Dare"
+1661:true:"Double Dragon II - The Revenge"
+1662:true:"Double Dragon III - The Sacred Stones"
+1663:true:"Dr. Chaos"
+1664:true:"Dr. Jekyll and Mr. Hyde"
+1665:false:"Dragon Fighter"
+1666:true:"Dragon Spirit - The New Legend"
+1667:true:"Dragon Warrior III"
+1668:true:"Dragon's Lair"
+1669:true:"Duck Hunt"
+1670:true:"Duck Tales 2"
+1671:false:"Dungeon Magic - Sword of the Elements"
+1672:false:"Dusty Diamond's All-Star Softball"
+1673:true:"Dynowarz - The Destruction of Spondylus"
+1674:true:"Elevator Action"
+1675:false:"Eliminator Boat Duel"
+1676:false:"The Empire Strikes Back"
+1677:false:"Top Players' Tennis"
+1678:false:"F-15 Strike Eagle"
+1679:false:"F-117A Stealth Fighter"
+1680:false:"Family Feud"
+1681:false:"Faria - A World of Mystery and Danger"
+1682:true:"Faxanadu"
+1683:true:"Felix the Cat"
+1684:false:"Ferrari Grand Prix Challenge"
+1685:true:"Fester's Quest"
+1686:true:"Fire 'N Ice"
+1687:false:"Fisher Price - Firehouse Rescue"
+1688:false:"Fisher Price - I Can Remember"
+1689:false:"Fisher Price - Perfect Fit"
+1690:false:"Fist of the North Star"
+1691:false:"Flight of the Intruder"
+1692:true:"The Flintstones - The Rescue of Dino and Hoppy"
+1693:true:"Flying Dragon - The Secret Scroll"
+1694:false:"Flying Warriors"
+1695:false:"Formula 1 - Built to Win"
+1696:true:"Frankenstein - The Monster Returns"
+1697:false:"Freedom Force"
+1698:false:"Fun House"
+1699:false:"G.I. Joe: The Atlantis Factor"
+1700:true:"G.I. Joe: A Real American Hero"
+1701:true:"Galaga"
+1702:false:"Galaxy 5000: Racing in the 51st Century"
+1704:false:"Gauntlet II"
+1705:true:"Gauntlet"
+1706:false:"Genghis Khan"
+1707:false:"George Foreman's KO Boxing"
+1708:false:"Ghostbusters II"
+1709:false:"Ghostbusters"
+1710:true:"Ghosts 'N Goblins"
+1711:true:"Ghoul School"
+1712:false:"Goal!"
+1713:false:"Godzilla 2 - War of the Monsters"
+1714:true:"Godzilla"
+1715:false:"Gold Medal Challenge '92"
+1716:false:"Golf Grand Slam"
+1717:true:"Golf"
+1718:false:"Golgo 13 - Top Secret Episode"
+1719:true:"The Goonies II"
+1720:false:"The Goonies"
+1721:false:"Gotcha! The Sport!"
+1722:true:"Gradius"
+1723:false:"The Great Waldo Search"
+1724:false:"Greg Norman's Golf Power"
+1725:true:"Gremlins 2: The New Batch"
+1726:true:"The Guardian Legend"
+1727:true:"Guerrilla War"
+1728:true:"Gun Nac"
+1729:true:"Gunsmoke"
+1730:false:"Harlem Globetrotters"
+1731:false:"Hatris"
+1732:true:"Heavy Barrel"
+1733:true:"Heavy Shreddin'"
+1734:false:"Hogan's Alley"
+1735:false:"Hollywood Squares"
+1736:true:"Home Alone 2: Lost in New York"
+1737:true:"Home Alone"
+1738:true:"Hook"
+1739:false:"Hoops"
+1740:false:"Hudson Hawk"
+1741:false:"Hunt for Red October, The"
+1742:false:"Hydlide"
+1743:true:"Ice Climber"
+1744:true:"Ice Hockey"
+1745:false:"Ikari Warriors II - Victory Road"
+1746:false:"Ikari Warriors III - The Rescue"
+1747:false:"Ikari Warriors"
+1748:false:"Image Fight"
+1749:false:"The Immortal"
+1750:false:"Incredible Crash Dummies, The"
+1751:false:"Indiana Jones and the Last Crusade (Taito)"
+1752:true:"Indiana Jones and the Last Crusade (UBI Soft)"
+1753:false:"Indiana Jones and the Temple of Doom"
+1754:false:"Infiltrator"
+1755:false:"Iron Tank"
+1756:true:"Isolated Warrior"
+1757:true:"Ivan Stewart's Super Off-Road"
+1758:true:"Jackie Chan's Action Kung Fu"
+1759:false:"James Bond Jr."
+1760:true:"Jaws"
+1761:false:"Jeopardy! 25th Silver Anniversary Edition"
+1762:false:"Jeopardy!"
+1763:false:"Jetsons - Cogswell's Caper, The"
+1764:true:"Jimmy Connors Tennis"
+1765:false:"Joe and Mac"
+1766:false:"John Elway's Quarterback"
+1767:false:"Jordan vs. Bird - One-on-One"
+1768:true:"Journey to Silius"
+1769:true:"Joust"
+1770:true:"The Jungle Book"
+1771:true:"Jurassic Park"
+1772:true:"Kabuki - Quantum Fighter"
+1773:false:"Karate Champ"
+1774:true:"The Karate Kid"
+1775:false:"Karnov"
+1776:true:"Kick Master"
+1777:true:"Kickle Cubicle"
+1778:false:"Mickey Mouse III: Yume Fuusen"
+1779:true:"Kid Kool and the Quest for the Seven Wonder Herbs"
+1781:false:"King's Knight"
+1782:false:"Kings of the Beach"
+1783:true:"King's Quest V"
+1784:true:"Kiwi Kraze: A Bird-Brained Adventure!"
+1785:false:"KlashBall"
+1786:false:"Knight Rider"
+1787:true:"The Krion Conquest"
+1788:false:"Krusty's Funhouse"
+1790:false:"Last Action Hero"
+1791:false:"The Last Ninja"
+1792:false:"The Last Starfighter"
+1793:false:"Lee Trevino's Fighting Golf"
+1794:true:"The Legend of Kage"
+1795:false:"Legacy of the Wizard"
+1796:false:"Legend of the Ghost Lion"
+1797:false:"Legends of the Diamond"
+1798:true:"Lemmings"
+1799:false:"Lethal Weapon"
+1800:true:"Life Force"
+1801:false:"Little League Baseball - Championship Series"
+1802:true:"The Little Mermaid"
+1803:true:"Little Nemo: The Dream Master"
+1804:false:"Little Ninja Brothers"
+1805:true:"Little Samson"
+1806:false:"The Lone Ranger"
+1807:false:"LoopZ"
+1808:false:"Low G Man: The Low Gravity Man"
+1809:false:"Lunar Pool"
+1810:true:"M.C. Kids"
+1811:false:"M.U.L.E."
+1812:true:"M.U.S.C.L.E. - Tag Team Match"
+1813:true:"Mach Rider"
+1814:false:"Mad Max"
+1815:true:"Golgo 13 - The Mafat Conspiracy"
+1816:false:"Magic Darts"
+1817:false:"Magic Johnson's Fast Break"
+1818:true:"The Magic of Scheherazade"
+1819:true:"Magician"
+1820:true:"Magmax"
+1821:false:"Major League Baseball"
+1822:false:"Mappy-Land"
+1823:true:"Marble Madness"
+1824:true:"Mario Bros."
+1825:false:"Mario is Missing"
+1826:false:"Mario's Time Machine"
+1827:false:"The Uncanny X-Men"
+1828:false:"Mechanized Attack"
+1829:true:"Mega Man 4"
+1830:true:"Mendel Palace"
+1831:false:"Metal Mech"
+1832:true:"Metal Storm"
+1833:false:"Michael Andretti's World Grand Prix"
+1834:false:"Mickey's Adventures in Numberland"
+1835:false:"Mickey's Safari in Letterland"
+1836:false:"Might and Magic - Secret of the Inner Sanctum"
+1837:false:"Mighty Bomb Jack"
+1838:true:"Mighty Final Fight"
+1839:false:"Millipede"
+1840:false:"Milon's Secret Castle"
+1841:false:"Mission Impossible"
+1842:false:"Monopoly"
+1843:true:"Monster In My Pocket"
+1844:false:"Monster Truck Rally"
+1845:false:"Motor City Patrol"
+1846:true:"Ms. Pac Man (Namco)"
+1847:true:"Ms. Pac Man (Tengen)"
+1848:false:"Muppet Adventure - Chaos at the Carnival"
+1849:false:"The Mutant Virus - Crisis in a Computer World"
+1850:false:"Mystery Quest"
+1851:false:"NARC"
+1852:false:"NES Open Tournament Golf"
+1853:false:"NFL Football"
+1854:false:"Nigel Mansell's World Championship Challenge"
+1855:false:"Nightshade"
+1856:false:"Ninja Crusaders"
+1857:true:"Ninja Gaiden II - The Dark Sword of Chaos"
+1858:true:"Ninja Gaiden III - The Ancient Ship of Doom"
+1859:true:"Ninja Gaiden"
+1860:false:"Ninja Kid"
+1861:true:"Nintendo World Cup"
+1862:false:"Nobunaga's Ambition"
+1863:false:"North and South"
+1864:false:"Operation Wolf"
+1865:false:"Orb-3D"
+1866:false:"Othello"
+1867:false:"Overlord"
+1868:false:"P.O.W. - Prisoners of War"
+1870:false:"Palamedes"
+1871:true:"Panic Restaurant"
+1872:false:"Paperboy 2"
+1873:false:"Paperboy"
+1874:false:"Fox&#39;s Peter Pan and the Pirates"
+1875:false:"Phantom Fighter"
+1876:false:"Pictionary"
+1877:true:"Pinball"
+1878:false:"Pipe Dream"
+1879:false:"Pirates!"
+1880:true:"Platoon"
+1881:true:"Popeye"
+1882:false:"Power Blade 2"
+1883:true:"Power Blade"
+1884:false:"Power Punch II"
+1885:true:"Predator"
+1886:false:"Prince of Persia"
+1887:false:"Princess Tomato in Salad Kingdom"
+1888:false:"Punch-Out!!"
+1889:true:"The Punisher"
+1890:true:"Puss 'N Boots - Pero's Great Adventure"
+1891:false:"Puzznic"
+1892:false:"Qix"
+1893:false:"R.B.I. Baseball 2"
+1894:false:"R.B.I. Baseball 3"
+1895:false:"R.B.I. Baseball"
+1896:true:"R.C. Pro-Am II"
+1897:false:"Race America"
+1898:false:"Racket Attack"
+1899:false:"Rad Racer II"
+1900:true:"Rad Racer"
+1901:false:"Raid on Bungeling Bay"
+1902:false:"Rainbow Islands - The Story of Bubble Bobble 2"
+1903:true:"Rally Bike"
+1904:false:"Rampage"
+1905:false:"Rampart"
+1906:false:"Remote Control"
+1907:false:"Ren and Stimpy Show - Buckaroo$, The"
+1908:true:"Renegade / Nekketsu Kouha Kunio-Kun"
+1909:false:"Rescue - The Embassy Mission"
+1910:false:"Ring King"
+1911:false:"Road Runner"
+1912:false:"RoadBlasters"
+1913:true:"Robin Hood - Prince of Thieves"
+1914:true:"RoboCop 2"
+1915:false:"RoboCop 3"
+1916:false:"RoboCop versus The Terminator"
+1917:false:"Robowarrior"
+1918:false:"Rock 'n' Ball"
+1919:false:"Rocket Ranger"
+1920:true:"The Rocketeer"
+1921:true:"Rockin' Kats"
+1922:false:"Roger Clemens MVP Baseball"
+1923:false:"Rollerball"
+1924:false:"Rollerblade Racer"
+1925:true:"Rollergames"
+1926:false:"Rolling Thunder"
+1927:false:"Romance of The Three Kingdoms"
+1928:false:"Roundball - 2 on 2 Challenge"
+1929:true:"Rush 'n Attack"
+1930:false:"S.C.A.T.: Special Cybernetic Attack Team"
+1931:false:"Secret Ties"
+1932:false:"Section-Z"
+1933:true:"Seicross"
+1934:false:"Sesame Street - 123"
+1935:false:"Sesame Street - ABC"
+1936:false:"Sesame Street - ABC & 123"
+1937:false:"Sesame Street - Big Bird's Hide and Speak"
+1938:false:"Sesame Street - Countdown"
+1939:false:"Shadow of the Ninja"
+1940:true:"Shatterhand"
+1941:false:"Shingen the Ruler"
+1942:false:"Shooting Range"
+1943:false:"Short Order - Eggsplode"
+1944:false:"Side Pocket"
+1945:false:"Silent Service"
+1946:true:"Silkworm"
+1947:true:"Silver Surfer"
+1949:false:"The Simpsons - Bart vs. The World"
+1950:false:"The Simpsons - Bartman Meets Radioactive Man"
+1951:false:"Skate or Die 2"
+1952:false:"Skate or Die"
+1953:true:"Ski or Die"
+1954:false:"Sky Kid"
+1955:false:"Sky Shark"
+1956:false:"Slalom"
+1957:false:"Smash T.V."
+1958:true:"Snake Rattle 'n Roll"
+1959:true:"Snake's Revenge - Metal Gear II"
+1960:false:"Snoopy's Silly Sports Spectacular"
+1961:true:"Snow Bros."
+1962:true:"Soccer"
+1963:true:"Solar Jetman - Hunt for the Golden Warpship"
+1964:false:"Solomon's Key"
+1965:false:"Solstice: The Quest for the Staff of Demnos"
+1966:false:"Space Harrier"
+1967:false:"Space Shuttle Project"
+1968:true:"Spelunker"
+1969:false:"Spider-Man - Return of the Sinister Six"
+1970:false:"Spot: The Video Game"
+1971:true:"Spy Hunter"
+1972:false:"Spy vs. Spy"
+1973:true:"Sqoon"
+1974:false:"Stack-Up"
+1975:false:"Stadium Events"
+1976:false:"Stanley - The Search for Dr. Livingston"
+1977:true:"Star Force"
+1978:true:"Star Soldier"
+1979:false:"Star Trek - The Next Generation"
+1980:false:"Star Trek 25th Anniversary"
+1981:false:"Star Voyager"
+1982:false:"Star Wars"
+1983:false:"Starship Hector"
+1984:true:"StarTropics II - Zoda's Revenge"
+1985:true:"StarTropics"
+1986:false:"Stealth ATF"
+1987:false:"Street Cop"
+1988:false:"Strider"
+1989:true:"Super C"
+1990:false:"Super Cars"
+1991:true:"Super Dodge Ball"
+1992:false:"Super Glove Ball"
+1993:false:"Super Jeopardy!"
+1994:true:"Super Mario Bros. 2"
+1995:true:"Super Mario Bros. 3"
+1996:false:"Super Spike V'Ball"
+1997:false:"Super Sprint"
+1998:false:"Super Spy Hunter"
+1999:false:"Super Team Games"
+2000:false:"Superman"
+2001:false:"Swamp Thing"
+2002:true:"Sword Master"
+2003:false:"Swords and Serpents"
+2004:true:"Town and Country Surf Designs -  Wood and Water Rage"
+2005:false:"Town and Country Surf Designs - Thrilla&#39;s Surfari"
+2006:true:"Taboo - The Sixth Sense"
+2007:false:"Tag Team Pro Wrestling"
+2008:true:"Tag Team Wrestling"
+2009:true:"Tale Spin"
+2010:false:"Target: Renegade"
+2011:false:"Tecmo Baseball"
+2012:false:"Tecmo Cup Soccer Game"
+2013:false:"Tecmo NBA Basketball"
+2014:false:"Tecmo Super Bowl"
+2015:false:"Tecmo World Wrestling"
+2016:true:"Teenage Mutant Ninja Turtles"
+2017:true:"Tennis"
+2018:true:"Terminator 2 - Judgment Day"
+2019:false:"The Terminator"
+2020:false:"Terra Cresta"
+2021:false:"Tetris (BPS)"
+2022:true:"Tetris"
+2023:false:"Tetris (Tengen)"
+2024:false:"Tetris 2"
+2025:true:"The Three Stooges"
+2026:false:"Thunderbirds"
+2027:false:"Thundercade"
+2028:true:"Time Lord"
+2029:false:"Times of Lore"
+2030:false:"Tiny Toon Adventures - Cartoon Workshop"
+2031:true:"Tiny Toon Adventures 2 - Trouble in Wackyland"
+2032:true:"Tiny Toon Adventures"
+2033:false:"To The Earth"
+2034:true:"Toki"
+2035:true:"Tom & Jerry: The Ultimate Game of Cat and Mouse!"
+2036:false:"Tombs and Treasure"
+2037:false:"Toobin'"
+2038:false:"Top Gun - The Second Mission"
+2039:false:"Top Gun"
+2040:false:"Total Recall"
+2041:true:"Totally Rad"
+2042:false:"Touchdown Fever"
+2043:false:"Toxic Crusaders"
+2044:true:"Track and Field II"
+2045:true:"Track and Field"
+2046:false:"Treasure Master"
+2047:false:"Trog"
+2048:false:"Twin Cobra"
+2049:false:"Twin Eagle"
+2050:false:"Ultima - Exodus"
+2051:false:"Ultima - Quest of the Avatar"
+2052:false:"Ultima - Warriors of Destiny"
+2053:false:"Ultimate Air Combat"
+2054:false:"Ultimate Basketball"
+2055:false:"The Ultimate Stuntman"
+2056:false:"Uninvited"
+2057:false:"The Untouchables"
+2058:true:"Urban Champion"
+2059:false:"Vegas Dream"
+2060:true:"Vice - Project Doom"
+2061:false:"Volleyball"
+2062:true:"Wacky Races"
+2063:false:"Wall Street Kid"
+2064:false:"Wario's Woods"
+2065:false:"Wayne Gretzky Hockey"
+2066:false:"Wayne's World"
+2067:false:"WCW World Championship Wrestling"
+2068:false:"Werewolf - The Last Warrior"
+2069:false:"Wheel of Fortune - Family Edition"
+2070:false:"Wheel of Fortune - Junior Edition"
+2071:false:"Wheel of Fortune - Starring Vanna White"
+2072:false:"Where in Time is Carmen Sandiego"
+2073:false:"Where's Waldo"
+2074:false:"Who Framed Roger Rabbit"
+2075:true:"Whomp 'Em"
+2076:false:"Widget"
+2077:true:"Wild Gunman"
+2078:true:"Willow"
+2079:false:"Win, Lose or Draw"
+2080:false:"Winter Games"
+2081:false:"Wizardry - Proving Grounds of the Mad Overlord"
+2082:false:"Wizardry - The Knight of Diamonds"
+2083:false:"Wizards & Warriors II - Ironsword"
+2084:true:"Wizards & Warriors III - Kuros: Visions of Power"
+2085:false:"Wolverine"
+2086:false:"World Champ"
+2087:true:"World Class Track Meet"
+2088:false:"World Games"
+2089:false:"Wrath of the Black Manta"
+2090:true:"Wrecking Crew"
+2091:false:"WrestleMania"
+2092:false:"Wurm: Journey To The Center Of The Earth"
+2093:true:"WWF King of the Ring"
+2094:false:"WWF Wrestlemania: Steel Cage Challenge"
+2095:false:"WWF WrestleMania Challenge"
+2096:false:"Xenophobe"
+2097:false:"Xevious - The Avenger"
+2098:true:"Xexyz"
+2099:true:"Yo! Noid"
+2100:false:"Yoshi"
+2101:true:"Yoshi's Cookie"
+2102:false:"Young Indiana Jones Chronicles, The"
+2103:true:"Zanac"
+2104:true:"Zen - Intergalactic Ninja"
+2105:false:"Zombie Nation"
+2108:false:"2-in-1 Super Mario Bros - Duck Hunt"
+2109:false:"3-in-1 Super Mario Bros - Duck Hunt - World Class Track Meet"
+2110:false:"Advanced Dungeons and Dragons - Heroes of the Lance"
+2111:false:"Afterburner"
+2113:false:"Teenage Mutant Ninja Turtles - Tournament Fighters"
+2114:true:"Teenage Mutant Ninja Turtles II - The Arcade Game"
+2115:true:"Teenage Mutant Ninja Turtles III - The Manhattan Project"
+2129:false:"Digital Devil Story - Megami Tensei II"
+2137:true:"Final Fantasy VII"
+2139:true:"Gimmick!"
+2140:true:"Splatterhouse: Wanpaku Graffiti"
+2142:true:"Crisis Force"
+2175:true:"Dig Dug"
+2178:false:"Barcode World"
+2200:false:"Fantasy Zone"
+2208:true:"Holy Diver"
+2221:true:"Castlevania III - Dracula''s Curse"
+2222:false:"Captain Planet and the Planeteers (E)"
+2225:true:"Somari"
+2230:true:"Sweet Home"
+2232:false:"Captain Tsubasa"
+2238:true:"Pin Bot"
+2248:true:"Nuts & Milk"
+2359:false:"Bible Adventures?"
+2360:true:"Bucky O'Hare"
+2361:true:"Action 52"
+2362:false:"Championship Bowling"
+2406:false:"I''m Kid Dracula"
+2420:true:"Battle City"
+2432:true:"Gradius 2"
+2444:true:"Yie Ar Kung-Fu"
+2604:false:"Nintendo World Championships 1990"
+2615:false:"Ganbare Goemon Gaiden: Kieta Ougon Kiseru "
+2616:false:"Ganbare Goemon 2"
+2752:false:"Kunio-Kun no Nekketsu Soccer League"
+2863:false:"Akumajou Special: Boku Dracula-kun"
+2963:false:"Crystal Mines"
+3578:true:"The Smurfs"
+3614:true:"Galaxian"
+3677:false:"Crazy Climber"
+3682:false:"Summer Carnival '92 Recca"
+3709:false:"The Tower of Druaga"
+3710:false:"The Quest of Ki"
+3711:false:"Star Luster"
+3712:false:"Valis: The Fantastic Soldier"
+3715:false:"Suikoden - Tenmei no Chikai"
+3814:true:"Earthbound Zero"
+3820:false:"Mouryou Senki Madara"
+4030:true:"Joy Mech Fight"
+4031:true:"Donkey Kong Country 4"
+4034:false:"Elite"
+4035:false:"Shinobi"
+4036:true:"Road Fighter"
+4041:false:"Dragon Ball Super Butoden 3"
+4051:false:"Kero Kero Keroppi no Daibouken 2: Donuts Ike ha Oosawagi"
+4094:true:"Antarctic Adventure"
+4101:false:"Dig Dug 2"
+4103:false:"Exerion"
+4105:true:"Transformers: Mystery of Convoy"
+4122:false:"MilioNESy"
+4152:false:"The Simpsons - Bart Vs. the Space Mutants"
+4185:false:"Magic Jewelry"
+4220:false:"Pyramid"
+4333:false:"bucky o hare"
+4541:false:"Ball ''N Flag"
+4542:true:"Bubble Bath Babes"
+4543:true:"Adventures of Captain Comic"
+4544:false:"dracs night out"
+4545:false:"Adventures of Rocky and Bullwinkle and Friends"
+4546:false:"Adventures of Tom Sawyer"
+4547:false:"Roll-chan Evolution S, Episode V - Air Sliding"
+4548:true:"Alien Syndrome"
+4549:false:"Wally Bear and the No Gang"
+4550:false:"Anticipation!"
+4552:false:"Baby Boomer"
+4553:false:"Bandit Kings of Ancient China"
+4557:false:"Barbie!"
+4558:false:"Bard's Tale, Tales of the Unknown"
+4559:true:"Batman: Return Of The Joker "
+4560:false:"Bee 52"
+4561:false:"Bible Buffet "
+4562:false:"Big Nose Freaks Out"
+4563:false:"Big Nose the Caveman "
+4564:false:"Blackjack"
+4568:true:"Bomberman"
+4569:false:"Hot Slots"
+4570:false:"Bugs Bunny Fun House "
+4579:false:"California Raisins - The Grape Escape "
+4580:false:"Caltron 6-in-1"
+4581:false:"Castle of Deceit "
+4582:false:"Challenge of the Dragon "
+4583:false:"Cheetah Men II "
+4584:false:"Chiller "
+4585:false:"Cyberball "
+4586:false:"Star Wars (j)"
+4598:true:"D-Pad Hero 2"
+4599:true:"D-Pad Hero"
+4600:false:"Deadly Towers"
+4601:false:"Death Race"
+4602:false:"Deathbots"
+4605:true:"Dizzy The Adventurer"
+4607:false:"Double Strike"
+4608:false:"Championship Rally"
+4609:false:"HES 6 - in  -1"
+4610:false:"Maxi 15"
+4611:false:"Dragon Power"
+4612:true:"Dragon Warrior IV"
+4613:false:"Dudes With Attitude"
+4614:false:"Exodus"
+4615:false:"F-15 City War"
+4616:false:"The Fantastic Adventures of Dizzy"
+4617:false:"Fire Hawk "
+4618:false:"The Flintstones - The Surprise at Dinosaur Peak!"
+4620:false:"Gemfire"
+4621:false:"Goal Two!"
+4622:false:"Gumshoe"
+4623:false:"High Speed"
+4625:false:"impossible Mission II"
+4627:false:"Jack Nicklaus' Greatest 18 Holes of Major Championship Golf "
+4628:false:"Tagin' Dragon"
+4629:true:"Hello Kitty World"
+4630:false:"Wing of Madoola"
+4641:true:"Aussie Rules Football"
+4649:false:"Bomb Sweeper"
+4650:true:"Zooming secretary"
+4651:false:"Sack of Flour, Heart Of Gold"
+4653:false:"Russian Roulette"
+4654:false:"Naughts and Crosses!"
+4655:false:"K.Y.F.F."
+4658:true:"Moon Crystal"
+4663:false:"Super Pikachu"
+4666:false:"NESnake"
+4680:true:"Pizza Pop!"
+4681:true:"Spartan X 2"
+4684:false:"3 in 1 "
+4687:true:"Time Zone"
+4694:true:"Bio Miracle Bokutte Upa"
+4704:false:"zero pong "
+4705:false:"Y's"
+4718:false:"Bloody Warriors - Shan-Go no Gyakushuu"
+4720:true:"Blue Shadow"
+4754:false:"Karateka"
+4755:false:"Gomoku Narabe"
+4756:true:"Mappy"
+4757:false:"Mahjong"
+4758:false:"Formation Z"
+4759:false:"Devil World"
+4760:false:"Onyanko Town"
+4761:false:"Challenger"
+4762:false:"Popeye no Eigo Asobi"
+4763:false:"Route - 16 Turbo"
+4764:false:"Astro Robo Sasa"
+4765:false:"4 Nin Uchi Mahjong"
+4766:false:"Field Combat"
+4767:false:"F-1 Race"
+4769:false:"Ninja Kun: Majou no Bouken"
+4770:false:"Warpman"
+4771:false:"Door Door"
+4772:false:"Flappy"
+4773:false:"Lunar Ball"
+4774:false:"Space Invaders"
+4777:false:"Honshogi - Naitou Kudan Shogi Hiden"
+4778:false:"Pooyan"
+4779:true:"Super Arabian"
+4780:false:"Pachicom"
+4781:false:"Geimos"
+4782:false:"Ganso Saiyuuki - Super Monkey Daibouken"
+4783:false:"Championship Lode Runner"
+4784:false:"Chack'n Pop "
+4786:false:"Hyper Olympic"
+4787:false:"Nagagutsu o Haita Neko - Sekai Isshuu 80 Nichi Daibouken"
+4788:true:"Zippy Race"
+4789:false:"Portopia Renzoku Satsujin Jiken"
+4790:false:"Sansuu 1 Nen - Keisan Game"
+4791:false:"Front Line"
+4792:false:"Atlantis no Nazo"
+4793:true:"Ikki"
+4794:false:"Sky Destroyer"
+4796:false:"Aigiina no Yogen - From The Legend of Balubalouk"
+4797:false:"Hyper Sports"
+4798:false:"Volguard II"
+4799:false:"Bokosuka Wars"
+4800:false:"Dough Boy"
+4803:false:"Ninja Jajamaru Kun"
+4804:true:"TwinBee"
+4805:false:"Pac-Land"
+4806:false:"Son Son"
+4807:false:"Lot Lot"
+4808:true:"Binary Land"
+4809:false:"Thexder"
+4810:false:"Gyrodine"
+4811:false:"Baltron"
+4812:true:"Circus Charlie"
+4813:false:"Argus"
+4814:false:"Bird Week"
+4815:false:"Choujikuu Yousai - Macross"
+4816:true:"Zunou Senkan Galg"
+4818:true:"Spy Vs Spy"
+4819:false:"B-Wings"
+4820:false:"Exed Exes"
+4821:false:"Super Chinese"
+4822:false:"Banana"
+4823:false:"Choplifter"
+4824:true:"Ninja Hattori Kun"
+4825:false:"Babel no Tou"
+4826:false:"Space Hunter"
+4827:false:"Hokuto no Ken"
+4828:false:"Penguin Kun Wars"
+4829:true:"Kyatto Ninden Teyandee"
+4830:false:"Makaimura"
+4831:false:"Sansuu 2 Nen - Keisan Game"
+4832:false:"Jajamaru no Daibouken"
+4833:false:"Super Xevious - Gump no Nazo"
+4834:false:"Dragon Quest"
+4835:false:"Super Star Force"
+4837:false:"ASO - Armored Scrum Object"
+4838:true:"Obake no Q Tarou - Wanwan Panic"
+4839:true:"Kanshakudama Nage Kantarou no Toukaidou Gojuusan Tsugi"
+4840:true:"Urusei Yatsura - Lum no Wedding Bell "
+4841:true:"R.B.I Baseball (Tengen)"
+4842:false:"Sansuu 3 Nen - Keisan Game"
+4843:false:"Musashi no Ken - Tadaima Shugyou Chuu"
+4844:false:"Valkyrie no Bouken - Toki no Kagi Densetsu"
+4846:false:"Takeshi no Chousenjou"
+4847:false:"Ganbare Goemon! - Karakuri Douchuu"
+4848:false:"Gegege no Kitarou - Youkai Dai Makyou"
+4849:false:"Sansuu 4 Nen - Keisan Game"
+4850:false:"Mobile Suit Z Gundam - Hot Scramble"
+4851:false:"Pro Yakyuu - Family Stadium"
+4852:false:"Mississippi Satsujin Jiken"
+4856:false:"Daiva Story 6 - Imperial of Nirsartia"
+4857:false:"Hottaaman no Chitei Tanken"
+4858:false:"Doraemon"
+4859:false:"Sansuu 5 "
+4860:false:"Sherlock Holmes - Hakushaku Reijou Yuukai Jiken"
+4861:false:"Crackout"
+4865:false:"Metro-Cross"
+4866:true:"Dragon Ball Z III - Ressen Jinzou Ningen"
+4867:false:"King Kong 2 - Ikari no Megaton Punch"
+4869:false:"Layla"
+4870:false:"Seikima II - Akuma no Gyakushuu"
+4875:false:"Toki no Tabibito"
+4876:true:"Hi no Tori Hououhen - Gaou no Bouken"
+4877:false:"Dragon Buster"
+4878:false:"Labyrinth"
+4883:false:"Black Bass (Japan)"
+4884:false:"Pocket Zaurus - Juu Ouken no Nazo"
+4885:false:"Ikinari Musician"
+4886:false:"Mickey Mouse"
+4888:false:"Law of the West"
+4889:false:"City Adventure Touch - Mystery of Triangle"
+4891:false:"Hana no Star Kaidou"
+4892:false:"Lost Word of Jenny"
+4896:false:"Nangoku Shirei!! - Spy Vs Spy"
+4899:false:"Makai Island"
+4900:false:"Morita Kazuo no Shougi"
+4901:false:"Nekketsu Kouha Kunio-Kun "
+4902:false:"Family Jockey"
+4903:false:"Youkai Kurabu"
+4904:false:"Dynamite Bowl"
+4905:false:"Family Trainer - Jogging Race"
+4911:false:"3-in-1 Super Mario Bros. - Duck Hunt - World Class Track Meet"
+4914:false:"Takahashi Meijin no Bug'tte Honey"
+4953:true:"Quattro Adventure"
+4958:false:"Roll-chan Evolution, Episode V - Install Metal"
+4961:false:"Magical Kid Doropie [The Krion Conquest]"
+4966:false:"Herakles no Eikou - Toujin Makyou Den"
+4971:false:"Tecmo Super Bowl 2015"
+4976:false:"Family Trainer - Athletic World"
+4977:false:"Family Boxing"
+4978:false:"Woody Poko"
+4979:false:"Moero!! Pro Yakyuu"
+4980:false:"Tokoro San no Mamoru mo Semeru mo"
+4986:true:"Mitsume ga Tooru"
+4988:false:"Hokkaidou Rensa Satsujin - Ohotsuku ni Kiyu"
+4989:false:"Mirai Shinwa Jarvas"
+4990:false:"Zombie Hunter"
+4992:false:"Zelda - The Legend of Link"
+4993:true:"The Legend of Zelda: Outlands"
+4994:false:"Mario Adventure"
+4997:false:"Getsu Fuuma Den"
+4998:false:"Booby Kids"
+4999:false:"Kaiketsu Yanchamaru 3 - Taiketsu! Zouringen (Japan)"
+5001:true:"Kid Niki 3"
+5002:false:"Jongbou"
+5003:true:"Batsu and Terii - Makyou no Tetsujin Race"
+5005:true:"Street Fighter IV"
+5014:false:"Chester Field - Ankoku Shin e no Chousen"
+5046:false:"Family Trainer - Meiro Daisakusen"
+5047:false:"Miracle Ropit's Adventure in 2100"
+5051:true:"U-four-ia: The Saga"
+5052:false:"Erunaaku no Zaihou"
+5053:false:"Saint Seiya - Ougon Densetsu"
+5054:false:"Gekitotsu Yonku Battle"
+5058:false:"Quattro Arcade"
+5059:false:"Quattro Sports"
+5060:true:"Gargoyle's Quest II"
+5063:false:"Majou Densetsu 2 - Daimashikyou Galious"
+5064:false:"Mito Koumon"
+5073:false:"Blade Buster"
+5074:false:"Karaoke Studio"
+5076:false:"Igo - Kyuu Roban Taikyoku"
+5082:false:"Nekketsu! Street Basket - Ganbare Dunk Heroes"
+5083:true:"Micro Machines"
+5088:false:"Foton - The Ultimate Game on Planet Earth"
+5090:true:"Battle Kid"
+5091:true:"Hokuto no Ken 2"
+5092:false:"Zoids - Chuuou Tairiku no Tatakai"
+5095:false:"SWAT - Special Weapons and Tactics"
+5096:false:"Tsuppari Oozumou"
+5097:false:"Spelunker 2 - Yuusha heno Chousen"
+5099:false:"Family Mahjong"
+5101:false:"Kyonshiizu 2"
+5102:true:"Legendary Wings"
+5104:false:"Castlevania II: Simon's Quest Re-Translated"
+5107:true:"Kaiketsu Yancha Maru"
+5115:false:"Batman (beta)"
+5120:false:"Rygar (Europe)"
+5124:false:"Esper Boukentai"
+5125:false:"Indora no Hikari"
+5126:false:"Dungeon Kid"
+5134:false:"Minelvaton Saga"
+5135:false:"Haja no Fuuin"
+5136:false:"Momotarou Densetsu"
+5140:false:"Hoshi wo Miru Hito"
+5141:false:"Family BASIC"
+5142:false:"Romancia"
+5144:true:"Lupin Sansei - Pandora no Isan"
+5146:false:"Uchuusen - Cosmo Carrier"
+5147:false:"Artelius"
+5149:false:"Jikuu Yuuden - Debias"
+5150:false:"Outlanders"
+5152:false:"Dragon Scroll"
+5153:false:"Shanghai"
+5154:false:"JJ - Tobidase Daisakusen Part.II"
+5156:false:"Golf Club - Birdie Rush"
+5157:false:"Family Tennis"
+5158:false:"Yamamura Misa Suspense - Kyouto Ryuu no Tera Satsujin"
+5159:false:"Tetsudou Ou - Famicom Boardgame"
+5160:false:"Ginga no Sannin"
+5161:false:"Exciting Boxing"
+5162:false:"Stick Hunter - Exciting Ice Hockey"
+5163:false:"Taito Grand Prix - Eikou heno License"
+5164:false:"Mezase Pachi Pro - Pachio Kun"
+5166:false:"Gegege no Kitarou 2 : Youkai Gundan no Chousen"
+5167:false:"Magnum Kiki Ippatsu - Empire City - 1931"
+5168:true:"Attack Animal Gakuen"
+5169:false:"Family Trainer - Totsugeki! Fuuun Takeshi Jou"
+5170:false:"Family Circuit"
+5171:false:"Satsui no Kaisou: Power Soft Satsujin Jiken"
+5172:true:"Dragon Ball: Mystery of Shenlong"
+5173:false:"Dragon Ball - Le Secret Du Dragon"
+5175:true:"Mother: 25th Anniversary Edition"
+5183:true:"Super Mario Bros - The Lost Levels"
+5186:true:"Exerion 2 NA"
+5189:false:"Zelda - The Legend of Link (Hack)"
+5191:true:"Wai Wai World"
+5193:false:"Sukeban Deka III"
+5196:false:"Lipple Island"
+5197:true:"Street Fighter 3"
+5198:false:"Donald Land"
+5199:false:"Paris-Dakar Rally Special"
+5200:false:"Jumbo Ozaki no Hole in One Professional"
+5201:false:"Kamen Rider Club"
+5202:true:"Wai Wai World 2: SOS!! Paseri Jou"
+5218:true:"Over Horizon"
+5230:false:"Wily and Light no Rockboard: That's Paradise"
+5231:false:"Mega Man 3 (beta)"
+5232:false:"The Legend of Zelda: Shin Zelda Densetsu"
+5236:false:"Fire Emblem: Shadow Dragon and the Blade of Light"
+5239:false:"Utsurun Desu"
+5241:true:"Yume Penguin Monogatari"
+5242:true:"RockMan Cross X"
+5249:false:"Lagrange Point"
+5256:false:"super mario IV"
+5261:false:"Aladdin 2"
+5264:false:"Hokuto no Ken( O cara que poca a camisa)"
+5266:false:"Aladdin"
+5270:false:"Ide Yousuke Meijin no Jissen Mahjong"
+5272:false:"Karaoke Studio Senyou Cassette Vol 1"
+5273:false:"Family BASIC V3.0"
+5274:false:"Karaoke Studio Senyou Cassette Vol 2"
+5275:false:"Matsumoto Tooru no Kabushiki Hisshou Gaku"
+5276:false:"Tantei Jinguuji Saburou - Yokohamakou Renzoku Satsujin Jiken"
+5277:false:"Tetsuwan Atom"
+5278:false:"Ballblazer"
+5279:false:"Arkanoid II"
+5288:true:"Extra Mario Bros."
+5296:false:"Tsuri Kichi Sanpei - Blue Marlin Hen"
+5297:false:"Napoleon Senki"
+5298:false:"Tanigawa Kouji no Shougi Shinan 2"
+5299:true:"Super Mario Bros. 3Mix"
+5300:true:"Cocoron"
+5303:false:"Rockman Gaiden"
+5305:false:"sonic"
+5316:false:"Takeda Shingen"
+5317:false:"Fleet Commander"
+5318:false:"Fudou Myouou Den"
+5319:true:"Hector '87"
+5327:false:"Be-Bop-Highschool - Koukousei Gokuraku Densetsu"
+5328:false:"Dokuganryuu Masamune"
+5333:true:"Master Chu and the Drunkard Hu"
+5346:true:"Bio Force Ape"
+5347:true:"The Super Shinobi"
+5350:true:"Rescue: The Embassy Mission"
+5352:true:"Rod Land"
+5353:false:"ds"
+5358:false:"Elysion"
+5359:false:"Mad Wizard (Demo)"
+5363:false:"Action in New York"
+5375:true:"The Escape From Atlantis"
+5382:true:"Magic Carpet 1001"
+5391:false:"Probotector II - Return of the Evil Forces"
+5395:false:"Mei Tantei Holmes - Kiri no London Satsujin Jiken"
+5396:false:"Deep Dungeon III - Yuushi heno Tabi"
+5398:false:"Kamen no Ninja - Akakage"
+5399:false:"Ninja Kun: Ashura no Shou"
+5402:false:"Solomon's Key Another Route"
+5403:false:"Solomon's Key Pandemonium"
+5404:false:"Wrecking Crew 2004"
+5405:false:"Shougun"
+5406:false:"Namco Classic"
+5408:false:"Cosmo Police Galivan"
+5409:false:"Downtown Nekketsu Koushinkyoku: Soreyuke Dai Undoukai"
+5410:false:"Nekketsu! Street Basket: Ganbare Dunk Heroes"
+5426:false:"Super Robin Hood"
+5429:false:"Youkai Douchuuki"
+5431:false:"Fire Emblem Gaiden"
+5432:false:"Sanada Juu Yuushi"
+5433:false:"Kyuukyoku Harikiri Stadium"
+5434:false:"Super Black Onyx"
+5437:false:"Jarinko Chie - Bakudan Musume no Shiawase Sagashi"
+5438:true:"Don Doko Don 2"
+5445:false:"Best Play Pro Yakyuu"
+5448:false:"Maison Ikkoku"
+5450:false:"The Legend of Zelda (E)"
+5456:false:"Hiryuu no Ken II - Dragon no Tsubasa"
+5457:false:"Sangokushi - Chuugen no Hasha"
+5458:false:"Super Real Baseball '88"
+5460:false:"Eggerland - Meikyuu no Fukkatsu"
+5461:false:"Tatakae!! Rahmen Man - Sakuretsu Choujin 102 Gei"
+5468:false:"Wheel of Fortune"
+5470:false:"Money Game, The"
+5471:false:"Mito Koumon - Sekai Manyuu Ki"
+5473:true:"Parodius"
+5481:false:"The Lion King (Super Game)"
+5485:false:"Megaman Returns"
+5503:false:"Final Lap"
+5516:false:"Deep Dungeon 4"
+5526:true:"Plants Vs Zombies"
+5527:true:"Final Fantasy II (J)"
+5533:false:"Famicom Wars"
+5534:false:"mario"
+5536:false:"Mad City"
+5538:false:"Soccer League Winner's Cup"
+5539:true:"Dragon Ball - Dai Maou Fukkatsu"
+5541:false:"Hototogisu"
+5542:false:"Super Pinball"
+5543:false:"Super Dyna'mix Badminton"
+5547:false:"Super Contra 7 (unl)"
+5550:true:"Smash Ping Pong"
+5553:true:"Final Fantasy III (J) (1999 Translation)"
+5555:false:"Famicom Meijin Sen"
+5556:false:"Orb 3D"
+5565:false:"Reigen Doushi"
+5567:false:"Kujaku Ou"
+5575:false:"Toy Story"
+5576:false:"Erika to Satoru no Yume Bouken"
+5580:false:"Viva! Las Vegas"
+5582:false:"Nemo - Pajama Hero"
+5583:false:"Zelda II - Part 2 (Easy)"
+5584:false:"Zelda II - Part 2 (Medium)"
+5585:false:"Zelda II - Part 2 (Hard)"
+5586:false:"Best Play Pro Yakyuu (Shin Data)"
+5587:false:"Daisenryaku"
+5588:false:"Genpei Touma Den - Computer Boardgame"
+5589:false:"The Krion Conquest (Japan)"
+5590:false:"Adventure Island 4"
+5599:false:"America Daitouryou Senkyo"
+5600:false:"Touhou Kenbun Roku"
+5608:true:"Tower RE"
+5609:false:"Superman (Sunman Hack)"
+5610:false:"Mega Man Forever (PRG1)"
+5611:false:"Duck Tales (Prototype)"
+5615:false:"Super Mario Bros. 2 (Prototype)"
+5621:false:"SuperStar Pro Wrestling"
+5633:false:"Saiyuuki World"
+5634:false:"Gambler Jiko Chuushin Ha - Mahjong Game"
+5649:false:"Family Quiz"
+5650:false:"Kaijuu Monogatari"
+5660:false:"Family Mahjong II - Shanghai heno Michi"
+5661:false:"Takeshi no Sengoku Fuuunji"
+5665:false:"conquest "
+5666:false:"cavaleiros do zodiaco"
+5667:true:"Dragon Ball Z: Kyoushuu! Saiyajin"
+5668:false:"pac man"
+5671:false:"mARIO 2"
+5672:false:"mario 4 ?"
+5674:false:"dk"
+5675:false:"batman 3"
+5678:false:"Roll-chan Evolution, Episode II - Roll-chan no Constancy"
+5683:false:"super mario"
+5684:false:"donkey kong jr"
+5688:false:"64-IN-1"
+5757:false:"mega man 1 nes"
+5759:false:"Roll-chan Evolution S, Episode II - Roll-chan Claw 2"
+5760:false:"frankeinstein"
+5769:false:"McDonald Land"
+5774:false:"Power Blazer"
+5777:true:"Pokemon - Yellow"
+5781:false:"The Adventures of Dr. Franken"
+5782:false:"Ai Senshi Nicol"
+5783:false:"Akumajou Densetsu"
+5784:false:"Aladdin (Unl)"
+5785:false:"Alien 3"
+5787:false:"Robocco Wars"
+5788:false:"Armadillo"
+5789:false:"Asmik-Kun Land"
+5790:true:"Astérix"
+5791:false:"Astro Fang - Super Machine"
+5795:false:"Banana Prince"
+5797:false:"Beauty and the Beast"
+5799:false:"Bomber King"
+5801:false:"Boogerman"
+5804:false:"Caesar Captain (Unl)"
+5806:false:"Chitei Senkuu Vazolder"
+5807:false:"Choujin Ookami Senki - Warwolf"
+5808:true:"Choujin Sentai Jetman"
+5809:false:"Chuuka Taisen"
+5811:false:"Cosmic Epsilon"
+5813:false:"Dai Meiro - Meikyuu no Tatsujin"
+5814:false:"Daiku no Gen San"
+5815:false:"Daiku no Gen San 2 - Akage no Dan no Gyakushuu"
+5817:false:"Dengeki - Big Bang!"
+5818:false:"Devil Man"
+5819:false:"Doki Doki Panic"
+5820:false:"Downtown - Nekketsu Monogatari"
+5821:false:"Downtown Special: Kunio-Kun no Jidaigeki Dayo Zenin Shuugou!"
+5822:false:"Dragon Unit"
+5823:false:"Dreamworld Pogie"
+5824:false:"EarthWorm Jim 2 (Unl)"
+5825:false:"EarthWorm Jim 3 (Unl)"
+5826:false:"EarthWorm Jim 2 (SuperGame)"
+5827:false:"Egger Land - Meikyuu no Fukkatsu "
+5828:false:"Egypt"
+5829:false:"El Monstruo de Los Globos (Unl)"
+5830:false:"Esper Bouken Tai"
+5831:false:"Exodus - Journey to the Promised Land"
+5832:false:"Fantasy Zone II - The Teardrop of Opa-Opa"
+5833:false:"Fighting Hero III"
+5834:false:"Final Combat"
+5835:false:"Final Fight 3"
+5836:false:"Final Mission"
+5837:false:"Fire Dragon"
+5839:false:"Fushigi na Blobby - Blobania no Kiki"
+5841:false:"Gaiapolis"
+5842:false:"Galactic Crusader"
+5844:false:"Garfield - A Week of Garfield"
+5845:false:"Golgo 13 - The Riddle of Icarus"
+5848:false:"Meiji Ishin"
+5849:false:"Meikyuu Jima"
+5850:false:"Meimon! Dai San Yakyuu Bu"
+5851:false:"Melville's Flame"
+5857:false:"Chuugoku Senseijutsu"
+5863:false:"Jurassick Park"
+5888:false:"wtf"
+5893:false:"Secret Scout in the Temple of Demise"
+5896:false:"Wagyan Land"
+5897:false:"Doko Doko Don"
+5925:false:"Klax"
+5935:false:"1944"
+5944:true:"Majou Densetsu II: Daimashikyou Galious"
+5948:true:"~Bonus~ Contra"
+5949:false:"Ys II: Ancient Ys Vanished - The Final Chapter"
+5950:false:"Ys II: Wanderers From Ys"
+5968:false:"Super Mario All-Stars"
+5992:false:"The Guardian Legend Secret Edition"
+5998:false:"ff7"
+6016:false:"Momotarou Dentetsu"
+6017:false:"Hanjuku Hero"
+6024:false:"Hiryuu no Ken 3 - 5 Nin no Ryuu Senshi "
+6027:false:"Mega²"
+6034:false:"ManiacMansion"
+6035:false:"King of Kings"
+6036:false:"DoubleDragon"
+6037:false:"'89 Dennou Kyuusei Uranai"
+6038:false:"Fighting Road"
+6039:false:"Captain Silver"
+6040:false:"Kyuukyoku Harikiri Stadium '88"
+6044:false:"The Triathron"
+6045:false:"Kaguya Hime Densetsu"
+6057:false:"Cycle Race - Road Man"
+6064:false:"Megaman Forever"
+6068:false:"harry potter"
+6070:true:"2048"
+6071:false:"Flappy bird"
+6072:false:"Assimilate "
+6096:true:"Kart Fighter"
+6098:false:"Top-Rider"
+6099:false:"Family Trainer - Fuuun Takeshi Jou 2"
+6108:false:"Ginga Eiyuu Densetsu"
+6110:false:"Airwolf (Japan)"
+6111:false:"Pro Yakyuu Satsujin Jiken"
+6113:false:"Shoukoushi Ceddie"
+6119:false:"Akira"
+6139:false:"Salamander"
+6147:true:"Linus Spacehead's Cosmic Crusade"
+6157:false:"Mario All Stars"
+6166:false:"Satomi Hakkenden"
+6174:false:"Nishimura Kyoutarou Mystery - Blue Train Satsujin Jiken"
+6180:false:"Megaman 3"
+6186:false:"Destiny of an Emperor 2"
+6191:false:"All Night Nippon Super Mario Bros."
+6207:false:"Family Trainer - Rairai Kyonshiizu"
+6208:false:"Motocross Champion"
+6214:false:"Dragon Ball Z II: Gekigami Freeza!!"
+6215:true:"New Ghostbusters II"
+6216:false:"Zoids 2 - Zenebasu no Gyakushuu"
+6230:false:"Pachio Kun 2"
+6254:false:"Kamen no Ninja - Hanamaru"
+6255:false:"Sekiryuuou"
+6258:false:"Yamamura Misa Suspense - Kyouto Hana no Misshitsu Satsujin Jiken"
+6259:false:"Yamamura Misa Suspense - Hana"
+6260:false:"Famicom Jump - Eiyuu Retsuden"
+6262:false:"Flying Hero"
+6264:false:"Hydlide 3 - Yami Kara no Houmonsha"
+6280:false:"Space Shadow"
+6281:false:"Wizardry II - Legacy of Llylgamyn"
+6282:false:"Hyakkiyakou"
+6283:false:"Ganbare Pennant Race!"
+6284:false:"Sakigake!! Otoko Juku - Shippuu Ichi Gou Sei"
+6293:false:"Hayauchi Super Igo"
+6294:false:"Rolling Thunder (Namco)"
+6295:false:"Jesus - Kyoufu no Bio Monster"
+6296:false:"Chronicle of The Radia War"
+6305:false:"Super Mario Bros."
+6307:false:"Bakushou!! Jinsei Gekijou"
+6308:false:"Ankoku Shinwa - Yamato Takeru Densetsu"
+6309:false:"Taro's Quest (Prototype)"
+6310:false:"Home Run Nighter - Pennant League!!"
+6311:false:"Test Cart"
+6324:false:"Hello Kitty Flower Shop"
+6327:false:"American Dream"
+6329:false:"Cadillac"
+6330:false:"Caesars Palace"
+6334:false:"Matsumoto Tooru no Kabushiki Hisshou Gaku 2"
+6344:false:"The Goonies 2 (E)"
+6351:false:"Dragon Ball 3: Gokuuden"
+6352:false:"Dragon Ball 3 - Gokuu Den"
+6355:false:"Mindseeker"
+6370:false:"Total Funpak"
+6380:false:"Castlevania - Chorus of Mysteries"
+6381:false:"Super C - Hell Hack"
+6391:false:"Kaizo Mario World 3"
+6392:false:"Kaizo Mario Bros. 3"
+6394:false:"Hammerin' Harry"
+6398:false:"Sir Ababol"
+6416:false:"Zelda: The Legend of Link"
+6421:false:"Bananan Ouji no Daibouken"
+6422:false:"Doki! Doki! Yuuenchi"
+6423:false:"Ike Ike! Nekketsu Hockey-bu: Subette Koronde Dai Rantou"
+6424:false:"Kaiketsu Yanchamaru 2: Karakuri Land"
+6425:false:"Ninja Jajamaru: Ginga Daisakusen"
+6427:false:"Super Mario Remix: The Toad Bros Tale (Beta 90)"
+6428:true:"Taiyou no Yuusha Fighbird"
+6429:false:"Takahashi Meijin no Bouken Jima IV (Adventure Island 4)"
+6599:false:"Dragon Buster II - Yami no Fuuin"
+6608:false:"Parasol Stars: The Story Of Bubble Bobble III"
+6624:false:"Keiba Simulation - Honmei"
+6625:false:"Meitantei Holmes - M Kara no Chousenjou"
+6626:false:"Kabushiki Doujou"
+6641:false:"Tetra Star: The Fighter"
+6645:false:"Kaettekita! Gunjin Shougi - Nanya Sore"
+6654:false:"LaSalle Ishii no Childs Quest"
+6656:false:"SD Gundam - Gachapon Senshi 2 - Capsule Senki"
+6657:false:"Murder Club"
+6658:false:"Shin Moero!! Pro Yakyuu"
+6659:false:"Igo Shinan"
+6672:false:"Hissatsu Doujou Yaburi"
+6673:false:"Tenkaichi Bushi - Keru Naguuru"
+6680:false:"Kyuukyoku Harikiri Stadium - Heisei Gannen Han"
+6681:false:"Perfect Bowling"
+6682:false:"Oishinbo"
+6692:false:"Famista '89 - Kaimaku Han!!"
+6709:false:"Cosmic Wars"
+6710:false:"Moeru! Oniisan"
+6711:false:"SD Battle Oozumou: Heisei Hero Basho"
+6729:false:"Ganbare Goemon2"
+6736:false:"Captain Ed"
+6737:false:"Racer Mini Yonku - Japan Cup"
+6740:false:"Tanigawa Kouji no Shougi Shinan III"
+6741:false:"Idol Hakkenden"
+6742:false:"Marusa no Onna"
+6746:false:"TwinBee 3 - Poko Poko Dai Maou"
+6747:false:"tecmo super bowl 2016"
+6748:false:"Ochin ni Toshi Puzzle Tonjan!"
+6749:false:"Maharaja"
+6760:false:"Koushien"
+6761:false:"Venus Senki"
+6762:false:"Hokuto no Ken 3 - Shin Seiki Souzou Seiken Restuden"
+6764:false:"Driar"
+6778:false:"Tashiro Masashi no Princess ga Ippai"
+6779:false:"Major League"
+6780:false:"Mahjong Taikai"
+6781:false:"Gozonji - Yaji Kita Chin Douchuu"
+6784:false:"Terao no Dosukoi Oozumou"
+6794:false:"Vegas Connection - Casino Kara Ai wo Komete"
+6795:false:"Golf Ko Open"
+6796:false:"Square no Tom Sawyer"
+6797:false:"Tao"
+6808:false:"Rampart (J)"
+6810:false:"DBZ 3 espanhol"
+6821:false:"Mirai Senshi - Lios"
+6822:false:"Meimon! Takonishi Ouendan - Kouha 6 Nin Shuu"
+6823:false:"Osomatsu Kun"
+6824:false:"Seirei Gari [Ghost Hunt]"
+6827:false:"Famicom Disk System Bios"
+6831:false:"Taito Chase H.Q"
+6832:true:"Time Diver Eon Man"
+6833:false:"Shin Satomi Hakken Den - Hikari to Yami no Tatakai"
+6836:true:"~Multi~ Contra"
+6837:false:"Snake's Revenge"
+6855:false:"Super Mogura Tataki!! - Pokkun Moguraa"
+6857:false:"Flipull - An Exciting Cube Game"
+6858:false:"Famicom Doubutsu Seitai Zukan! - Katte ni Shirokuma"
+6860:false:"Famicom Yakyuu Han"
+6861:false:"Shinsenden"
+6869:true:"Solitaire (Unl)"
+6883:false:"zzz Wrong ROM Please use (U)[!] ROM zzz"
+6891:false:"Nekketsu Kakutou Densetsu"
+6894:false:"Bikkuri Nekketsu Shin Kiroku!: Harukanaru Kin Medal"
+6895:false:"Nekketsu Koukou Dodge Ball-Bu: Soccer Hen"
+6896:false:"Nekketsu Koukou Dodge Ball-Bu"
+6897:false:"Famista '90"
+6898:false:"Quarter Back Scramble"
+6899:false:"I Love Softball"
+6900:false:"Emoyan no 10 Bai Pro Yakyuu"
+6901:false:"Money Game 2 - Kabutochou no Kiseki"
+6907:false:"Roll-chan Evolution, Episode III - Zone of Eden (Gamma Version)"
+6908:false:"Mappy Kids"
+6909:false:"Live in Power Bowl - TM Network"
+6913:false:"super mario 3"
+6919:false:"Magical Taruruuto Kun 2 - Mahou Daibouken"
+6935:false:"Chuugoku Janshi Story - Tonpuu"
+6937:false:"Herakles no Eikou 2 - Titan no Metsubou"
+6954:false:"Super Rugby"
+6961:false:"Rose Bowl"
+6962:false:"NCAA"
+6963:false:"MiG 29 - Soviet Fighter"
+6964:false:"Tie Fighter"
+6974:true:"Street Fighter II"
+6979:false:"Pokemon 2000"
+6989:false:"Donald Duck"
+6991:false:"You are Insignificant"
+6995:false:"Igo Meikan"
+7004:true:"Kung-Fu Heroes"
+7011:false:"Nobunaga's Ambition 2"
+7012:false:"Mottomo Abunai Deka"
+7013:false:"Bible Adventures"
+7026:false:"Mega Man Reloaded"
+7033:false:"Arctic"
+7035:false:"Kiteretsu Dai Hyakka"
+7037:false:"Akuma Kun - Makai no Wana"
+7045:false:"Jeopardy! Junior Edition"
+7048:false:"Contra: The Blue Falcon"
+7052:false:"Exciting Rally - World Rally Championship"
+7055:false:"Nishimura Kyoutarou Mystery - Super Express Satsujin Jiken"
+7056:false:"President no Sentaku"
+7057:false:"Moai Kun"
+7067:false:"Mashin Eiyuu Den Wataru Gaiden"
+7070:false:"Super Momotarou Dentetsu"
+7076:false:"Miracle"
+7117:false:"Golden Card 6-in-1 (Super Game)"
+7118:false:"yugioh"
+7127:false:"Evil Dead"
+7131:true:"Zelda II: Life Is Meaningless (V1.0)"
+7135:false:"Stunt Kids"
+7153:false:"Sansara Naga"
+7156:false:"Duck"
+7161:false:"Radia Senki - Reimei Hen"
+7163:false:"Mission Cobra"
+7165:false:"MEGA MAN 1"
+7169:false:"Power Soccer"
+7170:false:"Best Play Pro Yakyuu II"
+7187:false:"MEGAMAN WAVE"
+7188:false:"mega man god world "
+7200:false:"Kick Off"
+7201:false:"The Lion King"
+7209:false:"bayou"
+7227:false:"Isaki Shuugorou no Keiba Hisshou Gaku"
+7228:false:"Digital Devil Monogatari - Megami Tensei II"
+7234:false:"Ultraman Club 2 - Kaettekita Ultraman Club"
+7237:false:"Quarth"
+7238:false:"Gun Hed - Aratanaru Tatakai"
+7241:false:"Fighting Hero"
+7242:true:"Rockman 4: Minus Infinity"
+7247:false:"PwnAdventureZ"
+7248:false:"Battle Kid 2 - Mountain of Tornment"
+7264:false:"Spider-Man 2"
+7276:false:"gy"
+7277:false:"jop"
+7279:false:"Contra Curse of the Red Falcom"
+7287:false:"Kurogane Hiroshi no Yosou Daisuki! - Kachiuma Densetsu"
+7301:false:"Kagerou Densetsu"
+7302:false:"Castle Quest"
+7308:false:"Baken Hisshou Gaku - Gate In"
+7309:false:"Jajamaru Gekimaden - Maboroshi no Kinmajou"
+7339:false:"Battle Feet"
+7345:false:"Moero!! Juudou Warriors"
+7346:false:"SD Hero Soukessen - Taose! Aku no Gundan"
+7348:false:"Wit's"
+7352:false:"Megaman 2 (wrong set!)"
+7353:false:"Juuouki"
+7354:false:"Nichibutsu Mahjong III - Mahjong G Men"
+7355:false:"Captain Tsubasa Vol. II - Super Striker"
+7356:false:"Home Run Nighter '90 - The Pennant League"
+7360:false:"Sted - Iseki Wakusei no Yabou"
+7389:false:"3D Block"
+7426:false:"Tranny Tramps: The Family Jewels"
+7445:false:"Bikkuriman World - Gekitou Sei Senshi"
+7463:false:"Game Party"
+7467:false:"Ninja Rahoi!"
+7468:false:"Laser Invasion"
+7476:false:"dk3"
+7494:false:"Peepar Time"
+7512:false:"Titan"
+7513:false:"Parallel World"
+7514:false:"Kawa no Nushi Tsuri"
+7516:false:"tmnt 3"
+7519:false:"Mega Man ULTRA"
+7521:false:"Blodia Land - Puzzle Quest"
+7522:false:"SD Gundam Gaiden - Knight Gundam Monogatari"
+7527:false:"Kujaku Ou II"
+7528:false:"Shanghai II"
+7540:false:"Jangou"
+7541:false:"Uchuu Keibitai SDF"
+7547:false:"World Boxing"
+7549:false:"SD Sengoku Bushou Retsuden"
+7550:false:"Bakushou! Star Monomane Shitennou"
+7551:false:"Little Magic"
+7565:false:"Mega Man Redux"
+7569:false:"Doraemon - Giga Zombie no Gyakushuu"
+7586:false:"Ishin no Arashi"
+7587:false:"Tamura Koushou Mahjong Seminar"
+7588:false:"Insector X"
+7597:false:"Tantei Jinguuji Saburou - Toki no Sugiyuku Mama ni"
+7602:false:"Castlevania Extreme"
+7607:false:"Castlevania Orchestra of Despair"
+7611:false:"devil kirb"
+7612:false:"Palette Test By Loopy"
+7632:false:"Majaventure - Mahjong Senki"
+7635:false:"Ushio to Tora: Shinen no Daiyou"
+7652:false:"Shufflepuck Cafe"
+7655:false:"Oeka Kids - Anpanman to Oekaki Shiyou!!"
+7656:false:"Nantettatte!! Baseball"
+7657:false:"Mizushima Shinji no Dai Koushien"
+7661:false:"Pachio Kun 3"
+7662:false:"Cross Fire"
+7663:false:"Yamamura Misa Suspense - Kyouto Zaiteku Satsujin Jiken"
+7664:false:"Romance of The Three Kingdoms II"
+7665:false:"Last Armageddon"
+7667:false:"Zelda"
+7672:false:"Sanrio Carnival"
+7699:false:"Tecmo World Cup Soccer"
+7700:false:"Chiyonofuji no Ooichou"
+7704:false:"Communist Mario 3 v1.0"
+7710:false:"artgame mario"
+7711:false:"Gambler Jiko Chuushin Ha 2"
+7712:false:"Rockman 3 - Stalker Attack"
+7716:false:"Rockman 3 Claw"
+7726:false:"Power Rangers 2"
+7737:false:"Paris-Dakar Rally Special! [English Patch]"
+7763:false:"Grand Dad 7"
+7769:false:"Proto Man"
+7777:false:"Famicom Top Management"
+7778:false:"Best Play Pro Yakyuu '90"
+7793:false:"Paaman - Enban o Torikaese!!"
+7803:false:"Wagan Land 2"
+7810:false:"Fire Embelm 2"
+7829:false:"Super Mario Bros 2"
+7869:false:"Hissatsu Shigoto Nin"
+7876:false:"Bio Senshi Dan - Increaser Tono Tatakai"
+7889:false:"Jumpin' Kid - Jack to Mame no Ki Monogatari"
+7890:false:"Battle Stadium - Senbatsu Pro Yakyuu"
+7891:false:"Famista '91"
+7892:false:"The Hunt for Red October"
+7904:false:"Pokemon azul"
+7905:false:"Pokemon Gold"
+7906:false:"Pokemon Silver"
+7907:false:"pokemon green"
+7923:false:"Daikaijuu Deburas"
+7924:false:"Zoids Mokushiroku"
+7932:false:"Musashi no Bouken"
+7946:false:"Mega Man Overload 3"
+7947:false:"SD Gundam - Gachapon Senshi 3 - Eiyuu Senki"
+7981:false:"RockMan 3 Double Team"
+7985:false:"Urban Champion (Nude Girl Hack)"
+7992:false:"Bakushou!! Ai no Gekijou"
+7994:false:"Juvei Quest"
+8011:false:"Super Mario World (Hack)"
+8029:false:"Contra jap"
+8031:false:"Rockman"
+8035:false:"Happily Ever After"
+8036:false:"oyeh"
+8057:false:"Mahjong RPG Dora Dora Dora"
+8058:false:"batman"
+8072:false:"Back to the Future (Enhanced)"
+8073:false:"Dark Lord"
+8074:false:"Akagawa Jirou no Yuurei Ressha"
+8077:false:"Jason vs Freddy"
+8087:false:"Parasol Henbee"
+8089:false:"Famicom Shougi - Ryuuousen"
+8090:false:"Mini Putt"
+8092:true:"Digital Devil Monogatari: Megami Tensei"
+8094:false:"Rockman 3 - Endless"
+8095:false:"Rockman 2 - Endless"
+8096:false:"RockMan 4: Aratanaru Yabou!! Endless"
+8097:false:"RockMan 5: Blues no Wana!? Endless"
+8105:false:"Niji no Silk Road"
+8112:false:"megaman x"
+8113:false:"Ide Yousuke Meijin no Jissen Mahjong 2"
+8115:false:"Grand Master"
+8116:false:"Super Chinese 3"
+8120:false:"Kyuukyoku Harikiri Stadium 3"
+8130:false:"Namcot Mahjong III - Mahjong Tengoku"
+8132:false:"VS Super Mario Bros"
+8152:false:"Fushigi no Umi no Nadia"
+8154:false:"Uncharted Waters"
+8156:false:"Magical Taruruuto kun - Fantastic World!!"
+8157:false:"Itadaki Street - Watashi no Mise ni Yottette"
+8158:false:"Shadow Brain"
+8159:false:"Bakushou!! Jinsei Gekijou 2"
+8160:false:"Oeka Kids - Anpanman no Hiragana Daisuki"
+8161:false:"Kero Kero Keroppi no Daibouken"
+8164:false:"megaman 5"
+8168:false:"Hokuto no Ken 4 - Shichisei Haken Den - Hokuto Shinken no Kanata he"
+8170:false:"Alter Ego"
+8178:false:"City Rampage - Demo"
+8179:false:"Cat Killer"
+8180:false:"Chase"
+8181:false:"Super Pak Pak "
+8182:true:"Hot Seat Harry"
+8189:false:"Obocchama kun"
+8190:false:"Gorby no Pipeline Dai Sakusen"
+8192:false:"Cosmocop"
+8215:false:"Thunder and Lightning"
+8218:false:"L'Empereur"
+8233:false:"ballon "
+8262:false:"1999"
+8302:false:"castlr"
+8344:false:"Super Contra 6"
+8345:false:"Balloon Mario"
+8353:false:"Sukeban Deka III (Japan)"
+8355:false:"MegaMan Dutch"
+8356:false:"star soldier jj"
+8372:false:"Dragoon X Omega"
+8373:false:"Dragoon X Omega II"
+8392:false:"Yami no Shigotonin Kage"
+8407:false:"exerion1"
+8411:false:"Arena Mario (SMB1 Hack)"
+8412:false:"Bad Mario (SMB1 Hack)"
+8414:true:"Bowser's Jumping Challenge (SMB1 Hack)"
+8420:true:"Saint Seiya: Ougon Densetsu Kanketsu Hen"
+8425:false:"QEB DISCO BROTHERS"
+8435:false:"FATAL FURY"
+8443:false:"Motion"
+8450:false:"GENGHISKAHN"
+8451:false:"MEGAMAN4Z"
+8452:false:"MEGAMANVI"
+8484:false:"Werewolf"
+8487:false:"1945"
+8493:true:"My Little Pony - Dr. Discord's Conquest (MegaMan 3 Hack)"
+8494:false:"Pac-Mania"
+8506:false:"Huge Insect"
+8527:false:"zelda 2 hack"
+8528:false:"fggg"
+8529:false:"cccccc"
+8540:false:"Pica"
+8541:false:"Puyo Puyo"
+8543:false:"Power Blade [Incorrect ROM]"
+8548:false:"Titenic"
+8551:false:"Menace Beach"
+8552:false:"Angry Birds "
+8553:false:"Rockman 7"
+8562:false:"100 Man Dollar Kid - Maboroshi no Teiou Hen"
+8563:false:"1991 Du Ma Racing"
+8564:false:"A Ressha de Ikou"
+8565:false:"Aa Yakyuu Jinsei Icchokusen"
+8566:false:"Abarenbou Tengu"
+8567:false:"Aces - Iron Eagle 3"
+8568:false:"Ai Sensei no Oshiete - Watashi no Hoshi"
+8572:false:"Roll-chan Evolution, Episode IV - Sparking to Hero"
+8573:false:"Roll-chan Evolution S, Episode IV - Roll-chan BCAS"
+8577:false:"title"
+8591:false:"mickey mania"
+8600:false:"Five Days"
+8601:false:"AV Pachi-Slot"
+8617:false:"NES Test Cartridge"
+8620:false:"Spiritual Warfare"
+8631:false:"Robodemons"
+8634:false:"Tekken 2"
+8635:false:"Thunder Warrior"
+8647:false:"Tom "
+8653:false:"Tomb Raider"
+8654:false:"Titanic"
+8655:false:"Rockman: Deus Ex Machina - Easy"
+8656:false:"smb3"
+8683:false:"Super Merio Brothers Frustration Forever"
+8684:false:"Super Mario Bros. Frustration"
+8723:true:"Roll-chan Evolution, Episode I - Roll-chan Gaiden"
+8735:false:"Mortal Kombat 3"
+8750:false:"Rockman Deus Ex Machina (Hard)"
+8751:true:"Roll-chan Evolution S, Episode I - Roll-chan Claw"
+8752:false:"Final Fantasy 3"
+8754:false:"Windows 98"
+8759:false:"Castelvania"
+8760:false:"International Cricket"
+8764:false:"99999 in 1"
+8765:false:"Jesus Kyoufu no Bio Monster"
+8801:false:"Super Mario Adventure"
+8810:true:"Mega Man CX"
+8815:false:"Rock         Man"
+8918:false:"Soap Panic"
+8930:false:"Roll-chan Evolution S, Episode III - Speed Bound"
+8933:true:"Roll-chan Evolution Special: Roll-chan L"
+8940:false:"Otaku no Seiza - An Adventure in the Otaku Galaxy"
+8964:true:"Star Trek V - The Final Frontier"
+8991:false:"Double Moon Densetsu"
+9015:false:"Rockman No Constancy - Hard"
+9077:false:"pão"
+9089:false:"Castle Excellent"
+9105:false:"Kamikaze mario 3"
+9112:true:"Toadette's Christmas Adventure"
+9113:false:"Toad's Christmas Adventure"
+9119:false:"p o w"
+9127:false:"Tecmo Bowl '96"
+9136:false:"Super Mario Bros 3"
+9138:false:"super mario bros 3 fun edition"
+9167:false:"Pyokotan no Dai Meiro"
+9168:false:"Sugoro Quest"
+9225:false:"Mario Dragon (Double Dragon Hack)"
+9236:false:"Megaman CX"
+9254:false:"Ninja Jajamaru"
+9255:false:"MegaFag"
+9264:false:"Ninja Gaiden (US) (BETA)"
+9265:false:"Adventure Island 2"
+9268:false:"Iron szord"
+9270:false:"Tokkyuu Shirei Solbrain"
+9340:false:"Rockman 4 - Endless"
+9373:false:"Mega Man in the Mushroom Kingdom"
+9379:false:"Metal Slader"
+9380:true:"Kyouryuu Sentai Zyuranger"
+9425:false:"Cvetnye Linii"
+9433:false:"Joshua and the Battle of Jericho"
+9434:false:"Just Breed"
+9456:false:"Noah's Ark"
+9468:false:"Urusei Yatsura"
+9476:false:"The Legend of Zelda - Dreams In The Hourglass (Unl)"
+9477:false:"zelda random"
+9494:false:"Garou Densetsu Special"
+9497:false:"Juju"
+9499:false:"1100 in 1"
+9521:false:"Paaman Part 2: Himitsu Kessha Madoodan wo Taose!"
+9523:false:"Lost Levels"
+9547:false:"Super Contra X"
+9548:false:"Super Mario Adventures (Tiny Toon Adventures Hack)"
+9549:false:"Tiny Toon Adventures 6"
+9551:false:"kamen rider no yabou"
+9557:false:"The King of Fighters ''96"
+9575:false:"asterix"
+9583:false:"Rock   Man"
+9590:false:"Guardian Legend (U) [T Rus Shedevr (30.06.2004)]"
+9597:true:"Metroid: Rogue Dawn"
+9604:false:"The Legend of Prince Valiant"
+9613:false:"Little Red Hood (Sachen-HES)"
+9628:false:"Drop Zone"
+9632:false:"Chip 'n Dale Rescue Rangers"
+9638:false:"222"
+9639:false:"Dragon Warrior Hack"
+9642:false:"vs excitebike"
+9645:false:"Double dragon 4 nes"
+9648:false:"CASTREVASNIA"
+9655:false:"das"
+9657:false:"new gostbuster 2 nes"
+9672:false:"Luz do Dia na Noite"
+9677:false:"terminator2"
+9678:false:"Super Mario Bros. 2J   SMB1 Chars"
+9685:false:"SMB3 Random"
+9686:false:"SMB3???"
+9696:false:"forcite"
+9706:false:"Megaman in Java Island"
+9707:false:"Mega Man in Indonesia"
+9721:false:"Super Mario Bros. 3 Randomized"
+9728:false:"None"
+9730:false:"Mega Man IV: After In Indonesia"
+9731:false:"Mega Man: Dr. Wily Visits Indonesia"
+9732:false:"Mega Man V: Indonesian Artifact"
+9761:false:"1997 in 1"
+9770:false:"Roll-Chan"
+9773:false:"MAh"
+9774:false:"JJJ"
+9775:false:"hhh"
+9776:false:"Afro Man"
+9777:false:"Feminista"
+9778:false:"Badminton"
+9806:false:"Mega Man 2 (U) [T-Port]"
+9840:false:"Megaman V Second Strike"
+9841:false:"MashyMashy"
+9861:false:"Super Mario Bros. 3 (USA) [Hack by Frank Maggiore v1.1]"
+9869:false:"Summer Carnival '92 - Recca"
+9883:false:"Pocahontas"
+9898:false:"Kamikaze Mario Bros"
+9899:false:"SUPER CONTRA"
+9900:false:"SOLOMON KEY"
+9903:false:"LITTLE NEMO"
+9904:false:"Super Mario Unlimited"
+9916:false:"CA"
+9922:false:"SMB3.75TorvaEdition"
+9924:false:"Water Fall (SMB1 Hack)"
+9940:false:"ZXc"
+9944:false:"22"
+9961:false:"Darkwing Duck 2 (BETA)"
+9971:false:"Super C Hell Hack (God)"
+9972:false:"Bass"
+10107:false:"Nuts "
+10183:true:"Mortal Kombat II"
+10195:false:"Mortal Kombat II Special"
+10220:false:"F-1 Sensation"
+10234:false:"Renegade - Nekketsu Kouha Kunio-Kun"
+10292:false:"F1 Circus"
+10295:false:"The Golf &#39;92"
+10296:false:"Castlevania - Blood Moon"
+10311:false:"Kid Klown in Night Mayor World"
+10336:false:"Videomation"
+10341:false:"NES Play Action Football"
+10342:false:"Wizards "
+10343:false:"Pro Sport Hockey"
+10349:false:"Super Mario Bros. Special"
+10350:false:"Formula 1 Sensation"
+10351:false:"Konami Hyper Soccer"
+10352:false:"Rackets and Rivals"
+10353:false:"Rainbow Islands - Bubble Bobble 2 (Europe)"
+10354:false:"Super Turrican"
+10355:false:"King Neptune&#39;s Adventure"
+10361:false:"Krazy Kreatures"
+10362:false:"Mermaids of Atlantis - The Riddle of the Magic Bubble"
+10363:false:"Metal Fighter"
+10365:false:"Moon Ranger"
+10366:false:"Operation Secret Storm"
+10367:false:"Pesterminator"
+10368:false:"P&#39;Radikus Conflict"
+10369:false:"Puzzle"
+10370:false:"Rad Racket - Deluxe Tennis II"
+10371:false:"Raid 2020"
+10372:false:"Rumble Station - 15 in 1"
+10373:false:"Shockwave"
+10374:false:"Silent Assault"
+10375:false:"Skull and Crossbones"
+10376:false:"Sunday Funday - The Ride"
+10377:false:"Tiles of Fate"
+10378:false:"Trolls on Treasure Island"
+10379:false:"Ultimate League Soccer"
+10380:false:"Venice Beach Volleyball"
+10381:false:"Vindicators"
+10388:false:"Wonderland Dizzy (Proto)"
+10389:false:"Mystery World Dizzy"
+10395:false:"Deblock"
+10396:false:"Family Circuit &#39;91 "
+10397:false:"Great Battle Cyber"
+10398:false:"Great Deal"
+10399:false:"Wagyan Land 3"
+10400:false:"Ultraman Club - Kaijuu Daikessen!!"
+10401:false:"Kidou Senshi Z Gundam - Hot Scramble"
+10402:false:"Tetris 2 + Bombliss (BPS)"
+10403:false:"Puzslot"
+10404:false:"Nakajima Satoru - F-1 Hero"
+10405:false:"Nakajima Satoru Kanshuu - F-1 Hero 2"
+10408:false:"Advanced Dungeons and Dragons - Dragons of Flame"
+10410:false:"Armed Dragon Fantasy Villgust"
+10411:false:"Battle Storm"
+10413:false:"Pachinko Daisakusen"
+10414:false:"Pachinko Daisakusen 2"
+10415:false:"Moero TwinBee - Cinnamon Hakase o Sukue!"
+10417:false:"Chaos World"
+10418:false:"Columbus - Ougon no Yoake"
+10419:false:"335 md5s"
+10641:false:"Contra: Revenge of the Red Falcon (SWSRB Edition)"
+10645:false:"AstÃ©rix"
+10654:false:"<New Title>"

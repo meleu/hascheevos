@@ -1,74 +1,168 @@
-9962:true
-9996:false
-9997:false
-9998:true
-9999:false
-10000:false
-10001:false
-10004:false
-10005:true
-10006:true
-10007:true
-10008:false
-10009:false
-10010:false
-10011:true
-10012:false
-10013:true
-10014:true
-10015:true
-10016:false
-10020:true
-10025:true
-10027:false
-10028:true
-10032:false
-10033:true
-10034:true
-10035:false
-10036:false
-10038:false
-10039:true
-10040:false
-10041:false
-10042:true
-10043:false
-10044:false
-10045:false
-10046:false
-10047:false
-10048:false
-10049:false
-10051:false
-10058:false
-10059:false
-10060:false
-10076:true
-10095:false
-10106:false
-10122:false
-10130:false
-10132:false
-10134:false
-10191:false
-10192:false
-10203:true
-10205:false
-10212:false
-10219:true
-10221:false
-10231:false
-10257:false
-10323:false
-10406:false
-10426:false
-10427:false
-10428:false
-10439:false
-10440:false
-10441:false
-10442:false
-10443:false
-10554:false
-10556:false
-10668:false
+9962:true:"Sonic The Hedgehog"
+9996:false:"King's Quest - Quest For The Crown"
+9997:false:"Sonic the Hedgehog 2"
+9998:true:"Alex Kidd in Miracle World"
+9999:false:"Phantasy Star"
+10000:false:"Aleste"
+10001:false:"Golvellius: Valley of Doom"
+10004:false:"Golden Axe Warrior"
+10005:true:"Alex Kidd in Shinobi World"
+10006:true:"Rescue Mission"
+10007:true:"Wonder Boy III - The Dragons Trap"
+10008:false:"Monica no Castelo do Dragao"
+10010:false:"Sonic Chaos"
+10011:true:"Kenseiden"
+10012:false:"Rocky"
+10013:true:"Land of Illusion Starring Mickey Mouse"
+10014:true:"Ninja Gaiden"
+10015:true:"Master of Darkness"
+10016:false:"Disney's Aladdin"
+10020:true:"Choplifter"
+10025:true:"Fantasy Zone"
+10027:false:"Final Bubble Bobble"
+10028:true:"Tom and Jerry - The Movie"
+10032:false:"Ultima 4 - Quest of the Avatar"
+10033:true:"Space Harrier"
+10034:true:"Shinobi"
+10035:false:"Quartet"
+10036:false:"SDI"
+10038:false:"Paperboy"
+10039:true:"Ayrton Senna's Super Monaco GP II"
+10040:false:"Indiana Jones and the Last Crusade"
+10041:false:"F1 Championship"
+10042:true:"Outrun"
+10043:false:"Desert Strike"
+10044:false:"Alex Kidd in Miracle World 2"
+10045:false:"Power Strike II"
+10046:false:"Psycho Fox"
+10047:false:"Blade Eagle"
+10048:false:"Circuit, The"
+10049:false:"Comical Machine Gun Joe"
+10050:false:"Ys: The Vanished Omens"
+10051:false:"After Burner"
+10058:false:"R-Type"
+10059:false:"World Gran Prix"
+10060:false:"Megumi Rescue"
+10076:true:"Taz-Mania"
+10095:false:"Taz-Mania (Beta)"
+10106:false:"Ghost House"
+10122:false:"Opa Opa"
+10130:false:"Galaxy Force"
+10132:false:"Heroes of the Lance"
+10134:false:"Prince of Persia"
+10191:false:"Fantasy Zone II"
+10192:false:"Ms Pac-Man"
+10203:true:"Kung Fu Kid"
+10205:false:"Bonanza Bros"
+10212:false:"Monopoly"
+10219:true:"Hang-On"
+10221:false:"Alex Kidd in High Tech World"
+10231:false:"Fire and Ice"
+10257:false:"ALF"
+10323:false:"Penguin Land"
+10406:false:"Spider-Man - Return of the Sinister Six"
+10426:false:"Double Dragon"
+10427:false:"Vigilante"
+10428:false:"Desert Speedtrap Starring Road Runner And Wile E. Coyote"
+10439:false:"Great Volleyball"
+10440:false:"Rambo - First Blood Part 2"
+10441:false:"Spy vs. Spy"
+10442:false:"Sega Chess"
+10443:false:"Deep Duck Trouble"
+10554:false:"Castle of Illusion Starring Mickey Mouse"
+10556:false:"Danan : The Jungle Fighter"
+10668:false:"Arcade Smash Hits"
+10689:false:"Master of Combat"
+10690:false:"20 em 1"
+10691:false:"California Games"
+10692:false:"Championship Hockey"
+10693:false:"Cloud Master"
+10694:false:"Columns"
+10695:false:"Cosmic Spacehead"
+10696:false:"Cyborg Hunter"
+10697:false:"Dead Angle"
+10698:false:"Enduro Racer"
+10700:false:"Forgotten Worlds"
+10703:false:"Gauntlet"
+10704:false:"Gangster Town"
+10705:false:"Golden Axe"
+10706:false:"Global Defense"
+10707:false:"Impossible Mission"
+10708:false:"Joe Montana Football"
+10709:false:"Klax"
+10710:false:"Laser Ghost"
+10711:false:"Lemmings"
+10712:false:"Lord of the Sword"
+10713:false:"Sherlock Holmes - Loretta no Shouzou"
+10714:false:"The Lucky Dime Caper - Starring Donald Duck"
+10715:false:"Zaxxon 3-D"
+10716:false:"Zillion II - The Tri Formation"
+10717:false:"Ys - The Vanished Omens"
+10718:false:"World Cup Italia '90"
+10719:false:"Wanted"
+10720:false:"World Games"
+10721:false:"WWF Wrestlemania - Steel Cage Challenge"
+10722:false:"Walter Payton Football"
+10723:false:"Virtua Fighter Animation"
+10724:false:"Ultimate Soccer"
+10725:false:"Thunder Blade"
+10726:false:"Teddy Boy"
+10727:false:"Wolfchild"
+10728:false:"Wimbledon"
+10729:false:"Wimbledon II"
+10730:false:"World Cup USA '94"
+10731:false:"Super Space Invaders"
+10732:false:"Super Monaco GP"
+10733:false:"Street Fighter II"
+10734:false:"Space Harrier 3-D"
+10735:false:"Sonic Spinball"
+10736:false:"Sonic Blast"
+10737:false:"Slap Shot"
+10738:false:"Shooting Gallery"
+10739:false:"Shanghai"
+10740:false:"Scramble Spirits"
+10741:false:"Satellite 7"
+10742:false:"Sagaia"
+10743:false:"Ace of Aces"
+10744:false:"Action Fighter"
+10745:false:"Aerial Assault"
+10746:false:"Alien Storm"
+10747:false:"Alien Syndrome"
+10748:false:"Altered Beast"
+10749:false:"Assault City"
+10750:false:"Asterix"
+10751:false:"Asterix and the Great Rescue"
+10752:false:"Asterix and the Secret Mission"
+10753:false:"Astro Warrior"
+10754:false:"Air Rescue"
+10755:false:"Baku Baku Animal"
+10756:false:"Bank Panic"
+10757:false:"Black Belt"
+10758:false:"Bubble Bobble"
+10759:false:"Buggy Run"
+10760:false:"Bomber Raid"
+10761:false:"Battlemaniacs"
+10762:false:"Champions of Europe"
+10763:false:"Cool Spot"
+10764:false:"The Cyber Shinobi"
+10765:false:"Dynamite Headdy"
+10766:false:"Dick Tracy"
+10767:false:"Dynamite Dux"
+10768:false:"Dynamite Duke"
+10769:false:"Dr. Hello"
+10770:false:"Maze Hunter 3-D"
+10771:false:"My Hero"
+10772:false:"Nekkyuu Koushien"
+10773:false:"The Ninja"
+10774:false:"Parlour Games"
+10776:false:"Wonder Boy in Monster World"
+10777:false:"Wonder Boy in Monster Land"
+10813:false:"Road Rash"
+10814:false:"Running Battle"
+10815:false:"R.C. Grand Prix"
+10816:false:"Reggie Jackson Baseball"
+10817:false:"Montezuma's Revenge featuring Panama Joe"
+10818:false:"Missile Defense 3-D"
+10832:false:"Rampage"
+10879:false:"Fantasy Zone 3 - The Maze"
+10880:false:"E-SWAT - City Under Siege"
