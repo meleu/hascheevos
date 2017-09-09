@@ -5,8 +5,6 @@
 # A tool to check if your ROMs have cheevos (RetroAchievements.org).
 #
 # TODO: check dependencies curl, jq, zcat, unzip, 7z, cheevoshash (from this repo).
-# TODO: add the RA game name in *_hascheevos entries.
-#       It will be "game id:boolean:game name"
 
 # globals ####################################################################
 
@@ -110,12 +108,12 @@ function update_files() {
 # exit if fails
 # TODO: cache the token in some file
 function get_cheevos_token() {
-    [[ -n "$RA_TOKEN" ]] && return 0
-
     if [[ -z "$RA_USER" ]]; then
         echo "ERROR: undefined RetroAchievements.org user (see \"--user\" option)." >&2
         safe_exit 1
     fi
+
+    [[ -n "$RA_TOKEN" ]] && return 0
 
     if [[ -z "$RA_PASSWORD" ]]; then
         echo "ERROR: undefined RetroAchievements.org password (see \"--password\" option)." >&2
@@ -256,6 +254,7 @@ function game_has_cheevos() {
     local gameid="$1"
     local hascheevos_file
     local boolean
+    local game_title
 
     if [[ ! $gameid =~ $GAMEID_REGEX ]]; then
         echo "ERROR: \"$gameid\" invalid game ID." >&2
@@ -272,33 +271,51 @@ function game_has_cheevos() {
         safe_exit 1
     fi
 
-    hascheevos_file="$(grep -l "^$gameid:" "$DATA_DIR"/*_hascheevos-local.txt 2> /dev/null)"
-    [[ -f "$hascheevos_file" ]] || hascheevos_file="$(grep -l "^$gameid:" "$DATA_DIR"/*_hascheevos.txt 2> /dev/null)"
+    if [[ "$CHECK_RA_SERVER_FLAG" -ne 1 ]]; then
+        hascheevos_file="$(grep -l "^$gameid:" "$DATA_DIR"/*_hascheevos-local.txt 2> /dev/null)"
+        [[ -f "$hascheevos_file" ]] || hascheevos_file="$(grep -l "^$gameid:" "$DATA_DIR"/*_hascheevos.txt 2> /dev/null)"
 
-    if [[ -f "$hascheevos_file" ]]; then
-        boolean="$(grep "^$gameid:" "$hascheevos_file" | cut -d: -f2)"
-        [[ "$boolean" == true ]] && return 0
-        [[ "$boolean" == false && "$CHECK_FALSE_FLAG" -eq 0 ]] && return 1
+        if [[ -f "$hascheevos_file" ]]; then
+            boolean="$(   grep "^$gameid:" "$hascheevos_file" | cut -d: -f2)"
+            game_title="$(grep "^$gameid:" "$hascheevos_file" | sed 's/^[^:]\+:[^:]\+://' )"
+            [[ -n "$game_title" ]] && echo "--- Game Title: $game_title" >&2
+            [[ "$boolean" == true ]] && return 0
+            [[ "$boolean" == false && "$CHECK_FALSE_FLAG" -eq 0 ]] && return 1
+        fi
     fi
-
-    [[ "$CHECK_RA_SERVER_FLAG" -ne 1 ]] && return 1
 
     [[ -z "$RA_TOKEN" ]] && get_cheevos_token
 
     echo "--- checking at RetroAchievements.org server..." >&2
     local patch_json="$(curl -s "http://retroachievements.org/dorequest.php?r=patch&u=${RA_USER}&g=${gameid}&f=3&l=1&t=${RA_TOKEN}")"
-    local number_of_cheevos="$(echo "$patch_json" | jq '.PatchData.Achievements | length')"
-    [[ -z "$number_of_cheevos" || "$number_of_cheevos" -lt 1 ]] && return 1
 
-    # if the logic reaches this point, the game has cheevos
-
-    # updating the _hascheevos.txt file
     local console_id="$(echo "$patch_json" | jq '.PatchData.ConsoleID')"
+    if [[ "$console_id" -lt 1 || "$console_id" -gt "${#CONSOLE_NAME[@]}" || "$console_id" == null || -z "$console_id" ]]; then
+        echo "--- WARNING: unable to find the Console ID for Game #$gameid!" >&2
+        return 1
+    fi
     hascheevos_file="$DATA_DIR/${CONSOLE_NAME[console_id]}_hascheevos-local.txt"
 
-    sed -i "s/^${gameid}:.*/${gameid}:true/" "$hascheevos_file" 2> /dev/null
+    game_title="$(echo "$patch_json" | jq '.PatchData.game_title')"
+    [[ "$game_title" == null ]] && game_title=
+    [[ -n "$game_title" ]] && echo "--- Game Title: $game_title" >&2
+
+    local number_of_cheevos="$(echo "$patch_json" | jq '.PatchData.Achievements | length')"
+
+    # if the game has no cheevos...
+    if [[ -z "$number_of_cheevos" || "$number_of_cheevos" -lt 1 ]]; then
+        sed -i "s/^${gameid}:true/${gameid}:false/" "$hascheevos_file" 2> /dev/null
+        if ! grep -q "^${gameid}:false" "$hascheevos_file" 2> /dev/null; then
+            echo "${gameid}:false:${game_title}" >> "$hascheevos_file"
+            sort -un "$hascheevos_file" -o "$hascheevos_file"
+        fi
+        return 1
+    fi
+
+    # if the logic reaches this point, the game has cheevos.
+    sed -i "s/^${gameid}:false/${gameid}:true/" "$hascheevos_file" 2> /dev/null
     if ! grep -q "^${gameid}:true" "$hascheevos_file" 2> /dev/null; then
-        echo "${gameid}:true" >> "$hascheevos_file"
+        echo "${gameid}:true:${game_title}" >> "$hascheevos_file"
         sort -un "$hascheevos_file" -o "$hascheevos_file"
     fi
 
@@ -502,21 +519,26 @@ while [[ -n "$1" ]]; do
             check_argument "$1" "$2" || safe_exit 1
             shift
             RA_TOKEN="$1"
+            get_cheevos_token
             ;;
 
 #H -g|--game-id GAME_ID     Check if there are cheevos for a given GAME_ID and 
-#H                          exit. Note: this option should be the last argument.
+#H                          exit. Accept game IDs separated by commas, ex: 1,2,3
+#H                          Note: this option should be the last argument.
 #H 
         -g|--game-id)
             check_argument "$1" "$2" || safe_exit 1
-            # TODO: accept multiple game ids separated by comma
-            if game_has_cheevos "$2"; then
-                echo "--- Game ID $2 HAS CHEEVOS!" >&2
-                safe_exit 1
-            else
-                echo "--- Game ID $2 has no cheevos. :(" >&2
-                safe_exit 0
-            fi
+            ret=0
+            IFS=, # XXX: not sure if it will impact other parts
+            for i in $2; do
+                if game_has_cheevos "$i"; then
+                    echo "--- Game ID $i HAS CHEEVOS!" >&2
+                else
+                    echo "--- Game ID $i has no cheevos. :(" >&2
+                    ret=1
+                fi
+            done
+            safe_exit "$ret"
             ;;
 
 #H --get-hashlibs           Download JSON hash libraries for all supported
