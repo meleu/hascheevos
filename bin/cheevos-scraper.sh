@@ -2,17 +2,7 @@
 # cheevos-scraper.sh
 ####################
 #
-# I need:
-#
-# - get account info (retroarch.cfg)
-#
-# - system of a ROM
-#   here's a trick for getting the system based on the folder the rom is stored
-#   system="$(echo "$rom" | sed 's|\(.*/RetroPie/roms/[^/]*\).*|\1|' | xargs basename)"
-#
-# - scrape a ROM
-#
-# - scrape all ROMs from a system
+# meleu
 
 # globals #####################################################################
 readonly RP_ROMS_DIR="$HOME/RetroPie/roms"
