@@ -4,7 +4,7 @@
 #
 # A tool to check if your ROMs have cheevos (RetroAchievements.org).
 #
-# TODO: check dependencies curl, jq, zcat, unzip, 7z, cheevoshash (from this repo).
+# TODO: check dependencies curl, jq, unzip, 7z, cheevoshash (from this repo).
 
 # globals ####################################################################
 
@@ -52,11 +52,21 @@ CONSOLE_NAME[11]=mastersystem
 #CONSOLE_NAME[13]=atari
 #CONSOLE_NAME[14]=neogeo
 
+# RetroPie specific variables, used only when invoked with --scrape
+readonly RP_ROMS_DIR="$HOME/RetroPie/roms"
+GAMELIST=
+GAMELIST_BAK=
+ROMS_DIR=
+SCRAPE_FLAG=0
 
-# functions ##################################################################
+
+# functions ###################################################################
 
 function safe_exit() {
     rm -rf "$TMP_DIR"
+    if [[ -f "$GAMELIST" && -f "$GAMELIST_BAK" ]]; then
+        diff "$GAMELIST" "$GAMELIST_BAK" > /dev/null && rm -f "$GAMELIST_BAK"
+    fi
     exit $1
 }
 
@@ -72,6 +82,12 @@ function help_message() {
 }
 
 
+function is_retropie() {
+    [[ -d "$RP_ROMS_DIR" ]] && return 0 || return 1
+}
+
+
+# TODO: this function needs more intensive tests
 function update_files() {
     local err_flag=0
     local dir="$SCRIPT_DIR/.."
@@ -106,7 +122,7 @@ function update_files() {
 # input: RA_USER, RA_PASSWORD
 # updates: RA_TOKEN
 # exit if fails
-# TODO: cache the token in some file
+# TODO: cache the token in some file?
 function get_cheevos_token() {
     if [[ -z "$RA_USER" ]]; then
         echo "ERROR: undefined RetroAchievements.org user (see \"--user\" option)." >&2
@@ -120,8 +136,8 @@ function get_cheevos_token() {
         safe_exit 1
     fi
 
-    RA_TOKEN="$(curl -s "http://retroachievements.org/dorequest.php?r=login&u=${RA_USER}&p=${RA_PASSWORD}" | jq -r .Token)"
-    if [[ "$RA_TOKEN" == null || -z "$RA_TOKEN" ]]; then
+    RA_TOKEN="$(curl -s "http://retroachievements.org/dorequest.php?r=login&u=${RA_USER}&p=${RA_PASSWORD}" | jq -er .Token)"
+    if [[ "$?" -ne 0 || "$RA_TOKEN" == null || -z "$RA_TOKEN" ]]; then
         echo "ERROR: cheevos authentication failed. Aborting..."
         safe_exit 1
     fi
@@ -169,7 +185,7 @@ function update_hash_libraries() {
     local system
     local i
 
-    echo "Checking JSON hash libraries..."
+    echo "Checking JSON hash libraries..." >&2
 
     for i in "${!CONSOLE_NAME[@]}"; do
         [[ -f "$DATA_DIR/${CONSOLE_NAME[i]}_hashlibrary.json" ]] || download_hashlibrary "$i"
@@ -207,7 +223,7 @@ function get_game_id() {
     while read -r line; do
         echo "--- $line" >&2
         hash_i="$(echo "$line" | sed 's/^\(SNES\|NES\|Genesis\|plain MD5\): //')"
-        line="$(grep "\"$hash_i\"" "$DATA_DIR"/*_hashlibrary.json 2> /dev/null)"
+        line="$(grep -i "\"$hash_i\"" "$DATA_DIR"/*_hashlibrary.json 2> /dev/null)"
         echo -n "$(basename "${line%_hashlibrary.json*}")" > "$GAME_CONSOLE_NAME"
         gameid="$(echo ${line##*: } | tr -d ' ,')"
         [[ $gameid =~ $GAMEID_REGEX ]] && break
@@ -231,12 +247,12 @@ function get_game_id() {
     fi
 
     if [[ "$gameid" == 0 ]]; then
-        echo "WARNING: this ROM file doesn't feature achievements." >&2
+        echo "--- WARNING: this ROM file doesn't feature achievements." >&2
         return 1
     fi
 
     if [[ ! $gameid =~ $GAMEID_REGEX ]]; then
-        echo "ERROR: \"$rom\": unable to get game ID." >&2
+        echo "--- unable to get game ID." >&2
         return 1
     fi
 
@@ -289,15 +305,14 @@ function game_has_cheevos() {
     echo "--- checking at RetroAchievements.org server..." >&2
     local patch_json="$(curl -s "http://retroachievements.org/dorequest.php?r=patch&u=${RA_USER}&g=${gameid}&f=3&l=1&t=${RA_TOKEN}")"
 
-    local console_id="$(echo "$patch_json" | jq '.PatchData.ConsoleID')"
-    if [[ "$console_id" -lt 1 || "$console_id" -gt "${#CONSOLE_NAME[@]}" || "$console_id" == null || -z "$console_id" ]]; then
+    local console_id="$(echo "$patch_json" | jq -e '.PatchData.ConsoleID')"
+    if [[ "$?" -ne 0 || "$console_id" -lt 1 || "$console_id" -gt "${#CONSOLE_NAME[@]}" || -z "$console_id" ]]; then
         echo "--- WARNING: unable to find the Console ID for Game #$gameid!" >&2
         return 1
     fi
     hascheevos_file="$DATA_DIR/${CONSOLE_NAME[console_id]}_hascheevos-local.txt"
 
-    game_title="$(echo "$patch_json" | jq '.PatchData.game_title')"
-    [[ "$game_title" == null ]] && game_title=
+    game_title="$(echo "$patch_json" | jq -e '.PatchData.game_title')" || game_title=
     [[ -n "$game_title" ]] && echo "--- Game Title: $game_title" >&2
 
     local number_of_cheevos="$(echo "$patch_json" | jq '.PatchData.Achievements | length')"
@@ -465,6 +480,100 @@ function check_hascheevos_files() {
 }
 
 
+# a trick for getting the system based on the folder where the rom is stored
+function get_rom_system() {
+    echo "$1" | sed 's|\(.*/RetroPie/roms/[^/]*\).*|\1|' | xargs basename
+}
+
+
+# update gamelist.xml info
+# XXX: RetroPie specific
+function set_cheevos_gamelist_xml() {
+    local set="$2"
+    local system
+    local rom_full_path="$1"
+    local rom
+    local game_name
+    local new_entry_flag
+    local has_cheevos_xml_element
+
+    system=$(get_rom_system "$rom_full_path")
+
+    [[ -f "$rom_full_path" ]] || return 1
+    rom="$(basename "$rom_full_path")"
+
+    # From https://github.com/RetroPie/EmulationStation/blob/master/GAMELISTS.md
+    # ES will check three places for a gamelist.xml in the following order, using
+    # the first one it finds:
+    # - [SYSTEM_PATH]/gamelist.xml
+    # - ~/.emulationstation/gamelists/[SYSTEM_NAME]/gamelist.xml
+    # - /etc/emulationstation/gamelists/[SYSTEM_NAME]/gamelist.xml
+    for GAMELIST in \
+        "$RP_ROMS_DIR/$system/gamelist.xml" \
+        "$HOME/.emulationstation/gamelists/$system/gamelist.xml" \
+        "/etc/emulationstation/gamelists/$system/gamelist.xml"
+    do
+        [[ -f "$GAMELIST" ]] && break
+        GAMELIST=
+    done
+    [[ -f "$GAMELIST" ]] || return 1
+
+    GAMELIST_BAK="${GAMELIST}-$(date +'%Y%m%d-%H%M%S').bak"
+    cp "$GAMELIST" "$GAMELIST_BAK"
+
+    # if set != true, just delete <achievements> element (it's considered false).
+    if [[ "$set" != true ]]; then
+        xmlstarlet ed -L -d "/gameList/game[contains(path,\"$rom\")]/achievements" "$GAMELIST"
+        return "$?"
+    fi
+
+    # 0 means new entry
+    new_entry_flag="$(xmlstarlet sel -t -v "count(/gameList/game[contains(path,\"$rom\")])" "$GAMELIST")"
+
+    # 0 means no <achievements> xml element
+    has_cheevos_xml_element="$(xmlstarlet sel -t -v "count(/gameList/game[contains(path,\"$rom\")]/achievements)" "$GAMELIST")"
+
+    # if it's a new entry in gamelist.xml...
+    if [[ "$new_entry_flag" -eq 0 ]]; then
+        game_name="${rom%.*}"
+        xmlstarlet ed -L -s "/gameList" -t elem -n "game" -v "" \
+            -s "/gameList/game[last()]" -t elem -n "name" -v "$game_name" \
+            -s "/gameList/game[last()]" -t elem -n "path" -v "$rom_full_path" \
+            -s "/gameList/game[last()]" -t elem -n "achievements" -v "true" \
+            "$GAMELIST" || return 1
+    elif [[ "$has_cheevos_xml_element" -gt 0 ]]; then
+        xmlstarlet ed -L \
+            -u "/gameList/game[contains(path,\"$rom\")]/achievements" -v "true" \
+            "$GAMELIST" || return 1
+    else
+        xmlstarlet ed -L \
+            -s "/gameList/game[contains(path,\"$rom\")]" -t elem -n achievements -v "true" \
+            "$GAMELIST" || return 1
+    fi
+}
+
+
+function process_files() {
+    local f
+    for f in "$@"; do
+        if rom_has_cheevos "$f"; then
+            [[ "$SCRAPE_FLAG" -eq 1 ]] && set_cheevos_gamelist_xml "$f" true
+            echo -n "--- \"" >&2
+            echo -n "$f"
+            echo "\" HAS CHEEVOS!" >&2
+            if [[ "$COPY_ROMS_FLAG" -eq 1 ]]; then
+                console_name="$(cat "$GAME_CONSOLE_NAME")"
+                mkdir -p "$COPY_ROMS_DIR/$console_name"
+                cp -v "$f" "$COPY_ROMS_DIR/$console_name"
+            fi
+            echo
+        else
+            echo -e "\"$f\" has no cheevos. :(\n" >&2
+        fi
+    done
+}
+
+
 # helping to deal with command line arguments
 function check_argument() {
     # limitation: the argument 2 can NOT start with '-'
@@ -482,6 +591,7 @@ trap safe_exit SIGHUP SIGINT SIGQUIT SIGKILL SIGTERM
 
 [[ -z "$1" ]] && help_message
 
+# TODO: this args management should be done in a function.
 while [[ -n "$1" ]]; do
     case "$1" in
 
@@ -592,29 +702,54 @@ while [[ -n "$1" ]]; do
             safe_exit
             ;;
 
+#H --scrape                 [RETROPIE ONLY] Updates the gamelist.xml file with
+#H                          <achievements>true</achievements> if the ROM has
+#H                          cheevos.
+#H 
+        --scrape)
+            if ! is_retropie; then
+                echo "ERROR: not a RetroPie system." >&2
+                echo "The \"$1\" option is available only for RetroPie systems." >&2
+                safe_exit 1
+            fi
+            SCRAPE_FLAG=1
+            ;;
+
+#H -s|--system SYSTEM       [RETROPIE ONLY] Check if each ROM in the respective
+#H                          "~/RetroPie/roms/SYSTEM" directory has cheevos.
+#H 
+        -s|--system)
+            if ! is_retropie; then
+                echo "ERROR: not a RetroPie system." >&2
+                echo "The \"$1\" option is available only for RetroPie systems." >&2
+                safe_exit 1
+            fi
+
+            check_argument "$1" "$2" || safe_exit 1
+            shift
+            ROMS_DIR="$RP_ROMS_DIR/$1"
+
+            # TODO: make it able to process more than one systems separeted by commas
+            if [[ ! -d "$ROMS_DIR" ]]; then
+                echo "ERROR: \"$(basename "$ROMS_DIR")\": invalid system." >&2
+                safe_exit 1
+            fi
+            ;;
+
         *)  break
             ;;
     esac
     shift
 done
 
-get_cheevos_token
 update_hash_libraries
 
-for f in "$@"; do
-    if rom_has_cheevos "$f"; then
-        echo -n "--- \"" >&2
-        echo -n "$f"
-        echo "\" HAS CHEEVOS!" >&2
-        if [[ "$COPY_ROMS_FLAG" -eq 1 ]]; then
-            console_name="$(cat "$GAME_CONSOLE_NAME")"
-            mkdir -p "$COPY_ROMS_DIR/$console_name"
-            cp -v "$f" "$COPY_ROMS_DIR/$console_name"
-        fi
-        echo
-    else
-        echo -e "\"$f\" has no cheevos. :(\n" >&2
-    fi
-done
+if is_retropie && [[ -d "$ROMS_DIR" ]]; then
+    while read -r i; do
+        process_files "$i"
+    done < <(find "$ROMS_DIR" -type f -regextype egrep -iregex ".*\.($EXTENSIONS)$")
+fi
+
+process_files "$@"
 
 safe_exit
