@@ -136,7 +136,7 @@ function get_cheevos_token() {
         safe_exit 1
     fi
 
-    RA_TOKEN="$(curl -s "http://retroachievements.org/dorequest.php?r=login&u=${RA_USER}&p=${RA_PASSWORD}" | jq -er .Token)"
+    RA_TOKEN="$(curl -s "http://retroachievements.org/dorequest.php?r=login&u=${RA_USER}&p=${RA_PASSWORD}" | jq -e -r .Token)"
     if [[ "$?" -ne 0 || "$RA_TOKEN" == null || -z "$RA_TOKEN" ]]; then
         echo "ERROR: cheevos authentication failed. Aborting..."
         safe_exit 1
