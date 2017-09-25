@@ -518,8 +518,8 @@ function set_cheevos_gamelist_xml() {
     done
     [[ -f "$GAMELIST" ]] || return 1
 
-    GAMELIST_BAK="${GAMELIST}-$(date +'%Y%m%d-%H%M%S').bak"
-    cp "$GAMELIST" "$GAMELIST_BAK"
+    GAMELIST_BAK="${GAMELIST}-$(date +'%Y%m%d').bak"
+    [[ -f "$GAMELIST_BAK" ]] || cp "$GAMELIST" "$GAMELIST_BAK"
 
     # if set != true, just delete <achievements> element (it's considered false).
     if [[ "$set" != true ]]; then
