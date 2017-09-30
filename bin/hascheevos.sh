@@ -312,7 +312,7 @@ function game_has_cheevos() {
     fi
     hascheevos_file="$DATA_DIR/${CONSOLE_NAME[console_id]}_hascheevos-local.txt"
 
-    game_title="$(echo "$patch_json" | jq -e '.PatchData.game_title')" || game_title=
+    game_title="$(echo "$patch_json" | jq -e '.PatchData.Title')" || game_title=
     [[ -n "$game_title" ]] && echo "--- Game Title: $game_title" >&2
 
     local number_of_cheevos="$(echo "$patch_json" | jq '.PatchData.Achievements | length')"
