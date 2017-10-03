@@ -52,12 +52,13 @@ CONSOLE_NAME[11]=mastersystem
 #CONSOLE_NAME[13]=atari
 #CONSOLE_NAME[14]=neogeo
 
-# RetroPie specific variables, used only when invoked with --scrape
+# RetroPie specific variables
 readonly RP_ROMS_DIR="$HOME/RetroPie/roms"
 GAMELIST=
 GAMELIST_BAK=
 ROMS_DIR=
 SCRAPE_FLAG=0
+COLLECTIONS_FLAG=0
 
 
 # functions ###################################################################
@@ -83,7 +84,16 @@ function help_message() {
 
 
 function is_retropie() {
-    [[ -d "$RP_ROMS_DIR" ]] && return 0 || return 1
+    if [[ -d "$RP_ROMS_DIR" ]]; then
+        mkdir -p "$HOME/.emulationstation/collections"
+        return 0
+    fi
+    return 1
+}
+
+
+function regex_safe() {
+    echo "$1" |  sed -e 's/[]\/$*.^|[]/\\&/g'
 }
 
 
@@ -486,6 +496,31 @@ function get_rom_system() {
 }
 
 
+# add the game to the system specific custom collection
+# XXX: RetroPie specific
+function set_cheevos_custom_collection() {
+    [[ -f "$1" ]] || return 1
+
+    local set="$2"
+    local system
+    local rom_full_path="$1"
+    local collection_cfg
+
+    system=$(get_rom_system "$rom_full_path")
+    collection_cfg="$HOME/.emulationstation/collections/custom-$system achievements.cfg"
+
+    if [[ -z "$set" || "$set" == true ]]; then
+        echo "$rom_full_path" >> "$collection_cfg"
+    elif [[ "$set" == false ]]; then
+        sed -i "/$(regex_safe "$rom_full_path")/d" "$collection_cfg"
+    else
+        return 1
+    fi
+
+    sort -o "$collection_cfg" -u "$collection_cfg"
+}
+
+
 # update gamelist.xml info
 # XXX: RetroPie specific
 function set_cheevos_gamelist_xml() {
@@ -550,7 +585,7 @@ function set_cheevos_gamelist_xml() {
             -s "/gameList/game[contains(path,\"$rom\")]" -t elem -n achievements -v "true" \
             "$GAMELIST" || return 1
     fi
-    echo "--- This game has been defined as having cheevos in \"$GAMELIST\"."
+    echo "--- This game has been defined as having cheevos in \"$GAMELIST\"." >&2
 }
 
 
@@ -558,7 +593,8 @@ function process_files() {
     local f
     for f in "$@"; do
         if rom_has_cheevos "$f"; then
-            [[ "$SCRAPE_FLAG" -eq 1 ]] && set_cheevos_gamelist_xml "$f" true
+            [[ "$COLLECTIONS_FLAG" -eq 1 ]] && set_cheevos_custom_collection "$f" true
+            [[ "$SCRAPE_FLAG" -eq 1 ]]      && set_cheevos_gamelist_xml      "$f" true
             echo -n "--- \"" >&2
             echo -n "$f"
             echo "\" HAS CHEEVOS!" >&2
@@ -716,6 +752,20 @@ while [[ -n "$1" ]]; do
             SCRAPE_FLAG=1
             ;;
 
+#H --collection             [RETROPIE ONLY] Creates a custom collection file
+#H                          to use on RetroPie's EmulationStation. The file will
+#H                          be placed in "~/.emuationstation/collections" directory
+#H                          and filled with full paths for ROMs that have cheevos.
+#H 
+        --collection)
+            if ! is_retropie; then
+                echo "ERROR: not a RetroPie system." >&2
+                echo "The \"$1\" option is available only for RetroPie systems." >&2
+                safe_exit 1
+            fi
+            COLLECTIONS_FLAG=1
+
+            ;;
 #H -s|--system SYSTEM       [RETROPIE ONLY] Check if each ROM in the respective
 #H                          "~/RetroPie/roms/SYSTEM" directory has cheevos.
 #H 
