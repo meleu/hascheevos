@@ -585,7 +585,7 @@ function set_cheevos_gamelist_xml() {
             -s "/gameList/game[contains(path,\"$rom\")]" -t elem -n achievements -v "true" \
             "$GAMELIST" || return 1
     fi
-    echo "--- This game has been defined as having cheevos in \"$GAMELIST\"."
+    echo "--- This game has been defined as having cheevos in \"$GAMELIST\"." >&2
 }
 
 
