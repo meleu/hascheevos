@@ -593,8 +593,8 @@ function process_files() {
     local f
     for f in "$@"; do
         if rom_has_cheevos "$f"; then
-            [[ "$COLLECTIONS_FLAG" -eq 1 ]] && set_cheevos_gamelist_xml      "$f" true
-            [[ "$SCRAPE_FLAG" -eq 1 ]]      && set_cheevos_custom_collection "$f" true
+            [[ "$COLLECTIONS_FLAG" -eq 1 ]] && set_cheevos_custom_collection "$f" true
+            [[ "$SCRAPE_FLAG" -eq 1 ]]      && set_cheevos_gamelist_xml      "$f" true
             echo -n "--- \"" >&2
             echo -n "$f"
             echo "\" HAS CHEEVOS!" >&2
