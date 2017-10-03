@@ -517,7 +517,8 @@ function set_cheevos_custom_collection() {
         return 1
     fi
 
-    sort -o "$collection_cfg" -u "$collection_cfg"
+    sort -o "$collection_cfg" -u "$collection_cfg" \
+    && echo "--- This game has been added to \"$collection_cfg\"." >&2
 }
 
 
