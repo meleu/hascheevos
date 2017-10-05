@@ -93,7 +93,7 @@ function is_retropie() {
 
 
 function regex_safe() {
-    echo "$1" |  sed -e 's/[]\/$*.^|[]/\\&/g'
+    echo "$@" |  sed -e 's/[]\/$*.^|[]/\\&/g'
 }
 
 
