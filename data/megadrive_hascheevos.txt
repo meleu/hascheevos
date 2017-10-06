@@ -148,7 +148,7 @@
 183:false:"Micro Machines"
 184:true:"Art of Fighting"
 188:true:"Eternal Champions"
-191:false:"Crystal's Pony Tale"
+191:true:"Crystal's Pony Tale"
 192:true:"Shining in the Darkness"
 193:false:"Soleil"
 194:false:"James Bond 007: The Duel"
@@ -576,7 +576,7 @@
 4323:false:"KAWASAKI SUPERBIKE CHALLENGE"
 4324:false:"THE KICK BOXING"
 4325:false:"THE KILLING GAME SHOW"
-4326:false:"King Colossus"
+4326:true:"King Colossus"
 4327:false:"KING OF THE MONSTERS"
 4328:false:"KING OF THE MONSTERS 2"
 4329:false:"Battlewings"
@@ -1278,3 +1278,4 @@
 10568:true:"Magical Taruruuto-kun"
 10578:false:"224 md5s"
 10642:false:"<New Title>"
+10925:false:
