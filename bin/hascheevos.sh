@@ -129,7 +129,7 @@ function update_files() {
     fi
 
     # after updating, silently check hascheevos-local.txt files
-    check_hascheevos_file >/dev/null 2>&
+    check_hascheevos_file >/dev/null 2>&1
 
     echo "UPDATE: The files have been successfully updated."
     safe_exit 0
