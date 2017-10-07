@@ -97,6 +97,11 @@ function regex_safe() {
 }
 
 
+function get_game_title_hascheevos() {
+    echo "$@" | sed 's/^[^:]\+:[^:]\+://'
+}
+
+
 # TODO: this function needs more intensive tests
 function update_files() {
     local err_flag=0
@@ -303,7 +308,7 @@ function game_has_cheevos() {
 
         if [[ -f "$hascheevos_file" ]]; then
             boolean="$(   grep "^$gameid:" "$hascheevos_file" | cut -d: -f2)"
-            game_title="$(grep "^$gameid:" "$hascheevos_file" | sed 's/^[^:]\+:[^:]\+://' )"
+            game_title="$(get_game_title_hascheevos "$(grep "^$gameid:" "$hascheevos_file")" )"
             [[ -n "$game_title" ]] && echo "--- Game Title: $game_title" >&2
             [[ "$boolean" == true ]] && return 0
             [[ "$boolean" == false && "$CHECK_FALSE_FLAG" -eq 0 ]] && return 1
@@ -449,26 +454,35 @@ function check_hascheevos_files() {
     local gameid
     local bool_local
     local bool_orig
+    local title_local
+    local title_orig
     local ret=0
     local updated
 
     while read -r file_local; do
         file_orig="${file_local/-local/}"
+        echo
         echo "Checking \"$(basename "$file_orig")\"..."
 
         while read -r line_local; do
             gameid=$(echo "$line_local" | cut -d: -f1)
-
             line_orig=$(grep "^$gameid:" "$file_orig")
+            bool_local=$(echo "$line_local" | cut -d: -f2)
+            bool_orig=$( echo "$line_orig"  | cut -d: -f2)
+            title_local="$(get_game_title_hascheevos "$line_local")"
+            title_orig="$( get_game_title_hascheevos "$line_orig")"
+
             if [[ -z "$line_orig" ]]; then
                 echo "* there's no Game ID #$gameid on your \"$(basename "$file_orig")\"."
                 ret=1
-            elif [[ "$line_local" == "$line_orig" ]]; then
-                sed -i "/$line_local/d" "$file_local"
-                [[ -s "$file_local" ]] || rm "$file_local"
+            elif [[ "$bool_local" == "$bool_orig" ]]; then
+                if [[ "$title_local" == "$title_orig" ]]; then
+                    sed -i "/$line_local/d" "$file_local"
+                    [[ -s "$file_local" ]] || rm "$file_local"
+                else
+                    echo "* Game ID #$gameid is named $title_local locally but it's $title_orig in the original file."
+                fi
             else
-                bool_local=$(echo "$line_local" | cut -d: -f2)
-                bool_orig=$( echo "$line_orig"  | cut -d: -f2)
                 echo "* Game ID #$gameid is marked as \"$bool_local\" locally but it's \"$bool_orig\" in the original file."
                 ret=1
             fi
