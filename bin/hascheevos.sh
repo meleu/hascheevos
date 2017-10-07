@@ -127,7 +127,10 @@ function update_files() {
         echo "UPDATE: Failed to update \"$SCRIPT_NAME\"." >&2
         safe_exit 1
     fi
-    
+
+    # after updating, silently check hascheevos-local.txt files
+    check_hascheevos_file >/dev/null 2>&
+
     echo "UPDATE: The files have been successfully updated."
     safe_exit 0
 }
