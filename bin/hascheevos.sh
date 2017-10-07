@@ -699,11 +699,10 @@ while [[ -n "$1" ]]; do
 
 #H -f|--check-false         Check at RetroAchievements.org server even if the game
 #H                          ID is marked as "has no cheevos" (false) in the
-#H                          *_hascheevos.txt files. Implies --check-ra-server.
+#H                          *_hascheevos.txt files.
 #H 
         -f|--check-false)
             CHECK_FALSE_FLAG=1
-            CHECK_RA_SERVER_FLAG=1
             ;;
 
 #H -r|--check-ra-server     Check at RetroAchievements.org remote server if fail
