@@ -452,6 +452,7 @@ function is_updated() {
 function check_hascheevos_files() {
     local file_local
     local file_orig
+    local file_pr # file for Pull Request
     local line_local
     local line_orig
     local gameid
@@ -459,11 +460,22 @@ function check_hascheevos_files() {
     local bool_orig
     local title_local
     local title_orig
-    local ret=0
+    local ret
     local updated
+    local pr_files
+
+    is_updated
+    updated="$?"
+    if [[ "$updated" == 1 ]]; then
+        echo "WARNING: your hascheevos files are outdated. Consider performing an '--update'."
+    fi
 
     while read -r file_local; do
+        ret=0
         file_orig="${file_local/-local/}"
+        file_pr="${file_orig/.txt/-PR.txt}"
+        [[ "$updated" == 0 ]] && cat "$file_orig" > "$file_pr"
+
         echo
         echo "Checking \"$(basename "$file_orig")\"..."
 
@@ -484,23 +496,30 @@ function check_hascheevos_files() {
                     [[ -s "$file_local" ]] || rm "$file_local"
                 else
                     echo "* Game ID #$gameid is named $title_local locally but it's $title_orig in the original file."
+                    ret=1
                 fi
             else
                 echo "* Game ID #$gameid is marked as \"$bool_local\" locally but it's \"$bool_orig\" in the original file."
                 ret=1
             fi
 
+            if [[ "$updated" == 0 && "$ret" != 0 ]]; then
+                sed -i "/^$gameid/d" "$file_pr"
+                echo "$line_local" >> "$file_pr"
+                sort -o "$file_pr" -un "$file_pr"
+            fi
+
         done < "$file_local"
+        diff -q "$file_pr" "$file_orig" >/dev/null && rm "$file_pr"
     done < <(find "$DATA_DIR" -type f -name '*_hascheevos-local.txt')
 
-    is_updated
-    updated="$?"
-    if [[ "$updated" -eq 0 && "$ret" -ne 0 ]]; then
+    pr_files="$(find "$DATA_DIR" -maxdepth 1 -name '*-PR.txt')"
+    if [[ -n "$pr_files" ]]; then
         echo -e "\n-----"
         echo "Consider helping to keep the hascheevos files synchronized with RetroAchievements.org data."
         echo "Please, copy the output's content above and paste it in a new issue at https://github.com/meleu/hascheevos/issues"
-    elif [[ "$updated" -eq 1 ]]; then
-        echo "WARNING: your hascheevos files are outdated. Try to '--update' and then '--check-hascheevos' again."
+        echo "Attaching the file(s) below to your issue would really useful:"
+        echo "$pr_files"
     fi
 
     safe_exit "$ret"
