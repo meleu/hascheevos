@@ -109,11 +109,8 @@ function update_files() {
 
     if [[ -d "$dir/.git" ]]; then
         pushd "$dir" > /dev/null
-        if ! git pull --rebase ; then
-            git merge --abort && git pull -X theirs || err_flag=1
-        fi
-        if [[ $err_flag -eq 0 ]]; then
-            git submodule update --init --recursive || err_flag=1
+        if ! git pull ; then
+            git fetch && git reset --hard origin/master || err_flag=1
         fi
         popd > /dev/null
     else
