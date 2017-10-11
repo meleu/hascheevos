@@ -26,7 +26,7 @@ cd hascheevos
 ```
 make
 ```
-(yes, the command is right: just `make` and nothing more! This compiles the `src/cheevoshash.c` and creats the executable `bin/cheevoshash`.)
+(yes, the command is right: just `make` and nothing more! This compiles the `src/cheevoshash.c` and creates the executable `bin/cheevoshash`.)
 
 4. **[OPTIONAL]** Include the tool's directory on your PATH:
 ```
