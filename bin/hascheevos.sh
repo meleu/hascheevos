@@ -3,8 +3,6 @@
 ###############
 #
 # A tool to check if your ROMs have cheevos (RetroAchievements.org).
-#
-# TODO: check dependencies curl, jq, unzip, 7z, cheevoshash (from this repo).
 
 # globals ####################################################################
 
@@ -81,6 +79,35 @@ function help_message() {
     sed -n 's/^#H //p' "$0"
     safe_exit
 }
+
+
+function check_dependencies() {
+    local cmd
+    local answer
+    local deps=(jq curl unzip 7z)
+
+    for cmd in "${deps[@]}"; do
+        if ! which "$cmd" >/dev/null 2>&1; then
+            if ! which apt-get >/dev/null 2>&1; then
+                echo "ERROR: missing dependency: $cmd" >&2
+                echo "To use this tool you need to install \"$cmd\" package. Please, install it and try again."
+                safe_exit 1
+            fi
+            echo "To use this tool you need to install \"$cmd\"."
+            echo "Do you want to install \"$cmd\" now? (if you're sure, type \"yes\" and press ENTER)"
+            read -p 'Answer: ' answer
+
+            if ! [[ "$answer" =~ ^[Yy][Ee][Ss]$ ]]; then
+                echo "Aborting..."
+                safe_exit 1
+            fi
+
+            [[ "$cmd" == 7z ]] && cmd=p7zip-full
+            sudo apt-get install "$cmd"
+        fi
+    done
+}
+
 
 
 function is_retropie() {
@@ -660,7 +687,10 @@ function check_argument() {
 
 trap safe_exit SIGHUP SIGINT SIGQUIT SIGKILL SIGTERM
 
+check_dependencies
+
 [[ -z "$1" ]] && help_message
+
 
 # TODO: this args management should be done in a function.
 while [[ -n "$1" ]]; do
