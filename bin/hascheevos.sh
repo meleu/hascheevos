@@ -54,9 +54,10 @@ CONSOLE_NAME[11]=mastersystem
 
 # RetroPie specific variables
 readonly RP_ROMS_DIR="$HOME/RetroPie/roms"
+readonly VALID_SYSTEMS=megadrive|n64|snes|gb|gba|gbc|nes|pcengine|mastersystem
 GAMELIST=
 GAMELIST_BAK=
-ROMS_DIR=
+ROMS_DIR=()
 SCRAPE_FLAG=0
 COLLECTIONS_FLAG=0
 
@@ -811,13 +812,17 @@ while [[ -n "$1" ]]; do
 
             check_argument "$1" "$2" || safe_exit 1
             shift
-            ROMS_DIR="$RP_ROMS_DIR/$1"
 
-            # TODO: make it able to process more than one systems separeted by commas
-            if [[ ! -d "$ROMS_DIR" ]]; then
-                echo "ERROR: \"$(basename "$ROMS_DIR")\": invalid system." >&2
-                safe_exit 1
-            fi
+            oldIFS="$IFS"
+            IFS=,
+            for i in $1; do
+                if ! [[ -d "$RP_ROMS_DIR/$i" || "$i" =~ ^($VALID_SYSTEMS)$ ]]; then
+                    echo "WARNING: ignoring \"$i\": invalid system." >&2
+                    continue
+                fi
+                ROMS_DIR+=("$RP_ROMS_DIR/$i")
+            done
+            IFS="$oldIFS"
             ;;
 
         *)  break
@@ -828,10 +833,10 @@ done
 
 update_hash_libraries
 
-if is_retropie && [[ -d "$ROMS_DIR" ]]; then
+if is_retropie && [[ -n "$ROMS_DIR" ]]; then
     while read -r i; do
         process_files "$i"
-    done < <(find "$ROMS_DIR" -type f -regextype egrep -iregex ".*\.($EXTENSIONS)$")
+    done < <(find "${ROMS_DIR[@]}" -type f -regextype egrep -iregex ".*\.($EXTENSIONS)$")
 fi
 
 process_files "$@"
