@@ -54,7 +54,7 @@ CONSOLE_NAME[11]=mastersystem
 readonly RP_ROMS_DIR="$HOME/RetroPie/roms"
 GAMELIST=
 GAMELIST_BAK=
-ROMS_DIR=
+ROMS_DIR=()
 SCRAPE_FLAG=0
 COLLECTIONS_FLAG=0
 
@@ -208,6 +208,7 @@ function download_hashlibrary() {
 
 
 # download hashlibrary for all consoles
+# TODO: is it really necessary?
 function download_hash_libraries() {
     local i
 
@@ -583,6 +584,7 @@ function set_cheevos_custom_collection() {
 
 
 # update gamelist.xml info
+# TODO: will it be useful? this feature will be useful only if the related PR will be merged on ES.
 # XXX: RetroPie specific
 function set_cheevos_gamelist_xml() {
     local set="$2"
@@ -682,6 +684,195 @@ function check_argument() {
 }
 
 
+function parse_args() {
+    local i
+    local ret
+    local oldIFS
+    local directories=()
+
+    while [[ -n "$1" ]]; do
+        case "$1" in
+
+#H -h|--help                Print the help message and exit.
+#H 
+            -h|--help)
+                help_message
+                ;;
+
+#H --update                 Update hascheevos files and exit.
+#H 
+            --update)
+                update_files
+                ;;
+
+#H -u|--user USER           USER is your RetroAchievements.org username.
+#H 
+            -u|--user)
+                check_argument "$1" "$2" || safe_exit 1
+                shift
+                RA_USER="$1"
+                ;;
+
+#H -p|--password PASSWORD   PASSWORD is your RetroAchievements.org password.
+#H 
+            -p|--password)
+                check_argument "$1" "$2" || safe_exit 1
+                shift
+                RA_PASSWORD="$1"
+                ;;
+
+# TODO: is it really necessary?
+##H -t|--token TOKEN         TOKEN is your RetroAchievements.org token.
+##H 
+            -t|--token)
+                check_argument "$1" "$2" || safe_exit 1
+                shift
+                RA_TOKEN="$1"
+                get_cheevos_token
+                ;;
+
+#H -g|--game-id GAME_ID     Check if there are cheevos for a given GAME_ID and 
+#H                          exit. Accept game IDs separated by commas, ex: 1,2,3
+#H                          Note: this option should be the last argument.
+#H 
+            -g|--game-id)
+                check_argument "$1" "$2" || safe_exit 1
+                ret=0
+                IFS=, # XXX: not sure if it will impact other parts
+                for i in $2; do
+                    if game_has_cheevos "$i"; then
+                        echo "--- Game ID $i HAS CHEEVOS!" >&2
+                    else
+                        echo "--- Game ID $i has no cheevos. :(" >&2
+                        ret=1
+                    fi
+                done
+                safe_exit "$ret"
+                ;;
+
+# TODO: is it really necessary?
+##H --get-hashlibs           Download JSON hash libraries for all supported
+##H                          consoles and exit.
+##H 
+            --get-hashlibs)
+                download_hash_libraries
+                safe_exit
+                ;;
+
+#H -f|--check-false         Check at RetroAchievements.org server even if the
+#H                          game ID is marked as "has no cheevos" (false) in
+#H                          the local *_hascheevos.txt files.
+#H 
+            -f|--check-false)
+                CHECK_FALSE_FLAG=1
+                ;;
+
+# TODO: is it a good idea to let users use the script this way? can stress the server
+##H -r|--check-ra-server     Force checking info at RetroAchievements.org server
+##H                          ignoring some info you may have locally.
+##H 
+            -r|--check-ra-server)
+                CHECK_RA_SERVER_FLAG=1
+                ;;
+
+#H -d|--copy-roms-to DIR    Create a copy of the ROMs that has cheevos and put
+#H                          them at "DIR/CONSOLE_NAME/". There's no need to
+#H                          specify the console name, the script detects it.
+#H 
+            -d|--copy-roms-to)
+                check_argument "$1" "$2" || safe_exit 1
+                shift
+                COPY_ROMS_FLAG=1
+                COPY_ROMS_DIR="$1"
+                ;;
+
+#H -c|--check-hascheevos    Check if your local data is synchronized with the
+#H                          repository and print e report.
+#H 
+            -c|--check-hascheevos)
+                check_hascheevos_files
+                ;;
+
+# TODO: is it really necessary?
+##H --print-token            Print the user's RetroAchievements.org token and exit.
+##H 
+            --print-token)
+                get_cheevos_token
+                echo "$RA_TOKEN"
+                safe_exit
+                ;;
+
+# TODO: will it be useful? this feature will be useful only if the related PR will be merged on ES.
+##H --scrape                 [RETROPIE ONLY] Updates the gamelist.xml file with
+##H                          <achievements>true</achievements> if the ROM has
+##H                          cheevos.
+##H 
+            --scrape)
+                if ! is_retropie; then
+                    echo "ERROR: not a RetroPie system." >&2
+                    echo "The \"$1\" option is available only for RetroPie systems." >&2
+                    safe_exit 1
+                fi
+                SCRAPE_FLAG=1
+                ;;
+
+#H --collection             [RETROPIE ONLY] Creates a custom collection file
+#H                          to use on RetroPie's EmulationStation. The resulting
+#H                          files will be named as 
+#H                          "~/.emuationstation/collections/custom-SYSTEM achievements.cfg"
+#H                          and filled with full paths for ROMs that have cheevos.
+#H 
+            --collection)
+                if ! is_retropie; then
+                    echo "ERROR: not a RetroPie system." >&2
+                    echo "The \"$1\" option is available only for RetroPie systems." >&2
+                    safe_exit 1
+                fi
+                COLLECTIONS_FLAG=1
+                ;;
+#H -s|--system SYSTEM       [RETROPIE ONLY] Check if each ROM in the respective
+#H                          "~/RetroPie/roms/SYSTEM" directory has cheevos. You
+#H                          can specifie multiple systems separeted by commas or
+#H                          use "all" to check all supported systems' directory.
+#H 
+            -s|--system)
+                if ! is_retropie; then
+                    echo "ERROR: not a RetroPie system." >&2
+                    echo "The \"$1\" option is available only for RetroPie systems." >&2
+                    safe_exit 1
+                fi
+
+                check_argument "$1" "$2" || safe_exit 1
+                shift
+
+                if [[ "$1" == all ]]; then
+                    directories=("${CONSOLE_NAME[@]}")
+                else
+                    oldIFS="$IFS"
+                    IFS=, # XXX: not sure if it will impact other parts
+                    for i in $1; do
+                        directories+=("$RP_ROMS_DIR/$i")
+                    done
+                    IFS="$oldIFS"
+                fi
+
+                for i in "${directories[@]}"; do
+                    if [[ -d "$RP_ROMS_DIR/$i" ]]; then
+                        ROMS_DIR+=("$RP_ROMS_DIR/$i")
+                        continue
+                    fi
+                    echo "WARNING: ignoring \"$(basename "$ROMS_DIR")\": not found." >&2
+                done
+                ;;
+
+            *)  break
+                ;;
+        esac
+        shift
+    done
+}
+
+
 
 # START HERE ##################################################################
 
@@ -692,176 +883,14 @@ check_dependencies
 [[ -z "$1" ]] && help_message
 
 
-# TODO: this args management should be done in a function.
-while [[ -n "$1" ]]; do
-    case "$1" in
-
-#H -h|--help                Print the help message and exit.
-#H 
-        -h|--help)
-            help_message
-            ;;
-
-#H --update                 Update hascheevos files and exit.
-#H 
-        --update)
-            update_files
-            ;;
-
-#H -u|--user USER           USER is your RetroAchievements.org username.
-#H 
-        -u|--user)
-            check_argument "$1" "$2" || safe_exit 1
-            shift
-            RA_USER="$1"
-            ;;
-
-#H -p|--password PASSWORD   PASSWORD is your RetroAchievements.org password.
-#H 
-        -p|--password)
-            check_argument "$1" "$2" || safe_exit 1
-            shift
-            RA_PASSWORD="$1"
-            ;;
-
-#H -t|--token TOKEN         TOKEN is your RetroAchievements.org token.
-#H 
-        -t|--token)
-            check_argument "$1" "$2" || safe_exit 1
-            shift
-            RA_TOKEN="$1"
-            get_cheevos_token
-            ;;
-
-#H -g|--game-id GAME_ID     Check if there are cheevos for a given GAME_ID and 
-#H                          exit. Accept game IDs separated by commas, ex: 1,2,3
-#H                          Note: this option should be the last argument.
-#H 
-        -g|--game-id)
-            check_argument "$1" "$2" || safe_exit 1
-            ret=0
-            IFS=, # XXX: not sure if it will impact other parts
-            for i in $2; do
-                if game_has_cheevos "$i"; then
-                    echo "--- Game ID $i HAS CHEEVOS!" >&2
-                else
-                    echo "--- Game ID $i has no cheevos. :(" >&2
-                    ret=1
-                fi
-            done
-            safe_exit "$ret"
-            ;;
-
-#H --get-hashlibs           Download JSON hash libraries for all supported
-#H                          consoles and exit.
-#H 
-        --get-hashlibs)
-            download_hash_libraries
-            safe_exit
-            ;;
-
-#H -f|--check-false         Check at RetroAchievements.org server even if the game
-#H                          ID is marked as "has no cheevos" (false) in the
-#H                          *_hascheevos.txt files.
-#H 
-        -f|--check-false)
-            CHECK_FALSE_FLAG=1
-            ;;
-
-#H -r|--check-ra-server     Check at RetroAchievements.org remote server if fail
-#H                          to find info locally.
-#H 
-        -r|--check-ra-server)
-            CHECK_RA_SERVER_FLAG=1
-            ;;
-
-#H -d|--copy-roms-to DIR    Create a copy of the ROMs that has cheevos and put
-#H                          them at "DIR/ROM_CONSOLE_NAME/". There's no need to
-#H                          specify the console name, the script detects it.
-#H 
-        -d|--copy-roms-to)
-            check_argument "$1" "$2" || safe_exit 1
-            shift
-            COPY_ROMS_FLAG=1
-            COPY_ROMS_DIR="$1"
-            ;;
-
-#H -c|--check-hascheevos    Check if the *_hascheevos.txt files are outdated
-#H                          comparing them with the respective *_hascheevos-local.txt
-#H                          and exit.
-#H 
-        -c|--check-hascheevos)
-            check_hascheevos_files
-            ;;
-
-#H --print-token            Print the user's RetroAchievements.org token and exit.
-#H 
-        --print-token)
-            get_cheevos_token
-            echo "$RA_TOKEN"
-            safe_exit
-            ;;
-
-#H --scrape                 [RETROPIE ONLY] Updates the gamelist.xml file with
-#H                          <achievements>true</achievements> if the ROM has
-#H                          cheevos.
-#H 
-        --scrape)
-            if ! is_retropie; then
-                echo "ERROR: not a RetroPie system." >&2
-                echo "The \"$1\" option is available only for RetroPie systems." >&2
-                safe_exit 1
-            fi
-            SCRAPE_FLAG=1
-            ;;
-
-#H --collection             [RETROPIE ONLY] Creates a custom collection file
-#H                          to use on RetroPie's EmulationStation. The file will
-#H                          be placed in "~/.emuationstation/collections" directory
-#H                          and filled with full paths for ROMs that have cheevos.
-#H 
-        --collection)
-            if ! is_retropie; then
-                echo "ERROR: not a RetroPie system." >&2
-                echo "The \"$1\" option is available only for RetroPie systems." >&2
-                safe_exit 1
-            fi
-            COLLECTIONS_FLAG=1
-
-            ;;
-#H -s|--system SYSTEM       [RETROPIE ONLY] Check if each ROM in the respective
-#H                          "~/RetroPie/roms/SYSTEM" directory has cheevos.
-#H 
-        -s|--system)
-            if ! is_retropie; then
-                echo "ERROR: not a RetroPie system." >&2
-                echo "The \"$1\" option is available only for RetroPie systems." >&2
-                safe_exit 1
-            fi
-
-            check_argument "$1" "$2" || safe_exit 1
-            shift
-            ROMS_DIR="$RP_ROMS_DIR/$1"
-
-            # TODO: make it able to process more than one systems separeted by commas
-            if [[ ! -d "$ROMS_DIR" ]]; then
-                echo "ERROR: \"$(basename "$ROMS_DIR")\": invalid system." >&2
-                safe_exit 1
-            fi
-            ;;
-
-        *)  break
-            ;;
-    esac
-    shift
-done
+parse_args "$@"
 
 update_hash_libraries
 
-if is_retropie && [[ -d "$ROMS_DIR" ]]; then
+if is_retropie && [[ -n "$ROMS_DIR" ]]; then
     while read -r i; do
         process_files "$i"
-    done < <(find "$ROMS_DIR" -type f -regextype egrep -iregex ".*\.($EXTENSIONS)$")
+    done < <(find "${ROMS_DIR[@]}" -type f -regextype egrep -iregex ".*\.($EXTENSIONS)$")
 fi
 
 process_files "$@"
