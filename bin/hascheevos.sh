@@ -667,6 +667,16 @@ function set_cheevos_gamelist_xml() {
 
 function process_files() {
     local f
+    readonly local max=10
+    
+    # avoiding to stress the server
+    if [[ "$CHECK_RA_SERVER_FLAG" == 1 && "$#" -gt "$max" ]]; then
+        echo >&2
+        echo "ABORTING!" >&2
+        echo "Using the --check-ra-server option to check more than $max files isn't allowed!" >&2
+        return 1
+    fi
+
     for f in "$@"; do
         if rom_has_cheevos "$f"; then
             [[ "$COLLECTIONS_FLAG" -eq 1 ]] && set_cheevos_custom_collection "$f" true
@@ -780,10 +790,12 @@ function parse_args() {
                 CHECK_FALSE_FLAG=1
                 ;;
 
-# TODO: is it a good idea to let users use the script this way? can stress the server
-##H -r|--check-ra-server     Force checking info at RetroAchievements.org server
-##H                          ignoring some info you may have locally.
-##H 
+# XXX: is it a good idea to let users use the script this way? can stress the server
+# answer: it's useful to check if a game doesn't have cheevos anymore.
+#H -r|--check-ra-server     Force checking info at RetroAchievements.org server
+#H                          ignoring some info you may have locally.
+#H                          Note: do NOT use this option to check many files at once.
+#H 
             -r|--check-ra-server)
                 CHECK_RA_SERVER_FLAG=1
                 ;;
@@ -912,8 +924,7 @@ function main() {
     fi
 
     process_files "${FILES_TO_CHECK[@]}"
-
-    safe_exit
+    safe_exit "$?"
 }
 
 main "$@"
