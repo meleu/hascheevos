@@ -167,3 +167,5 @@
 10879:false:"Fantasy Zone 3 - The Maze"
 10880:false:"E-SWAT - City Under Siege"
 10898:false:
+10967:false:"NBA Jam"
+10969:false:"Zillion"

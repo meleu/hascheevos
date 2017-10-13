@@ -1089,6 +1089,7 @@
 2882:false:"Fire Striker"
 2884:false:"First Queen - Ornic Senki"
 2885:false:"Fishing Koushien"
+2886:false:"Flintstones, The"
 2887:false:"Flying Hero - Bugyuru no Daibouken"
 2888:false:"Fortune Quest - Dice wo Korogase"
 2889:false:"Frogger"
