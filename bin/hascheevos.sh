@@ -136,7 +136,7 @@ function update_files() {
 
     if [[ -d "$dir/.git" ]]; then
         pushd "$dir" > /dev/null
-        if ! git pull ; then
+        if ! git pull --rebase 2>/dev/null; then
             git fetch && git reset --hard origin/master || err_flag=1
         fi
         popd > /dev/null
@@ -535,7 +535,9 @@ function check_hascheevos_files() {
             fi
 
         done < "$file_local"
-        diff -q "$file_pr" "$file_orig" >/dev/null && rm "$file_pr"
+        if [[ "$updated" == 0 ]]; then
+            diff -q "$file_pr" "$file_orig" >/dev/null && rm "$file_pr"
+        fi
     done < <(find "$DATA_DIR" -type f -name '*_hascheevos-local.txt')
 
     pr_files="$(find "$DATA_DIR" -maxdepth 1 -name '*-PR.txt')"
