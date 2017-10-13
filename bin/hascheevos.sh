@@ -208,42 +208,52 @@ function download_hashlibrary() {
 }
 
 
-# download hashlibrary for all consoles
-# TODO: is it really necessary?
-function download_hash_libraries() {
-    local i
-
-    echo "Getting hash libraries..."
-
-    for i in $(seq 1 ${#CONSOLE_NAME[@]}); do
-        # XXX: do not get hashlibrary for sega32x and segacd (currently unsupported)
-        [[ $i -eq 9 || $i -eq 10 ]] && continue
-        download_hashlibrary "$i"
-    done
-}
-
-
-# update hashlibraries older than 1 day
-function update_hash_libraries() {
+# if a valid system is given in $1, the function tries to update only the
+# hashlib for that system.
+# Otherwise update hashlibraries older than 1 day.
+function update_hashlib() {
     local line
-    local system
+    local system="$1"
+    local file
     local i
 
     echo "Checking JSON hash libraries..." >&2
-
     for i in "${!CONSOLE_NAME[@]}"; do
         [[ -f "$DATA_DIR/${CONSOLE_NAME[i]}_hashlibrary.json" ]] || download_hashlibrary "$i"
     done
+    echo "Done!" >&2
 
-    while read -r line; do
-        system="$(basename "${line%_hashlibrary.json*}")"
-        for i in "${!CONSOLE_NAME[@]}"; do
-            if [[ "${CONSOLE_NAME[i]}" == "$system" ]]; then
-                download_hashlibrary "$i"
-                break
+    if [[ -n "$system" ]]; then
+        file="$DATA_DIR/${system}_hashlibrary.json"
+        # check if the file exists and is older than 1 minute
+        if [[ -n "$(find "$file" -mmin +1 2>/dev/null)" ]]; then
+            echo "Updating \"$system\" hashlib..." >&2
+            for i in "${!CONSOLE_NAME[@]}"; do
+                if [[ "${CONSOLE_NAME[i]}" == "$system" ]]; then
+                    download_hashlibrary "$i" && echo "Done!" >&2
+                    return "$?"
+                fi
+            done
+        else
+            if [[ -f "$file" ]]; then
+                echo "The \"$system\" hashlib is already up-to-date." >&2
+                return 0
+            else
+                echo "ERROR: invalid system: \"$system\""
+                return 1
             fi
-        done
-    done < <(find "$DATA_DIR" -type f -name '*_hashlibrary.json' -mtime +1)
+        fi
+    else
+        while read -r line; do
+            system="$(basename "${line%_hashlibrary.json*}")"
+            for i in "${!CONSOLE_NAME[@]}"; do
+                if [[ "${CONSOLE_NAME[i]}" == "$system" ]]; then
+                    download_hashlibrary "$i"
+                    break
+                fi
+            done
+        done < <(find "$DATA_DIR" -type f -name '*_hashlibrary.json' -mtime +1)
+    fi
 }
 
 
@@ -753,13 +763,14 @@ function parse_args() {
                 safe_exit "$ret"
                 ;;
 
-# TODO: is it really necessary?
-##H --get-hashlibs           Download JSON hash libraries for all supported
-##H                          consoles and exit.
-##H 
-            --get-hashlibs)
-                download_hash_libraries
-                safe_exit
+#H --get-hashlib SYSTEM     Download JSON hash library for a given SYSTEM (console)
+#H                          and exit.
+#H 
+            --get-hashlib)
+                check_argument "$1" "$2" || safe_exit 1
+                shift
+                update_hashlib "$1"
+                safe_exit "$?"
                 ;;
 
 #H -f|--check-false         Check at RetroAchievements.org server even if the
@@ -890,7 +901,7 @@ function main() {
 
     parse_args "$@"
 
-    update_hash_libraries
+    update_hashlib
 
     if is_retropie && [[ -n "$ROMS_DIR" ]]; then
         while read -r i; do
