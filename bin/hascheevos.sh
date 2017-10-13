@@ -130,7 +130,7 @@ function get_game_title_hascheevos() {
 }
 
 
-# TODO: this function needs more intensive tests
+# XXX: this function needs more intensive tests
 function update_files() {
     local err_flag=0
     local dir="$SCRIPT_DIR/.."
@@ -535,7 +535,7 @@ function check_hascheevos_files() {
                     ret=1
                 fi
             else
-                echo "* Game ID #$gameid is marked as \"$bool_local\" locally but it's \"$bool_orig\" in the original file."
+                echo "* Game ID #$gameid ($title_local) is marked as \"$bool_local\" locally but it's \"$bool_orig\" in the original file."
                 ret=1
             fi
 
@@ -597,7 +597,7 @@ function set_cheevos_custom_collection() {
 
 
 # update gamelist.xml info
-# TODO: will it be useful? this feature will be useful only if the related PR will be merged on ES.
+# TODO: will it be useful? this feature will be useful only if the related PR gets merged on ES.
 # XXX: RetroPie specific
 function set_cheevos_gamelist_xml() {
     local set="$2"
@@ -701,7 +701,6 @@ function parse_args() {
     local i
     local ret
     local oldIFS
-    local directories=()
 
     while [[ -n "$1" ]]; do
         case "$1" in
@@ -850,6 +849,8 @@ function parse_args() {
 #H                          use "all" to check all supported systems' directory.
 #H 
             -s|--system)
+                local directories=()
+
                 if ! is_retropie; then
                     echo "ERROR: not a RetroPie system." >&2
                     echo "The \"$1\" option is available only for RetroPie systems." >&2
@@ -865,7 +866,7 @@ function parse_args() {
                     oldIFS="$IFS"
                     IFS=, # XXX: not sure if it will impact other parts
                     for i in $1; do
-                        directories+=("$RP_ROMS_DIR/$i")
+                        directories+=("$i")
                     done
                     IFS="$oldIFS"
                 fi
@@ -875,7 +876,7 @@ function parse_args() {
                         ROMS_DIR+=("$RP_ROMS_DIR/$i")
                         continue
                     fi
-                    echo "WARNING: ignoring \"$(basename "$ROMS_DIR")\": not found." >&2
+                    echo "WARNING: ignoring \"$(basename "$i")\": not found." >&2
                 done
                 ;;
 
@@ -904,8 +905,9 @@ function main() {
     update_hashlib
 
     if is_retropie && [[ -n "$ROMS_DIR" ]]; then
-        while read -r i; do
-            process_files "$i"
+        local line
+        while read -r line; do
+            FILES_TO_CHECK+=("$line")
         done < <(find "${ROMS_DIR[@]}" -type f -regextype egrep -iregex ".*\.($EXTENSIONS)$")
     fi
 
