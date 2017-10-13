@@ -29,6 +29,7 @@ CHECK_RA_SERVER_FLAG=0
 RA_USER=
 RA_PASSWORD=
 RA_TOKEN=
+FILES_TO_CHECK=()
 COPY_ROMS_DIR=
 TMP_DIR="/tmp/hascheevos-$$"
 mkdir -p "$TMP_DIR"
@@ -513,7 +514,7 @@ function check_hascheevos_files() {
             title_orig="$( get_game_title_hascheevos "$line_orig")"
 
             if [[ -z "$line_orig" ]]; then
-                echo "* there's no Game ID #$gameid on your \"$(basename "$file_orig")\"."
+                echo "* there's no Game ID #$gameid ($title_local) on your \"$(basename "$file_orig")\"."
                 ret=1
             elif [[ "$bool_local" == "$bool_orig" ]]; then
                 if [[ "$title_local" == "$title_orig" ]]; then
@@ -872,29 +873,34 @@ function parse_args() {
         esac
         shift
     done
+
+    FILES_TO_CHECK=("$@")
 }
 
 
 
 # START HERE ##################################################################
 
-trap safe_exit SIGHUP SIGINT SIGQUIT SIGKILL SIGTERM
+function main() {
+    trap safe_exit SIGHUP SIGINT SIGQUIT SIGKILL SIGTERM
 
-check_dependencies
+    check_dependencies
 
-[[ -z "$1" ]] && help_message
+    [[ -z "$1" ]] && help_message
 
+    parse_args "$@"
 
-parse_args "$@"
+    update_hash_libraries
 
-update_hash_libraries
+    if is_retropie && [[ -n "$ROMS_DIR" ]]; then
+        while read -r i; do
+            process_files "$i"
+        done < <(find "${ROMS_DIR[@]}" -type f -regextype egrep -iregex ".*\.($EXTENSIONS)$")
+    fi
 
-if is_retropie && [[ -n "$ROMS_DIR" ]]; then
-    while read -r i; do
-        process_files "$i"
-    done < <(find "${ROMS_DIR[@]}" -type f -regextype egrep -iregex ".*\.($EXTENSIONS)$")
-fi
+    process_files "${FILES_TO_CHECK[@]}"
 
-process_files "$@"
+    safe_exit
+}
 
-safe_exit
+main "$@"
