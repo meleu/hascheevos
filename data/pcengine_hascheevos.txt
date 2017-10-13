@@ -109,7 +109,7 @@
 7193:false:"Alice"
 7205:false:"Bomberman '94"
 7222:false:"Valkyrie no Densetsu"
-7388:true:"Strip Fighter II"
+7388:false:"Strip Fighter II"
 7444:false:"J.J. "
 7554:false:"Final Soldier"
 7801:false:"Atomic Robo Kid"
