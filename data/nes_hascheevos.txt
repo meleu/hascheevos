@@ -1645,7 +1645,7 @@
 8591:false:"mickey mania"
 8600:false:"Five Days"
 8601:false:"AV Pachi-Slot"
-8617:false:"NES Test Cartridge"
+8617:true:"NES Control Deck Test Cartridge"
 8620:false:"Spiritual Warfare"
 8631:false:"Robodemons"
 8634:false:"Tekken 2"
