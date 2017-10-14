@@ -1199,7 +1199,7 @@
 9478:false:"28:69\r\n INDEX 01 07:30:69\r\n TRACK 06 AUD"
 9479:false:"4:06\r\n INDEX 01 25:16:06\r\n TRACK 06 AUDIO\r\n"
 9484:false:"3 IN 1 CART PACK VOL. 1"
-9490:false:"COMBAT CARS"
+9490:true:"Combat Cars"
 9495:false:"ROBOTNIK RETURNS! BETA by Pacguy"
 9502:false:"6 IN 1 CART PACK VOL. 2"
 9505:false:"RBI 3 Baseball"
