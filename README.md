@@ -3,12 +3,12 @@ A way to check if your ROM is OK for RetroAchievements.
 
 ## installing
 
-0. Be sure to have all dependencies installed. On a Debian based system the command below should install everything you need. Probably you already have most of these packages installed and the only new one will be `jq` (it's a tool to parse JSON data):
+0. **Dependencies**: `jq`, `curl`, `unzip`, `gzip` and `p7zip-full`. On typical Linux distro you'll probably already have most of these packages installed and the only new one will be `jq` (it's a tool to parse JSON data). On a Debian based system the command below should install everything you need:
 ```
 sudo apt-get install jq unzip gzip p7zip-full curl
 ```
 
-If you're using another Linux distro (or even Cygwin on Windows), the script is still useful for you. Just be sure to install the equivalent packages on your system.
+If you're using another Linux distro (or even Cygwin on Windows), the script is still useful for you. Just be sure to install the equivalent packages on your shell.
 
 
 1. Go to the directory where you want to "install" the tool (if unsure, your home directory can be the easiest choice):
@@ -31,6 +31,7 @@ make
 4. **[OPTIONAL]** Include the tool's directory on your PATH:
 ```
 # adapt the path below to your setup!
+# you probably want to paste it at the end of your ~/.bashrc
 export PATH="$PATH:/path/to/hascheevos/bin"
 ```
 
@@ -41,46 +42,14 @@ export PATH="$PATH:/path/to/hascheevos/bin"
 
 **THE** tool of this repo is the [`hascheevos.sh`](https://github.com/meleu/hascheevos/blob/master/bin/hascheevos.sh) script.
 
-The usual way to use it is:
-```
-./hascheevos.sh -u YOUR_RA_USERNAME -p YOUR_RA_PASSWORD /path/to/the/ROM/file
-```
+**Run it with `--help` to see the available options.**
 
-**Run it with `--help` to see more options.**
+### Checking if a single ROM is OK for cheevos
 
-## examples
-
-### When there are cheevos for your ROM/game.
+This is the simplest way to use the script:
 
 ```
-$ ./hascheevos.sh -u USER -p PASSWORD /path/to/megadrive/Sonic\ the\ Hedgehog\ \(USA\,\ Europe\).zip 
-Checking "/path/to/megadrive/Sonic the Hedgehog (USA, Europe).zip"...
---- hash:    2e912d4a3164b529bbe82295970169c6
---- game ID: 1
---- "/path/to/megadrive/Sonic the Hedgehog (USA, Europe).zip" HAS CHEEVOS!
-```
-
-### When there are no cheevos for your ROM/game.
-
-```
-$ ./hascheevos.sh -u USER -p PASSWORD /path/to/nes/Qix\ \(USA\).zip 
-Checking "/path/to/nes/Qix (USA).zip"...
---- hash:    40089153660f092b5cbb6e204efce1b7
---- game ID: 1892
---- "/path/to/nes/Qix (USA).zip" has no cheevos. :(
-```
-
-### When your ROM is incompatible.
-
-```
-$ ./hascheevos.sh -u USER -p PASSWORD  /path/to/mastersystem/Alex\ Kidd\ in\ Miracle\ World\ \(USA\,\ Europe\).zip 
-Checking "/path/to/mastersystem/Alex Kidd in Miracle World (USA, Europe).zip"...
---- hash:    1b494dd760aef7929313d6a803c2d003
---- hash:    50a29e43423cc77564d6f49b289eef1d
---- checking at RetroAchievements.org server...
---- hash:    1b494dd760aef7929313d6a803c2d003
---- hash:    50a29e43423cc77564d6f49b289eef1d
-WARNING: this ROM file doesn't feature achievements.
+hascheevos.sh -u YOUR_RA_USERNAME -p YOUR_RA_PASSWORD /path/to/the/ROM
 ```
 
 ### Create a list of all ROMs that have cheevos in a directory.
@@ -123,6 +92,42 @@ This option is specially useful when used in conjunction with `--scrape`. The ex
 $ ./hascheevos.sh -u USER -p PASSWORD --system nes --scrape
 ```
 
+
+
+## examples of usage
+
+### When there are cheevos for your ROM/game.
+
+```
+$ ./hascheevos.sh -u USER -p PASSWORD /path/to/megadrive/Sonic\ the\ Hedgehog\ \(USA\,\ Europe\).zip 
+Checking "/path/to/megadrive/Sonic the Hedgehog (USA, Europe).zip"...
+--- hash:    2e912d4a3164b529bbe82295970169c6
+--- game ID: 1
+--- "/path/to/megadrive/Sonic the Hedgehog (USA, Europe).zip" HAS CHEEVOS!
+```
+
+### When there are no cheevos for your ROM/game.
+
+```
+$ ./hascheevos.sh -u USER -p PASSWORD /path/to/nes/Qix\ \(USA\).zip 
+Checking "/path/to/nes/Qix (USA).zip"...
+--- hash:    40089153660f092b5cbb6e204efce1b7
+--- game ID: 1892
+--- "/path/to/nes/Qix (USA).zip" has no cheevos. :(
+```
+
+### When your ROM is incompatible.
+
+```
+$ ./hascheevos.sh -u USER -p PASSWORD  /path/to/mastersystem/Alex\ Kidd\ in\ Miracle\ World\ \(USA\,\ Europe\).zip 
+Checking "/path/to/mastersystem/Alex Kidd in Miracle World (USA, Europe).zip"...
+--- hash:    1b494dd760aef7929313d6a803c2d003
+--- hash:    50a29e43423cc77564d6f49b289eef1d
+--- checking at RetroAchievements.org server...
+--- hash:    1b494dd760aef7929313d6a803c2d003
+--- hash:    50a29e43423cc77564d6f49b289eef1d
+WARNING: this ROM file doesn't feature achievements.
+```
 
 ---
 
