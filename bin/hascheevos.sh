@@ -155,8 +155,9 @@ function update() {
 
     # after updating, silently check hascheevos-local.txt files
     check_hascheevos_file >/dev/null 2>&1
-    rm "$DATA_DIR/.*.bkp"
+    rm "$DATA_DIR/*.bkp" 2> /dev/null
 
+    echo
     echo "UPDATE: The files have been successfully updated."
     safe_exit 0
 }
@@ -500,14 +501,24 @@ function check_hascheevos_files() {
     local ret
     local updated
     local pr_files
+    local ret=0
+    local tmp_ret
 
-    is_updated && updated=true || updated=false
-    if [[ "$updated" == false ]]; then
-        echo "WARNING: your hascheevos files are outdated. Consider performing an '--update'."
-    fi
+    is_updated
+    ret="$?"
+    case "$ret" in
+        0)  updated=true
+            ;;
+        1)  update=false
+            echo "WARNING: your hascheevos files are outdated. Consider performing an '--update'." >&2
+            ;;
+        2)  updated=false
+            echo "WARNING: unable to compare your local files with remote ones from hascheevos repository." >&2
+            ;;
+    esac
 
     while read -r file_local; do
-        ret=0
+        tmp_ret=0
         file_orig="${file_local/-local/}"
         file_pr="${file_orig/.txt/-PR.txt}"
         [[ "$updated" == true ]] && cat "$file_orig" > "$file_pr"
@@ -526,6 +537,7 @@ function check_hascheevos_files() {
             if [[ -z "$line_orig" ]]; then
                 echo "* there's no Game ID #$gameid ($title_local) on your \"$(basename "$file_orig")\"."
                 ret=1
+                tmp_ret=1
             elif [[ "$bool_local" == "$bool_orig" ]]; then
                 if [[ "$title_local" == "$title_orig" ]]; then
                     sed -i "/$line_local/d" "$file_local"
@@ -533,10 +545,12 @@ function check_hascheevos_files() {
                 else
                     echo "* Game ID #$gameid is named $title_local locally but it's $title_orig in the original file."
                     ret=1
+                    tmp_ret=1
                 fi
             else
                 echo "* Game ID #$gameid ($title_local) is marked as \"$bool_local\" locally but it's \"$bool_orig\" in the original file."
                 ret=1
+                tmp_ret=1
             fi
 
             if [[ "$updated" == true && "$ret" != 0 ]]; then
@@ -551,8 +565,13 @@ function check_hascheevos_files() {
         fi
     done < <(find "$DATA_DIR" -type f -name '*_hascheevos-local.txt')
 
-    while read -r line_local; do
-        pr_files+=("$line_local")
+    while read -r file_pr; do
+        file_orig="${file_pr/-PR.txt/.txt}"
+        if diff -q "$file_pr" "$file_orig" >/dev/null; then
+            rm "$file_pr"
+        else
+            pr_files+=("$file_pr")
+        fi
     done < <(find "$DATA_DIR" -maxdepth 1 -name '*-PR.txt')
 
     if [[ -n "$pr_files" ]]; then
@@ -568,7 +587,7 @@ function check_hascheevos_files() {
         fi
     fi
 
-    safe_exit "$ret"
+    return "$ret"
 }
 
 
@@ -590,10 +609,18 @@ function update_repository() {
         # TODO: I need to revert these git commands if fail to git push
         git add "$file_orig"
     done
-
+    echo
     git commit -m "updated *_hascheevos.txt files ($(date +'%d-%b-%Y %H:%M'))"
     git push origin master
-    ret="$?"
+    if [[ "$?" != 0 ]]; then
+        for file_pr in "${pr_files[@]}"; do
+            file_orig="${file_pr/-PR.txt/.txt}"
+            file_bkp="${file_orig/.txt/.bkp}"
+            cat "$file_bkp" > "$file_orig"
+        done
+        git reset --soft HEAD^
+    fi
+
     popd > /dev/null
 }
 
@@ -847,10 +874,14 @@ function parse_args() {
                 ;;
 
 #H -c|--check-hascheevos    Check if your local data is synchronized with the
-#H                          repository and print e report.
+#H                          repository, print a report and exit.
 #H 
             -c|--check-hascheevos)
-                check_hascheevos_files
+                if check_hascheevos_files; then
+                    echo "Your hascheevos files are up-to-date."
+                    safe_exit "0"
+                fi
+                safe_exit "1"
                 ;;
 
 # TODO: is it really necessary?
