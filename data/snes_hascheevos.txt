@@ -2401,7 +2401,7 @@
 6703:false:"[Bad ROM] NINJA WARIOR"
 6707:false:"[Bad ROM] Knights of the Round"
 6708:false:"Rushing Beat Ran: Fukusei Toshi"
-6714:false:"ACTRAISER-USA"
+6714:true:"~Bonus~ Super Tennis"
 6722:false:"Super Mario_All Stars"
 6731:false:"KING OF DRAGONS"
 6744:false:"Bahamut Lagoon (?)"
