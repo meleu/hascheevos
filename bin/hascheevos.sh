@@ -131,7 +131,7 @@ function get_game_title_hascheevos() {
 
 
 # XXX: this function needs more intensive tests
-function update_files() {
+function update() {
     local err_flag=0
     local dir="$SCRIPT_DIR/.."
 
@@ -148,13 +148,14 @@ function update_files() {
         err_flag=1
     fi
 
-    if [[ $err_flag -ne 0 ]]; then
+    if [[ "$err_flag" != 0 ]]; then
         echo "UPDATE: Failed to update \"$SCRIPT_NAME\"." >&2
         safe_exit 1
     fi
 
     # after updating, silently check hascheevos-local.txt files
     check_hascheevos_file >/dev/null 2>&1
+    rm "$DATA_DIR/.*.bkp"
 
     echo "UPDATE: The files have been successfully updated."
     safe_exit 0
@@ -500,9 +501,8 @@ function check_hascheevos_files() {
     local updated
     local pr_files
 
-    is_updated
-    updated="$?"
-    if [[ "$updated" == 1 ]]; then
+    is_updated && updated=true || updated=false
+    if [[ "$updated" == false ]]; then
         echo "WARNING: your hascheevos files are outdated. Consider performing an '--update'."
     fi
 
@@ -510,7 +510,7 @@ function check_hascheevos_files() {
         ret=0
         file_orig="${file_local/-local/}"
         file_pr="${file_orig/.txt/-PR.txt}"
-        [[ "$updated" == 0 ]] && cat "$file_orig" > "$file_pr"
+        [[ "$updated" == true ]] && cat "$file_orig" > "$file_pr"
 
         echo
         echo "Checking \"$(basename "$file_orig")\"..."
@@ -539,29 +539,64 @@ function check_hascheevos_files() {
                 ret=1
             fi
 
-            if [[ "$updated" == 0 && "$ret" != 0 ]]; then
+            if [[ "$updated" == true && "$ret" != 0 ]]; then
                 sed -i "/^$gameid/d" "$file_pr"
                 echo "$line_local" >> "$file_pr"
                 sort -o "$file_pr" -un "$file_pr"
             fi
 
         done < "$file_local"
-        if [[ "$updated" == 0 ]]; then
+        if [[ "$updated" == true ]]; then
             diff -q "$file_pr" "$file_orig" >/dev/null && rm "$file_pr"
         fi
     done < <(find "$DATA_DIR" -type f -name '*_hascheevos-local.txt')
 
-    pr_files="$(find "$DATA_DIR" -maxdepth 1 -name '*-PR.txt')"
+    while read -r line_local; do
+        pr_files+=("$line_local")
+    done < <(find "$DATA_DIR" -maxdepth 1 -name '*-PR.txt')
+
     if [[ -n "$pr_files" ]]; then
-        echo -e "\n-----"
-        echo "Consider helping to keep the hascheevos files synchronized with RetroAchievements.org data."
-        echo "Please, copy the output's content above and paste it in a new issue at https://github.com/meleu/hascheevos/issues"
-        echo "Attaching the file(s) below to your issue would really useful:"
-        echo "$pr_files"
+        # XXX: yeah! I shouldn't hardcode this thing, but it helps to keep the repo updated! :)
+        if [[ "$updated" == true && "$RA_USER" == meleu ]]; then
+            update_repository || echo "WARNING: hascheevos repository was NOT updated!" >&2
+        else
+            echo -e "\n-----"
+            echo "Consider helping to keep the hascheevos files synchronized with RetroAchievements.org data."
+            echo "Please, copy the output's content above and paste it in a new issue at https://github.com/meleu/hascheevos/issues"
+            echo "Attaching the file(s) below to your issue would be really useful:"
+            echo "${pr_files[@]}"
+        fi
     fi
 
     safe_exit "$ret"
 }
+
+
+# this function exists only for me, sorry :)
+# needs to be called from check_hascheevos_files() to access its variables
+function update_repository() {
+    [[ "$RA_USER" != meleu ]] && return 1
+
+    local file_bkp
+
+    pushd "$dir" > /dev/null
+    for file_pr in "${pr_files[@]}"; do
+        file_orig="${file_pr/-PR.txt/.txt}"
+        file_bkp="${file_orig/.txt/.bkp}"
+
+        cat "$file_orig" > "$file_bkp"
+        cat "$file_pr" > "$file_orig"
+
+        # TODO: I need to revert these git commands if fail to git push
+        git add "$file_orig"
+    done
+
+    git commit -m "updated *_hascheevos.txt files ($(date +'%d-%b-%Y %H:%M'))"
+    git push origin master
+    ret="$?"
+    popd > /dev/null
+}
+
 
 
 # a trick for getting the system based on the folder where the rom is stored
@@ -724,7 +759,7 @@ function parse_args() {
 #H --update                 Update hascheevos files and exit.
 #H 
             --update)
-                update_files
+                update
                 ;;
 
 #H -u|--user USER           USER is your RetroAchievements.org username.
