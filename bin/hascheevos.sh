@@ -170,15 +170,15 @@ function update() {
 # TODO: cache the token in some file?
 function get_cheevos_token() {
     if [[ -z "$RA_USER" ]]; then
-        echo "ERROR: undefined RetroAchievements.org user (see \"--user\" option)." >&2
-        safe_exit 1
+        echo "WARNING: undefined RetroAchievements.org user (see \"--user\" option)." >&2
+        return 1
     fi
 
     [[ -n "$RA_TOKEN" ]] && return 0
 
     if [[ -z "$RA_PASSWORD" ]]; then
-        echo "ERROR: undefined RetroAchievements.org password (see \"--password\" option)." >&2
-        safe_exit 1
+        echo "WARNING: undefined RetroAchievements.org password (see \"--password\" option)." >&2
+        return 1
     fi
 
     RA_TOKEN="$(curl -s "http://retroachievements.org/dorequest.php?r=login&u=${RA_USER}&p=${RA_PASSWORD}" | jq -e -r .Token)"
@@ -356,7 +356,9 @@ function game_has_cheevos() {
         fi
     fi
 
-    [[ -z "$RA_TOKEN" ]] && get_cheevos_token
+    if [[ -z "$RA_TOKEN" ]]; then
+        get_cheevos_token || return $?
+    fi
 
     echo "--- checking at RetroAchievements.org server..." >&2
     local patch_json="$(curl -s "http://retroachievements.org/dorequest.php?r=patch&u=${RA_USER}&g=${gameid}&f=3&l=1&t=${RA_TOKEN}")"
@@ -597,6 +599,9 @@ function update_repository() {
     [[ "$RA_USER" != meleu ]] && return 1
 
     local file_bkp
+    local commit_msg=()
+
+    commit_msg=(-m "updated *_hascheevos.txt files ($(date +'%d-%b-%Y %H:%M'))")
 
     pushd "$dir" > /dev/null
     for file_pr in "${pr_files[@]}"; do
@@ -606,12 +611,14 @@ function update_repository() {
         cat "$file_orig" > "$file_bkp"
         cat "$file_pr" > "$file_orig"
 
-        # TODO: I need to revert these git commands if fail to git push
         git add "$file_orig"
+        commit_msg+=(-m "$file_orig")
     done
     echo
-    git commit -m "updated *_hascheevos.txt files ($(date +'%d-%b-%Y %H:%M'))"
+    git commit "${commit_msg[@]}"
     git push origin master
+
+    # revert things if failed to push
     if [[ "$?" != 0 ]]; then
         for file_pr in "${pr_files[@]}"; do
             file_orig="${file_pr/-PR.txt/.txt}"
@@ -643,7 +650,7 @@ function set_cheevos_custom_collection() {
     local collection_cfg
 
     system=$(get_rom_system "$rom_full_path")
-    collection_cfg="$HOME/.emulationstation/collections/custom-$system achievements.cfg"
+    collection_cfg="$HOME/.emulationstation/collections/custom-achievements ${system}.cfg"
 
     if [[ -z "$set" || "$set" == true ]]; then
         echo "$rom_full_path" >> "$collection_cfg"
