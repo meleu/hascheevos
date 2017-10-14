@@ -40,9 +40,7 @@ export PATH="$PATH:/path/to/hascheevos/bin"
 
 ## how to use it
 
-**THE** tool of this repo is the [`hascheevos.sh`](https://github.com/meleu/hascheevos/blob/master/bin/hascheevos.sh) script.
-
-**Run it with `--help` to see the available options.**
+**THE** tool of this repo is the [`hascheevos.sh`](https://github.com/meleu/hascheevos/blob/master/bin/hascheevos.sh) script. Run it with `--help` to see the available options.
 
 ### Checking if a single ROM is OK for cheevos
 
