@@ -512,10 +512,12 @@ function check_hascheevos_files() {
         0)  updated=true
             ;;
         1)  update=false
-            echo "WARNING: your hascheevos files are outdated. Consider performing an '--update'." >&2
+            echo "ERROR: your hascheevos files are outdated. Perform an '--update' and try again." >&2
+            return "$ret"
             ;;
         2)  updated=false
             echo "WARNING: unable to compare your local files with remote ones from hascheevos repository." >&2
+            return "$ret"
             ;;
     esac
 
@@ -538,7 +540,7 @@ function check_hascheevos_files() {
 
             if [[ -z "$line_orig" ]]; then
                 echo "* there's no Game ID #$gameid ($title_local) on your \"$(basename "$file_orig")\"."
-                ret=1
+                ret=3
                 tmp_ret=1
             elif [[ "$bool_local" == "$bool_orig" ]]; then
                 if [[ "$title_local" == "$title_orig" ]]; then
@@ -546,12 +548,12 @@ function check_hascheevos_files() {
                     [[ -s "$file_local" ]] || rm "$file_local"
                 else
                     echo "* Game ID #$gameid is named $title_local locally but it's $title_orig in the original file."
-                    ret=1
+                    ret=3
                     tmp_ret=1
                 fi
             else
                 echo "* Game ID #$gameid ($title_local) is marked as \"$bool_local\" locally but it's \"$bool_orig\" in the original file."
-                ret=1
+                ret=3
                 tmp_ret=1
             fi
 
