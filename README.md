@@ -47,85 +47,81 @@ export PATH="$PATH:/path/to/hascheevos/bin"
 This is the simplest way to use the script:
 
 ```
-hascheevos.sh -u YOUR_RA_USERNAME -p YOUR_RA_PASSWORD /path/to/the/ROM
+hascheevos.sh /path/to/the/ROM
 ```
 
-### Create a list of all ROMs that have cheevos in a directory.
-
-The only thing the script puts on stdout are file names of ROMs that have cheevos. Everything else are printed in stderr. Then if you want a list of all ROMs that have cheevos in a directory, do something like this:
+#### Example 1 - the ROM is OK for cheevos
 
 ```
-$ ./hascheevos.sh -u USER -p PASSWORD /path/to/megadrive/* > ~/megadrive-roms-with-cheevos.txt
-```
-
-Don't worry about non-ROM files in the same directory (like `gamelist.xml` or `.srm` files), the script ignores files with invalid extensions. ;-)
-
-
-### [RETROPIE ONLY] Check if a ROM has cheevos and if yes, add `<achievements>true</achievements>` entry in the respective `gamelist.xml` file.
-
-***Note:** This feature is only usable on a RetroPie system*
-
-```
-$ ./hascheevos.sh -u USER -p PASSWORD --scrape ~/RetroPie/roms/nes/Mega\ Man\ \(USA\).zip 
-Checking "/home/pi/RetroPie/roms/nes/Mega Man (USA).zip"...
---- NES: 4de82cfceadbf1a5e693b669b1221107
---- game ID: 1448
---- Game Title: "Mega Man"
---- This game has been defined as having cheevos in "/home/pi/RetroPie/roms/nes/gamelist.xml".
---- "/home/pi/RetroPie/roms/nes/Mega Man (USA).zip" HAS CHEEVOS!
-```
-
-
-### [RETROPIE ONLY] Check if each ROM in a system directory has cheevos.
-
-***Note:** This feature is only usable on a RetroPie system*
-
-```
-$ ./hascheevos.sh -u USER -p PASSWORD --system nes
-```
-
-This option is specially useful when used in conjunction with `--scrape`. The example below will scan all your NES' ROMs and update the NES' `gamelist.xml` with `<achievements>true</achievements>` for every ROM that has cheevos.
-
-```
-$ ./hascheevos.sh -u USER -p PASSWORD --system nes --scrape
-```
-
-
-
-## examples of usage
-
-### When there are cheevos for your ROM/game.
-
-```
-$ ./hascheevos.sh -u USER -p PASSWORD /path/to/megadrive/Sonic\ the\ Hedgehog\ \(USA\,\ Europe\).zip 
+$ hascheevos.sh /path/to/megadrive/Sonic\ the\ Hedgehog\ \(USA\,\ Europe\).zip 
 Checking "/path/to/megadrive/Sonic the Hedgehog (USA, Europe).zip"...
 --- hash:    2e912d4a3164b529bbe82295970169c6
 --- game ID: 1
 --- "/path/to/megadrive/Sonic the Hedgehog (USA, Europe).zip" HAS CHEEVOS!
 ```
 
-### When there are no cheevos for your ROM/game.
+#### Example 2: there is no cheevos for your ROM
 
 ```
-$ ./hascheevos.sh -u USER -p PASSWORD /path/to/nes/Qix\ \(USA\).zip 
+$ hascheevos.sh /path/to/nes/Qix\ \(USA\).zip 
 Checking "/path/to/nes/Qix (USA).zip"...
 --- hash:    40089153660f092b5cbb6e204efce1b7
 --- game ID: 1892
 --- "/path/to/nes/Qix (USA).zip" has no cheevos. :(
 ```
 
-### When your ROM is incompatible.
+
+### Copy all ROMs that have cheevos to a directory.
+
+If you have a big ROM set and want to copy only those which have cheevos, you can use the `--copy-roms-to` option.
+
+In the example below we will copy all ROMs that have cheevos from `/path/to/megadrive/roms/` to `folder/for/cheevos/with/roms/megadrive`.
 
 ```
-$ ./hascheevos.sh -u USER -p PASSWORD  /path/to/mastersystem/Alex\ Kidd\ in\ Miracle\ World\ \(USA\,\ Europe\).zip 
-Checking "/path/to/mastersystem/Alex Kidd in Miracle World (USA, Europe).zip"...
---- hash:    1b494dd760aef7929313d6a803c2d003
---- hash:    50a29e43423cc77564d6f49b289eef1d
---- checking at RetroAchievements.org server...
---- hash:    1b494dd760aef7929313d6a803c2d003
---- hash:    50a29e43423cc77564d6f49b289eef1d
-WARNING: this ROM file doesn't feature achievements.
+hascheevos.sh --copy-roms-to folder/for/cheevos/with/roms /path/to/megadrive/roms/*
 ```
+
+**Notes**
+
+- if the destination directory doesn't exist, it will be created.
+
+- the script automatically creates a subdirectory below the directory passed as argument to `--copy-roms-to` with the console name (megadrive, snes, etc.) of the respective ROM. Example: if you pass the directory `cheevos_roms`, the script creates subdirectories like `cheevos_roms/megadrive` or `cheevos_roms/nes`, according to the ROM's console name.
+
+- Don't worry about non-ROM files in the same directory (like `gamelist.xml` or `.srm` files), the script ignores files with invalid extensions. ;-)
+
+
+### [RETROPIE ONLY] Check if each ROM of a given console has cheevos.
+
+***Note:** This feature is only usable on a RetroPie system*
+
+On RetroPie the roms are placed at `$HOME/RetroPie/roms/CONSOLE_NAME`. When using this script on a RetroPie system, you can check all ROMs for a given console using the the `--system` option. Example:  
+
+```
+hascheevos.sh --system nes
+```
+
+**Note**: If you pass `all` for `--system` option, the script will look all supported system's directory. Namely: `megadrive`, `nes`, `snes`, `gb`, `gbc`, `gba`, `pcengine`, `mastersystem` and `n64`
+
+
+### [RETROPIE ONLY] Create an EmulationStation custom collection (for each console) with all games that have cheevos
+
+***Notes:***
+
+- *This feature is only usable on a RetroPie system.*
+- *This feature is only useful if you're using EmulationStation 2.6.0+.*
+- *Info on how to use ES custom collections can be found [here](https://github.com/retropie/retropie-setup/wiki/EmulationStation#custom-collections).*
+
+The command below creates custom collections for all supported systems, populating them with the your games that have cheevos.
+
+```
+hascheevos.sh --collection --system all
+```
+
+Depending on how many ROMs you have this command will take a few minutes.
+
+After the script finish, restart EmulationStation, press `Start` to access the **MAIN MENU** and then go to **GAME COLLECTIONS SETTING** -> **CUSTOM GAME COLLECTIONS** and enable the achievements collections you see there.
+
+Now you have a custom collection for each system that supports RetroAchievements and populated only with your games that have achievements.
 
 ---
 
@@ -136,4 +132,3 @@ Links to the answer:
 - https://retropie.org.uk/forum/topic/11859/what-about-adding-a-cheevos-flag-in-gamelist-xml
 
 - http://retroachievements.org/viewtopic.php?t=5025
-
