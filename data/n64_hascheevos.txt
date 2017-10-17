@@ -95,7 +95,7 @@
 10223:true:"Gex 3 - Deep Cover Gecko"
 10232:false:"Jeopardy!"
 10238:false:"Road Rash 64"
-10246:false:"Kirby 64 - The Crystal Shards"
+10246:true:"Kirby 64 - The Crystal Shards"
 10247:true:"Snowboard Kids 2"
 10248:true:"Star Fox 64"
 10255:false:"Shadow Man"
