@@ -58,6 +58,7 @@ GAMELIST_BAK=
 ROMS_DIR=()
 SCRAPE_FLAG=0
 COLLECTIONS_FLAG=0
+SINGLE_COLLECTION_FLAG=0
 
 
 # functions ###################################################################
@@ -651,8 +652,12 @@ function set_cheevos_custom_collection() {
     local rom_full_path="$1"
     local collection_cfg
 
-    system=$(get_rom_system "$rom_full_path")
-    collection_cfg="$HOME/.emulationstation/collections/custom-achievements ${system}.cfg"
+    if [[ "$SINGLE_COLLECTION_FLAG" == 1 ]]; then
+        collection_cfg="$HOME/.emulationstation/collections/custom-achievements.cfg"
+    else
+        system=$(get_rom_system "$rom_full_path")
+        collection_cfg="$HOME/.emulationstation/collections/custom-achievements ${system}.cfg"
+    fi
 
     if [[ -z "$set" || "$set" == true ]]; then
         echo "$rom_full_path" >> "$collection_cfg"
@@ -930,6 +935,23 @@ function parse_args() {
                 fi
                 COLLECTIONS_FLAG=1
                 ;;
+
+#H --single-collection      [RETROPIE ONLY] Creates one big custom collection file
+#H                          to use on RetroPie's EmulationStation. The resulting
+#H                          file will be named 
+#H                          "~/.emuationstation/collections/custom-achievements.cfg"
+#H                          and filled with full paths to ALL ROMs that have cheevos.
+#H 
+            --single-collection)
+                if ! is_retropie; then
+                    echo "ERROR: not a RetroPie system." >&2
+                    echo "The \"$1\" option is available only for RetroPie systems." >&2
+                    safe_exit 1
+                fi
+                COLLECTIONS_FLAG=1
+                SINGLE_COLLECTION_FLAG=1
+                ;;
+
 #H -s|--system SYSTEM       [RETROPIE ONLY] Check if each ROM in the respective
 #H                          "~/RetroPie/roms/SYSTEM" directory has cheevos. You
 #H                          can specifie multiple systems separeted by commas or
