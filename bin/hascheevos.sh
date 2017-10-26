@@ -615,7 +615,7 @@ function update_repository() {
         cat "$file_pr" > "$file_orig"
 
         git add "$file_orig"
-        commit_msg+=(-m "$file_orig")
+        commit_msg+=(-m "$(basename "$file_orig")" )
     done
     echo
     git commit "${commit_msg[@]}"
