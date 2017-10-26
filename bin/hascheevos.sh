@@ -47,8 +47,8 @@ CONSOLE_NAME[8]=pcengine
 CONSOLE_NAME[9]=segacd
 CONSOLE_NAME[10]=sega32x
 CONSOLE_NAME[11]=mastersystem
-#CONSOLE_NAME[12]=xbox360
-#CONSOLE_NAME[13]=atari
+CONSOLE_NAME[12]=xbox360
+CONSOLE_NAME[13]=atari
 #CONSOLE_NAME[14]=neogeo
 
 # RetroPie specific variables
@@ -1009,9 +1009,9 @@ function main() {
 
     [[ -z "$1" ]] && help_message
 
-    parse_args "$@"
-
     update_hashlib
+
+    parse_args "$@"
 
     if is_retropie && [[ -n "$ROMS_DIR" ]]; then
         local line
