@@ -799,6 +799,6 @@
 10105:false:"AstÃ©rix"
 10204:false:"Wave Race"
 10582:false:"ZELDA link's awakening"
-10666:false:"The Blues Brothers"
+10666:true:"The Blues Brothers"
 10870:false:"<New Title>"
 10950:false:"<New Title>"

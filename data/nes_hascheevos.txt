@@ -408,7 +408,7 @@
 1862:false:"Nobunaga's Ambition"
 1863:false:"North and South"
 1864:false:"Operation Wolf"
-1865:false:"~Bonus~ Castlevania"
+1865:true:"~Bonus~ Castlevania"
 1866:false:"Othello"
 1867:false:"Overlord"
 1868:false:"P.O.W. - Prisoners of War"
