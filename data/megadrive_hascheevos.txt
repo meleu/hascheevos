@@ -340,7 +340,7 @@
 1431:false:"Puyo Puyo"
 1432:false:"Wonder Boy VI - Monster World IV"
 1434:false:"Rampart"
-1435:false:"Phantasy Star III: Generations of Doom"
+1435:true:"Phantasy Star III: Generations of Doom"
 1436:true:"Phantasy Star II"
 1437:false:"Jungle Strike"
 1438:true:"Crusader of Centy"
