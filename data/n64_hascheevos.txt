@@ -40,7 +40,7 @@
 10128:false:"Quake II"
 10129:true:"Fighting Force 64"
 10131:false:"Wonder Project J2: Koruro no Mori no Jozet"
-10133:false:"F-Zero X"
+10133:true:"F-Zero X"
 10135:false:"007: The World is not Enough"
 10136:false:"1080: TenEighty Snowboarding"
 10137:false:"A Bug&#39;s Life"
@@ -306,3 +306,4 @@
 10888:false:"Ruinous Shards"
 10912:false:"Hot Wheels Turbo Racing"
 10953:false:"Golden Nugget 64"
+10962:true:"~Bonus~ F-Zero X"

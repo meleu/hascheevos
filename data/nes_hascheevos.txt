@@ -90,7 +90,7 @@
 1539:false:"All-Pro Basketball"
 1540:true:"Amagon"
 1541:false:"American Gladiators"
-1542:false:"Anticipation"
+1542:true:"Anticipation"
 1543:false:"Arch Rivals"
 1544:true:"Archon"
 1545:true:"Arkanoid"

@@ -737,7 +737,7 @@
 8319:false:"F1RACE"
 8327:false:"Star Wars (GB)"
 8334:false:"TINTIN AU TIBET"
-8361:false:"Jurassic Park 2 - The Chaos Continues"
+8361:true:"Jurassic Park 2: The Chaos Continues"
 8467:false:"Mortal Kombat & Mortal Kombat II"
 8468:false:"Ms. Pac-Man"
 8469:false:"VS.LEMMINGSALEE"
