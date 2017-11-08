@@ -13,8 +13,6 @@ $(basename "$0") [OPTIONS] romfile1 [romfile2 ...]"
 readonly GIT_REPO="https://github.com/meleu/hascheevos.git"
 readonly SCRIPT_URL="https://raw.githubusercontent.com/meleu/hascheevos/master/bin/hascheevos.sh"
 readonly SCRIPT_DIR="$(cd "$(dirname $0)" && pwd)"
-readonly SCRIPT_NAME="$(basename "$0")"
-readonly SCRIPT_FULL="$SCRIPT_DIR/$SCRIPT_NAME"
 readonly DATA_DIR="$SCRIPT_DIR/../data"
 readonly GAMEID_REGEX='^[1-9][0-9]{0,9}$'
 
@@ -150,7 +148,7 @@ function update() {
     fi
 
     if [[ "$err_flag" != 0 ]]; then
-        echo "UPDATE: Failed to update \"$SCRIPT_NAME\"." >&2
+        echo "UPDATE: Failed to update." >&2
         safe_exit 1
     fi
 
