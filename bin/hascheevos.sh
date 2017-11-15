@@ -1003,6 +1003,12 @@ function parse_args() {
 function main() {
     trap safe_exit SIGHUP SIGINT SIGQUIT SIGKILL SIGTERM
 
+    if [[ "$(id -u)" == 0 ]]; then
+        echo "ERROR: You can't use this script as super user." >&2
+        echo "       Please, try again as a regular user." >&2
+        safe_exit 1
+    fi
+
     check_dependencies
 
     [[ -z "$1" ]] && help_message
