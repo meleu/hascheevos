@@ -62,7 +62,7 @@
 10323:false:"Penguin Land"
 10406:false:"Spider-Man - Return of the Sinister Six"
 10426:false:"Double Dragon"
-10427:false:"Vigilante"
+10427:true:"Vigilante"
 10428:false:"Desert Speedtrap Starring Road Runner And Wile E. Coyote"
 10439:false:"Great Volleyball"
 10440:false:"Rambo - First Blood Part 2"
@@ -170,3 +170,4 @@
 10967:false:"NBA Jam"
 10969:false:"Zillion"
 11016:false:"Basketball Nightmare"
+11534:true:"Jurassic Park"

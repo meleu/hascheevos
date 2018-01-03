@@ -423,3 +423,4 @@
 10849:false:"Buzz Lightyear of Star Command"
 10894:false:"<New Title>"
 10972:false:"<New Title>"
+11165:true:"Bugs Bunny and Lola Bunny: Operation Carrot Patch"
