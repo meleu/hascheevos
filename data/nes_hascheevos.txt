@@ -1335,7 +1335,7 @@
 6709:false:"Cosmic Wars"
 6710:false:"Moeru! Oniisan"
 6711:false:"SD Battle Oozumou: Heisei Hero Basho"
-6729:false:"Ganbare Goemon2"
+6729:true:"~Bonus~ Mega Man"
 6736:false:"Captain Ed"
 6737:false:"Racer Mini Yonku - Japan Cup"
 6740:false:"Tanigawa Kouji no Shougi Shinan III"
