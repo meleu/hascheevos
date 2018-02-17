@@ -33,6 +33,8 @@ TMP_DIR="/tmp/hascheevos-$$"
 mkdir -p "$TMP_DIR"
 GAME_CONSOLE_NAME="$(mktemp -p "$TMP_DIR")"
 
+SUPPORTED_SYSTEMS=(megadrive n64 snes gb gba gbc nes pcengine mastersystem atarilynx ngp)
+
 CONSOLE_NAME=()
 CONSOLE_NAME[1]=megadrive
 CONSOLE_NAME[2]=n64
@@ -59,12 +61,12 @@ CONSOLE_NAME[22]=xbox
 CONSOLE_NAME[23]=skynet
 CONSOLE_NAME[24]=xone
 CONSOLE_NAME[25]=atari2600
-#CONSOLE_NAME[26]=dos
-#CONSOLE_NAME[27]=arcade
-#CONSOLE_NAME[28]=virtualboy
-#CONSOLE_NAME[29]=msx
-#CONSOLE_NAME[30]=commodore64
-#CONSOLE_NAME[31]=zx81
+CONSOLE_NAME[26]=dos
+CONSOLE_NAME[27]=arcade
+CONSOLE_NAME[28]=virtualboy
+CONSOLE_NAME[29]=msx
+CONSOLE_NAME[30]=commodore64
+CONSOLE_NAME[31]=zx81
 
 # RetroPie specific variables
 readonly RP_ROMS_DIR="$HOME/RetroPie/roms"
@@ -205,6 +207,16 @@ function get_cheevos_token() {
 }
 
 
+function is_supported_system() {
+    local sys
+    local match="$1"
+    for sys in "${SUPPORTED_SYSTEMS[@]}"; do
+        [[ "$sys" == "$match" ]] && return 0
+    done
+    return 1
+}
+
+
 # download hashlibrary for a specific console
 # $1 is the console_id
 function download_hashlibrary() {
@@ -213,6 +225,12 @@ function download_hashlibrary() {
     if [[ "$console_id" -le 0 || "$console_id" -gt "${#CONSOLE_NAME[@]}" ]]; then
         echo "ERROR: invalid console ID: $console_id" >&2
         safe_exit 1
+    fi
+
+    if ! is_supported_system "${CONSOLE_NAME[console_id]}"; then
+        # XXX: print the line below when --verbose (but I didn't implement --verbose yet)
+#        echo "WARNING: ignoring unsupported system ${CONSOLE_NAME[console_id]} (console ID=$console_id)" >&2
+        return
     fi
 
     local json_file="$DATA_DIR/${CONSOLE_NAME[console_id]}_hashlibrary.json"
@@ -560,7 +578,7 @@ function check_hascheevos_files() {
                 tmp_ret=1
             elif [[ "$bool_local" == "$bool_orig" ]]; then
                 if [[ "$title_local" == "$title_orig" ]]; then
-                    sed -i "/$line_local/d" "$file_local"
+                    sed -i "/$(regex_safe "$line_local")/d" "$file_local"
                     [[ -s "$file_local" ]] || rm "$file_local"
                 else
                     echo "* Game ID #$gameid is named $title_local locally but it's $title_orig in the original file."
@@ -985,7 +1003,7 @@ function parse_args() {
                 shift
 
                 if [[ "$1" == all ]]; then
-                    directories=("${CONSOLE_NAME[@]}")
+                    directories=("${SUPPORTED_SYSTEMS[@]}")
                 else
                     oldIFS="$IFS"
                     IFS=, # XXX: not sure if it will impact other parts
