@@ -630,7 +630,7 @@
 7423:false:"POKÉMON RED"
 7446:false:"Game Boy Gallery"
 7448:false:"Ultima: Runes of Virtue"
-7456:false:"YOSSY NO COOKIE"
+7456:true:"~Bonus~ Little Mermaid, The"
 7457:false:"Ranma Nibun no Ichi - Kakuren Bodesu Match"
 7458:false:"Puzznic"
 7459:false:"Ishido"
@@ -798,3 +798,4 @@
 10666:true:"The Blues Brothers"
 10870:false:"<New Title>"
 10950:false:"<New Title>"
+11632:true:"~Bonus~ Pokemon - Red and Blue Versions"

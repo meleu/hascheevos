@@ -293,7 +293,7 @@
 5031:false:"Robotech"
 5034:false:"Harry Potter - The Chamber of Secrets"
 5035:false:"SAMURAI_DST1"
-5057:false:"The Urbz: Sims in the City"
+5057:true:"The Urbz: Sims in the City"
 5068:true:"Alien Hominid"
 5080:true:"Tim Burton's The Nightmare Before Christmas - The Pumpkin King"
 5081:true:"Disney's Aladdin"

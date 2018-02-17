@@ -131,7 +131,7 @@
 8716:false:"The Ninja Warriors"
 8717:false:"darius"
 8718:false:"Maison Ikkoku"
-8742:false:"_Rename Me 097"
+8742:true:"Shiryou Sensen - War of the Dead"
 8838:false:"Ys III: Wanderers from Ys (CD)"
 8839:false:"Ys IV: The Dawn Of Ys (CD)"
 8841:false:"[BIOS] Super CD-ROM System (Japan) (v3.0)"
