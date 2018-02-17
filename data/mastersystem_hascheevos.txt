@@ -137,7 +137,7 @@
 10754:false:"Air Rescue"
 10755:false:"Baku Baku Animal"
 10756:false:"Bank Panic"
-10757:false:"Black Belt"
+10757:true:"Black Belt"
 10758:false:"Bubble Bobble"
 10759:false:"Buggy Run"
 10760:false:"Bomber Raid"

@@ -1092,7 +1092,7 @@
 2886:false:"Flintstones, The"
 2887:false:"Flying Hero - Bugyuru no Daibouken"
 2888:false:"Fortune Quest - Dice wo Korogase"
-2889:false:"Frogger"
+2889:true:"Frogger"
 2890:false:"From TV Animation Slam Dunk - Dream Team Shueisha Limited"
 2891:false:"From TV Animation Slam Dunk - SD Heat Up!!"
 2892:false:"From TV Animation Slam Dunk - Shikyou Gekitotsu!!"

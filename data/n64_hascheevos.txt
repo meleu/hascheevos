@@ -119,7 +119,7 @@
 10282:false:"Mischief Makers Wrong Rom, use (U) (1.0)"
 10283:false:"Chameleon Twist 2"
 10284:false:"Super Robot Spirits"
-10285:false:"Bomberman Hero"
+10285:true:"Bomberman Hero"
 10287:false:"GoldenEye 007 Wrong Rom, use (U)"
 10288:false:"Turok 2"
 10298:true:"Tarzan"
