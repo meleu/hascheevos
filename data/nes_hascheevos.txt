@@ -1185,7 +1185,7 @@
 5818:false:"Devil Man"
 5819:false:"Doki Doki Panic"
 5820:false:"Downtown - Nekketsu Monogatari"
-5821:false:"Downtown Special: Kunio-Kun no Jidaigeki Dayo Zenin Shuugou!"
+5821:true:"Downtown Special"
 5822:false:"Dragon Unit"
 5823:false:"Dreamworld Pogie"
 5824:false:"EarthWorm Jim 2 (Unl)"
