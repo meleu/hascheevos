@@ -15,6 +15,8 @@ readonly SCRIPT_URL="https://raw.githubusercontent.com/meleu/hascheevos/master/b
 readonly SCRIPT_DIR="$(cd "$(dirname $0)" && pwd)"
 readonly DATA_DIR="$SCRIPT_DIR/../data"
 readonly GAMEID_REGEX='^[1-9][0-9]{0,9}$'
+readonly HASH_REGEX='^[A-Fa-f0-9]{32}$'
+
 
 # the extensions below were taken from RetroPie's configs (es_systems.cfg)
 readonly EXTENSIONS='zip|7z|nes|fds|gb|gba|gbc|sms|bin|smd|gen|md|sg|smc|sfc|fig|swc|mgd|iso|cue|z64|n64|v64|pce|ccd|cue'
@@ -878,6 +880,38 @@ function parse_args() {
                         ret=1
                     fi
                 done
+                safe_exit "$ret"
+                ;;
+
+#H --hash CHECKSUM          Check if there are cheevos for a given CHECKSUM and exit.
+#H                          Note: this option should be the last argument.
+#H 
+            --hash)
+                local line
+                local gameid
+
+                check_argument "$1" "$2" || safe_exit 1
+                ret=0
+
+                if [[ ! $2 =~ $HASH_REGEX ]]; then
+                    echo "--- invalid checksum: $2" >&2
+                    safe_exit 1
+                fi
+
+                line="$(grep -i "\"$2\"" "$DATA_DIR"/*_hashlibrary.json 2> /dev/null)"
+                echo -n "$(basename "${line%_hashlibrary.json*}")" > "$GAME_CONSOLE_NAME"
+                gameid="$(echo ${line##*: } | tr -d ' ,')"
+                if [[ ! $gameid =~ $GAMEID_REGEX ]]; then
+                    echo "--- unable to get game ID." >&2
+                    safe_exit 1
+                fi
+
+                if game_has_cheevos "$gameid"; then
+                    echo "--- Game ID $gameid HAS CHEEVOS!" >&2
+                else
+                    echo "--- Game ID $gameid has no cheevos. :(" >&2
+                    ret=1
+                fi
                 safe_exit "$ret"
                 ;;
 
