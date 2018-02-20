@@ -415,6 +415,7 @@
 2483:false:"Street Fighter 2 - Special Champion Edition"
 2516:true:"Donald in Maui Mallard"
 2545:true:"Mickey Mania: The Timeless Adventures Of Mickey Mouse"
+3108:true:"Battle Mania Daiginjou"
 3175:true:"King's Bounty: The Conqueror's Quest"
 3330:false:"Battle Mania"
 3482:false:"Zool"

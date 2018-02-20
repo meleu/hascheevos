@@ -276,6 +276,7 @@
 10630:true:"~Bonus~ Star Fox 64"
 10636:false:"Rename Me 2"
 10646:false:"Scooby-Doo! Classic Creep Capers"
+10647:false:"BAD ROM 64"
 10648:false:"Star Wars Rogue Squadron"
 10649:false:"Pokemon Stadium Wrong Rom, use (U) (V1.1)"
 10650:false:"Pokemon Stadium (Japan exclusive)"

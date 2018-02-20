@@ -567,6 +567,7 @@
 7008:false:"Kininkou Maroku Oni"
 7009:false:"R-Type"
 7024:false:"NETTOU KOF 96"
+7040:true:"Tetris Blast"
 7050:false:"Taikyoku Renju"
 7063:false:"Bases Loaded"
 7073:false:"TETRIS2"
