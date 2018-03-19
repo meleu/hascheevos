@@ -98,7 +98,7 @@
 10246:true:"Kirby 64 - The Crystal Shards"
 10247:true:"Snowboard Kids 2"
 10248:true:"Star Fox 64"
-10255:false:"Shadow Man"
+10255:true:"Shadow Man"
 10256:false:"Mickey's Speedway USA"
 10258:true:"Pokemon Stadium 2"
 10259:false:"Mario Golf"
