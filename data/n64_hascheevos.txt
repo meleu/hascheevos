@@ -108,7 +108,7 @@
 10266:false:"Star Fox 64 Wrong Rom, use (U) (1.0)"
 10268:false:"Gauntlet Legends"
 10269:false:"Rayman 2 : The Great Escape"
-10270:false:"Pokemon Puzzle League"
+10270:true:"Pokemon Puzzle League"
 10271:false:"Re-Volt"
 10272:true:"StarCraft 64"
 10273:false:"Virtual Chess 64"

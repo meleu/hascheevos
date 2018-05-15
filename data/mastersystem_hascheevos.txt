@@ -156,7 +156,7 @@
 10773:false:"The Ninja"
 10774:false:"Parlour Games"
 10776:false:"Wonder Boy in Monster World"
-10777:false:"Wonder Boy in Monster Land"
+10777:true:"Wonder Boy in Monster Land"
 10813:false:"Road Rash"
 10814:false:"Running Battle"
 10815:false:"R.C. Grand Prix"
@@ -172,3 +172,4 @@
 11016:false:"Basketball Nightmare"
 11534:true:"Jurassic Park"
 11612:true:"Snail Maze - Sega Master System BIOS"
+12417:true:"Psychic World"
