@@ -19,7 +19,7 @@ readonly HASH_REGEX='^[A-Fa-f0-9]{32}$'
 
 
 # the extensions below were taken from RetroPie's configs (es_systems.cfg)
-readonly EXTENSIONS='zip|7z|nes|fds|gb|gba|gbc|sms|bin|smd|gen|md|sg|smc|sfc|fig|swc|mgd|iso|cue|z64|n64|v64|pce|ccd|cue'
+readonly EXTENSIONS='zip|7z|nes|fds|gb|gba|gbc|sms|bin|smd|gen|md|sg|smc|sfc|fig|swc|mgd|iso|cue|z64|n64|v64|pce|ccd|cue|a26|fba|lnx|ngp|ngc|gg'
 
 # flags
 CHECK_FALSE_FLAG=0
