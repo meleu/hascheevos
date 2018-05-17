@@ -25,6 +25,7 @@ readonly EXTENSIONS='zip|7z|nes|fds|gb|gba|gbc|sms|bin|smd|gen|md|sg|smc|sfc|fig
 CHECK_FALSE_FLAG=0
 COPY_ROMS_FLAG=0
 CHECK_RA_SERVER_FLAG=0
+TAB_FLAG=0
 
 RA_USER=
 RA_PASSWORD=
@@ -500,9 +501,16 @@ function rom_has_cheevos() {
     validate_rom_file "$rom" || return 1
 
     echo "Checking \"$rom\"..." >&2
+    [[ "$TAB_FLAG" == 1 ]] && echo -en "${rom/ (*/}"
 
     local gameid
-    gameid="$(get_game_id "$rom")" || return 1
+    gameid="$(get_game_id "$rom")"
+    if [[ -z "$gameid" ]]; then
+        echo -e "\t"
+        return 1
+    fi
+
+    [[ "$TAB_FLAG" == 1 ]] && echo -en "\t$gameid"
 
     game_has_cheevos "$gameid"
 }
@@ -790,19 +798,29 @@ function process_files() {
 
     for f in "$@"; do
         if rom_has_cheevos "$f"; then
-            [[ "$COLLECTIONS_FLAG" -eq 1 ]] && set_cheevos_custom_collection "$f" true
-            [[ "$SCRAPE_FLAG" -eq 1 ]]      && set_cheevos_gamelist_xml      "$f" true
-            echo -n "--- \"" >&2
-            echo -n "$f"
-            echo "\" HAS CHEEVOS!" >&2
+            if [[ "$TAB_FLAG" == 1 ]]; then
+                echo -e "\tx"
+            else
+                [[ "$COLLECTIONS_FLAG" -eq 1 ]] && set_cheevos_custom_collection "$f" true
+                [[ "$SCRAPE_FLAG" -eq 1 ]]      && set_cheevos_gamelist_xml      "$f" true
+                echo -n "--- \"" >&2
+                echo -n "$f"
+                echo "\" HAS CHEEVOS!" >&2
+                echo
+            fi
+
             if [[ "$COPY_ROMS_FLAG" -eq 1 ]]; then
                 console_name="$(cat "$GAME_CONSOLE_NAME")"
                 mkdir -p "$COPY_ROMS_DIR/$console_name"
                 cp -v "$f" "$COPY_ROMS_DIR/$console_name"
             fi
-            echo
         else
-            echo -e "\"$f\" has no cheevos. :(\n" >&2
+            if [[ "$TAB_FLAG" == 1 ]]; then
+                # echo -e "\tno"
+                echo
+            else
+                echo -e "\"$f\" has no cheevos. :(\n" >&2
+            fi
         fi
     done
 }
@@ -855,9 +873,9 @@ function parse_args() {
                 ;;
 
 # TODO: is it really necessary?
-##H -t|--token TOKEN         TOKEN is your RetroAchievements.org token.
+##H --token TOKEN         TOKEN is your RetroAchievements.org token.
 ##H 
-            -t|--token)
+           --token)
                 check_argument "$1" "$2" || safe_exit 1
                 shift
                 RA_TOKEN="$1"
@@ -931,6 +949,15 @@ function parse_args() {
 #H 
             -f|--check-false)
                 CHECK_FALSE_FLAG=1
+                ;;
+
+#H -t|--tab-output          Instead of the normal output, the -t option makes
+#H                          it be as in this example:
+#H                          Game With Cheevos	yes
+#H                          Game With No Cheevos	no
+#H 
+            -t|--tab-output)
+                TAB_FLAG=1
                 ;;
 
 # XXX: is it a good idea to let users use the script this way? can stress the server
