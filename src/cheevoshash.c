@@ -403,6 +403,24 @@ char *cheevos_hash_generic(const char *path) {
 }
 
 
+char *cheevos_hash_filename(const char *path) {
+    MD5_CTX ctx;
+    uint8_t hash[16];
+    char *noext;
+    char *last_dot;
+    
+    noext = strrchr(path, '/') + 1;
+    last_dot = strrchr(noext, '.');
+    *last_dot = '\0';
+
+    MD5_Init(&ctx);
+    MD5_Update(&ctx, (void*)noext, strlen(noext));
+    MD5_Final(hash, &ctx);
+
+    return hash_str(hash);
+}
+
+
 char *cheevos_hash_snes(const char *path) {
     MD5_CTX ctx;
     uint8_t hash[16];

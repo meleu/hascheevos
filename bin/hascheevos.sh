@@ -15,7 +15,7 @@ readonly SCRIPT_URL="https://raw.githubusercontent.com/meleu/hascheevos/master/b
 readonly SCRIPT_DIR="$(cd "$(dirname $0)" && pwd)"
 readonly DATA_DIR="$SCRIPT_DIR/../data"
 readonly GAMEID_REGEX='^[1-9][0-9]{0,9}$'
-readonly HASH_REGEX='^[A-Fa-f0-9]{32}$'
+readonly HASH_REGEX='[A-Fa-f0-9]{32}'
 
 
 # the extensions below were taken from RetroPie's configs (es_systems.cfg)
@@ -26,6 +26,7 @@ CHECK_FALSE_FLAG=0
 COPY_ROMS_FLAG=0
 CHECK_RA_SERVER_FLAG=0
 TAB_FLAG=0
+ARCADE_FLAG=0
 
 RA_USER=
 RA_PASSWORD=
@@ -440,6 +441,14 @@ function get_rom_hash() {
     local hash
     local uncompressed_rom
     local ret=0
+
+    if [[ "$ARCADE_FLAG" == 1 ]]; then
+        rom="$(basename "$rom")"
+        hash="$(echo -n "${rom%.*}" | md5sum | grep -Eo "^$HASH_REGEX")"
+        [[ "$hash" =~ ^$HASH_REGEX$ ]] || return 1
+        echo "$hash"
+        return 0
+    fi
 
     case "$rom" in
         *.zip|*.ZIP)
@@ -911,7 +920,7 @@ function parse_args() {
                 check_argument "$1" "$2" || safe_exit 1
                 ret=0
 
-                if [[ ! $2 =~ $HASH_REGEX ]]; then
+                if [[ ! $2 =~ ^$HASH_REGEX$ ]]; then
                     echo "--- invalid checksum: $2" >&2
                     safe_exit 1
                 fi
@@ -949,6 +958,14 @@ function parse_args() {
 #H 
             -f|--check-false)
                 CHECK_FALSE_FLAG=1
+                ;;
+
+#H -a|--arcade              Arcade hashes are calculated agains the ROM filename
+#H                          and then needs a different treatment. Use -a to check
+#H                          arcade ROM files.
+#H 
+            -a|--arcade)
+                ARCADE_FLAG=1
                 ;;
 
 #H -t|--tab-output          Instead of the normal output, the -t option makes
