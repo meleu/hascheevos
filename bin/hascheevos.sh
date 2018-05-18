@@ -315,7 +315,7 @@ function get_game_id() {
 
     while read -r line; do
         echo "--- $line" >&2
-        hash_i="$(echo "$line" | sed 's/^\(SNES\|NES\|Genesis\|plain MD5\): //')"
+        hash_i="$(echo "$line" | sed 's/^\(SNES\|NES\|Genesis\|Lynx\|plain MD5\): //')"
         line="$(grep -i "\"$hash_i\"" "$DATA_DIR"/*_hashlibrary.json 2> /dev/null)"
         echo -n "$(basename "${line%_hashlibrary.json*}")" > "$GAME_CONSOLE_NAME"
         gameid="$(echo ${line##*: } | tr -d ' ,')"
@@ -324,7 +324,7 @@ function get_game_id() {
 
     if [[ "$CHECK_RA_SERVER_FLAG" -eq 1 && ! $gameid =~ $GAMEID_REGEX ]]; then
         echo "--- checking at RetroAchievements.org server..." >&2
-        for hash_i in $(echo "$hash" | sed 's/^\(SNES\|NES\|Genesis\|plain MD5\): //'); do
+        for hash_i in $(echo "$hash" | sed 's/^\(SNES\|NES\|Genesis\|Lynx\|plain MD5\): //'); do
             echo "--- hash:    $hash_i" >&2
             gameid="$(curl -s "http://retroachievements.org/dorequest.php?r=gameid&m=$hash_i" | jq .GameID)"
             if [[ $gameid =~ $GAMEID_REGEX ]]; then

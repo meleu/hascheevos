@@ -439,6 +439,21 @@ char *cheevos_hash_genesis(const char *path) {
 }
 
 
+char *cheevos_hash_lynx(const char *path) {
+    MD5_CTX ctx;
+    uint8_t hash[16];
+    size_t count = cheevos_eval_md5(path, 0x0040, 0x0200, &ctx);
+
+    if (count == 0) {
+        MD5_Final(hash, &ctx);
+        return 0;
+    }
+
+    MD5_Final(hash, &ctx);
+    return hash_str(hash);
+}
+
+
 char *cheevos_hash_nes(const char *path) {
    /* Note about the references to the FCEU emulator below. There is no
     * core-specific code in this function, it's rather Retro Achievements
@@ -540,12 +555,20 @@ int cheevos_print_rom_hashes(const char *path) {
         0
     };
 
+    static const uint32_t lynx_exts[] =
+    {
+        0x0b888cf7U, /* lnx */
+        0
+    };
+
     static cheevos_hash_calculator_t finders[] =
     {
-        {cheevos_hash_snes,    "SNES",      snes_exts},
-        {cheevos_hash_genesis, "Genesis",   genesis_exts},
-        {cheevos_hash_nes,     "NES",       NULL},
-        {cheevos_hash_generic, "plain MD5", NULL},
+        {cheevos_hash_snes,     "SNES",         snes_exts},
+        {cheevos_hash_genesis,  "Genesis",      genesis_exts},
+        {cheevos_hash_lynx,     "Lynx",         lynx_exts},
+        {cheevos_hash_nes,      "NES",          NULL},
+        {cheevos_hash_generic,  "plain MD5",    NULL},
+//        {cheevos_hash_filename, "filename",     NULL},
     };
 
     unsigned i;
