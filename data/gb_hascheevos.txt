@@ -10,7 +10,7 @@
 542:false:"McDonaldland"
 547:false:"Double Dragon 3: The Arcade Game"
 549:true:"Bart Simpson's Escape from Camp Deadly"
-550:true:"Robocop"
+550:false:"Robocop"
 551:false:"Turrican"
 576:true:"Pokemon - Gold Version"
 577:true:"Yu-Gi-Oh! Dark Duel Stories"
