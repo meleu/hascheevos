@@ -730,7 +730,7 @@
 4560:false:"Bee 52"
 4561:false:"Bible Buffet "
 4562:false:"Big Nose Freaks Out"
-4563:false:"Big Nose the Caveman "
+4563:true:"Big Nose the Caveman "
 4564:false:"Blackjack"
 4568:true:"Bomberman"
 4569:false:"Hot Slots"

@@ -69,7 +69,7 @@
 10441:false:"Spy vs. Spy"
 10442:false:"Sega Chess"
 10443:false:"Deep Duck Trouble"
-10554:false:"Castle of Illusion Starring Mickey Mouse"
+10554:true:"Castle Of Illusion: Starring Mickey Mouse"
 10556:false:"Danan : The Jungle Fighter"
 10668:false:"Arcade Smash Hits"
 10689:false:"Master of Combat"
