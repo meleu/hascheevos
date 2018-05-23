@@ -37,7 +37,7 @@ TMP_DIR="/tmp/hascheevos-$$"
 mkdir -p "$TMP_DIR"
 GAME_CONSOLE_NAME="$(mktemp -p "$TMP_DIR")"
 
-SUPPORTED_SYSTEMS=(megadrive n64 snes gb gba gbc nes pcengine mastersystem atarilynx ngp atari2600)
+SUPPORTED_SYSTEMS=(megadrive n64 snes gb gba gbc nes pcengine mastersystem atarilynx ngp gamegear atari2600 arcade virtualboy)
 
 CONSOLE_NAME=()
 CONSOLE_NAME[1]=megadrive
@@ -54,7 +54,7 @@ CONSOLE_NAME[11]=mastersystem
 CONSOLE_NAME[12]=psx
 CONSOLE_NAME[13]=atarilynx
 CONSOLE_NAME[14]=ngp
-CONSOLE_NAME[15]=xbox360
+CONSOLE_NAME[15]=gamegear
 CONSOLE_NAME[16]=gamecube
 CONSOLE_NAME[17]=jaguar
 CONSOLE_NAME[18]=nds
