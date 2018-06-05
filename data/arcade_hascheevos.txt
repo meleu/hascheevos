@@ -4,6 +4,7 @@
 11753:true:"Last Blade 2, The (Bakumatsu Roman: Dai Ni Maku Gekka no Kenshi)"
 11763:true:"Cadillacs and Dinosaurs"
 11770:true:"Metal Slug X: Super Vehicle-001"
+11787:true:"Punisher, The"
 11795:true:"Street Fighter III 3rd Strike: Fight for The Future"
 11796:true:"Pulstar"
 11805:true:"Street Fighter Alpha: Warriors'' Dreams / Street Fighter Zero"
