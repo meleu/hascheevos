@@ -16,6 +16,7 @@ readonly SCRIPT_DIR="$(cd "$(dirname $0)" && pwd)"
 readonly DATA_DIR="$SCRIPT_DIR/../data"
 readonly GAMEID_REGEX='^[1-9][0-9]{0,9}$'
 readonly HASH_REGEX='[A-Fa-f0-9]{32}'
+readonly URL="https://retroachievements.org"
 
 
 # the extensions below were taken from RetroPie's configs (es_systems.cfg)
@@ -203,7 +204,7 @@ function get_cheevos_token() {
         return 1
     fi
 
-    RA_TOKEN="$(curl -s "http://retroachievements.org/dorequest.php?r=login&u=${RA_USER}&p=${RA_PASSWORD}" | jq -e -r .Token)"
+    RA_TOKEN="$(curl -s "$URL/dorequest.php?r=login&u=${RA_USER}&p=${RA_PASSWORD}" | jq -e -r .Token)"
     if [[ "$?" -ne 0 || "$RA_TOKEN" == null || -z "$RA_TOKEN" ]]; then
         echo "ERROR: cheevos authentication failed. Aborting..."
         safe_exit 1
@@ -240,7 +241,7 @@ function download_hashlibrary() {
     local json_file="$DATA_DIR/${CONSOLE_NAME[console_id]}_hashlibrary.json"
 
     echo "--- getting the console hash library for \"${CONSOLE_NAME[console_id]}\"..." >&2
-    curl -s "http://retroachievements.org/dorequest.php?r=hashlibrary&c=$console_id" \
+    curl -s "$URL/dorequest.php?r=hashlibrary&c=$console_id" \
         | jq '.' > "$json_file" 2> /dev/null \
         || echo "ERROR: failed to download hash library for \"${CONSOLE_NAME[console_id]}\"!" >&2
 
@@ -327,11 +328,11 @@ function get_game_id() {
         echo "--- checking at RetroAchievements.org server..." >&2
         for hash_i in $(echo "$hash" | sed 's/^\(SNES\|NES\|Genesis\|Lynx\|plain MD5\): //'); do
             echo "--- hash:    $hash_i" >&2
-            gameid="$(curl -s "http://retroachievements.org/dorequest.php?r=gameid&m=$hash_i" | jq .GameID)"
+            gameid="$(curl -s "$URL/dorequest.php?r=gameid&m=$hash_i" | jq .GameID)"
             if [[ $gameid =~ $GAMEID_REGEX ]]; then
                 # if the logic reaches this point, mark this game's console to download the hashlibrary
                 console_id="$(
-                    curl -s "http://retroachievements.org/dorequest.php?r=patch&u=${RA_USER}&g=${gameid}&f=3&l=1&t=${RA_TOKEN}" \
+                    curl -s "$URL/dorequest.php?r=patch&u=${RA_USER}&g=${gameid}&f=3&l=1&t=${RA_TOKEN}" \
                         | jq '.PatchData.ConsoleID'
                 )"
                 echo -n "${CONSOLE_NAME[console_id]}" > "$GAME_CONSOLE_NAME"
@@ -399,7 +400,7 @@ function game_has_cheevos() {
     fi
 
     echo "--- checking at RetroAchievements.org server..." >&2
-    local patch_json="$(curl -s "http://retroachievements.org/dorequest.php?r=patch&u=${RA_USER}&g=${gameid}&f=3&l=1&t=${RA_TOKEN}")"
+    local patch_json="$(curl -s "$URL/dorequest.php?r=patch&u=${RA_USER}&g=${gameid}&f=3&l=1&t=${RA_TOKEN}")"
 
     local console_id="$(echo "$patch_json" | jq -e '.PatchData.ConsoleID')"
     if [[ "$?" -ne 0 || "$console_id" -lt 1 || "$console_id" -gt "${#CONSOLE_NAME[@]}" || -z "$console_id" ]]; then
