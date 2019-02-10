@@ -18,10 +18,6 @@ readonly GAMEID_REGEX='^[1-9][0-9]{0,9}$'
 readonly HASH_REGEX='[A-Fa-f0-9]{32}'
 readonly URL="https://retroachievements.org"
 
-
-# the extensions below were taken from RetroPie's configs (es_systems.cfg)
-readonly EXTENSIONS='zip|7z|nes|fds|gb|gba|gbc|sms|bin|smd|gen|md|sg|smc|sfc|fig|swc|mgd|iso|cue|z64|n64|v64|pce|ccd|cue|a26|fba|lnx|ngp|ngc|gg'
-
 # flags
 CHECK_FALSE_FLAG=0
 COPY_ROMS_FLAG=0
@@ -38,8 +34,6 @@ TMP_DIR="/tmp/hascheevos-$$"
 mkdir -p "$TMP_DIR"
 GAME_CONSOLE_NAME="$(mktemp -p "$TMP_DIR")"
 
-SUPPORTED_SYSTEMS=(megadrive n64 snes gb gba gbc nes pcengine mastersystem atarilynx ngp gamegear atari2600 arcade virtualboy)
-
 CONSOLE_NAME=()
 CONSOLE_NAME[1]=megadrive
 CONSOLE_NAME[2]=n64
@@ -49,29 +43,43 @@ CONSOLE_NAME[5]=gba
 CONSOLE_NAME[6]=gbc
 CONSOLE_NAME[7]=nes
 CONSOLE_NAME[8]=pcengine
-CONSOLE_NAME[9]=segacd
-CONSOLE_NAME[10]=sega32x
 CONSOLE_NAME[11]=mastersystem
-CONSOLE_NAME[12]=psx
 CONSOLE_NAME[13]=atarilynx
 CONSOLE_NAME[14]=ngp
 CONSOLE_NAME[15]=gamegear
-CONSOLE_NAME[16]=gamecube
-CONSOLE_NAME[17]=jaguar
-CONSOLE_NAME[18]=nds
-CONSOLE_NAME[19]=wii
-CONSOLE_NAME[20]=wiiu
-CONSOLE_NAME[21]=ps2
-CONSOLE_NAME[22]=xbox
-CONSOLE_NAME[23]=skynet
-CONSOLE_NAME[24]=xone
 CONSOLE_NAME[25]=atari2600
-CONSOLE_NAME[26]=dos
 CONSOLE_NAME[27]=arcade
 CONSOLE_NAME[28]=virtualboy
-CONSOLE_NAME[29]=msx
-CONSOLE_NAME[30]=commodore64
-CONSOLE_NAME[31]=zx81
+CONSOLE_NAME[44]=coleco
+CONSOLE_NAME[47]=pc88
+CONSOLE_NAME[51]=atari7800
+
+SUPPORTED_SYSTEMS=(
+    megadrive n64 snes gb gba gbc nes pcengine mastersystem atarilynx ngp
+    gamegear atari2600 arcade virtualboy coleco pc88 atari7800
+)
+
+# the extensions below were taken from RetroPie's configs (platform.cfg)
+EXTENSIONS=()
+EXTENSIONS['nes']="nes|fds"
+EXTENSIONS['snes']="bin|bs|smc|sfc|fig|swc|mgd"
+EXTENSIONS['n64']="z64|n64|v64"
+EXTENSIONS['gb']="gb"
+EXTENSIONS['gbc']="gbc"
+EXTENSIONS['gba']="gba"
+EXTENSIONS['virtualboy']="vb"
+EXTENSIONS['mastersystem']="sms|bin"
+EXTENSIONS['megadrive']="smd|bin|gen|md|sg"
+EXTENSIONS['gamegear']="gg|bin|sms"
+EXTENSIONS['atari2600']="a26|bin|rom|gz"
+EXTENSIONS['atari7800']="a78|bin"
+EXTENSIONS['atarilynx']="lnx"
+EXTENSIONS['coleco']="bin|col|rom"
+EXTENSIONS['ngp']="ngp|ngc"
+EXTENSIONS['pcengine']="pce|ccd|chd|cue"
+EXTENSIONS['pc88']="d88|cmt|t88"
+EXTENSIONS['arcade']="zip|7z"
+
 
 # RetroPie specific variables
 readonly RP_ROMS_DIR="$HOME/RetroPie/roms"
@@ -475,8 +483,28 @@ function get_rom_hash() {
         hash="$($SCRIPT_DIR/cheevoshash "$rom")"
     fi
 
+    # XXX: I'm afraid the regex below is fragile
     [[ "$hash" =~ :\ [^\ ]{32} ]] || return 1
     echo "$hash"
+}
+
+
+# calculating the hash based on file extensions
+# (see: https://docs.retroachievements.org/Game-Identification/ )
+function calculate_hash() {
+    local extension="${rom##*.}"
+
+    if [[ ! "$extension" =~ ^(${EXTENSIONS['nes']})$ ]]; then
+        echo "NES: $(tail -c +17 "$rom" | md5sum | grep -oE '^[^ ]{32}')"
+
+    else if [[ ! "$extension" =~ ^(${EXTENSIONS['snes']})$ ]]; then
+        echo "SNES: $(tail -c +513 "$rom" | md5sum | grep -oE '^[^ ]{32}')"
+
+    else if [[ ! "$extension" =~ ^(${EXTENSIONS['atarilynx']})$ ]]; then
+        echo "Lynx: $(tail -c +65 "$rom" | md5sum | grep -oE '^[^ ]{32}')"
+    fi
+
+    echo "plain MD5: $(md5sum "$rom" | grep -oE '^[^ ]{32}')"
 }
 
 
@@ -1126,6 +1154,8 @@ function main() {
     check_dependencies
 
     [[ -z "$1" ]] && help_message
+
+    EXTENSIONS[0]="$(echo ${EXTENSIONS[@]} | sed 's/\( \||\)/\n/g' | sort -u | tr '\n' '|' | sed 's/|$//g')"
 
     update_hashlib
 
