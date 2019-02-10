@@ -477,10 +477,10 @@ function get_rom_hash() {
     fi
 
     if [[ -n "$uncompressed_rom" ]]; then
-        hash="$($SCRIPT_DIR/cheevoshash "$uncompressed_rom")"
+        hash="$(calculate_hash "$uncompressed_rom")"
         rm -f "$uncompressed_rom"
     else
-        hash="$($SCRIPT_DIR/cheevoshash "$rom")"
+        hash="$(calculate_hash "$rom")"
     fi
 
     # XXX: I'm afraid the regex below is fragile
