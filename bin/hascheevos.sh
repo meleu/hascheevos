@@ -497,10 +497,10 @@ function calculate_hash() {
     if [[ ! "$extension" =~ ^(${EXTENSIONS['nes']})$ ]]; then
         echo "NES: $(tail -c +17 "$rom" | md5sum | grep -oE '^[^ ]{32}')"
 
-    else if [[ ! "$extension" =~ ^(${EXTENSIONS['snes']})$ ]]; then
+    elif [[ ! "$extension" =~ ^(${EXTENSIONS['snes']})$ ]]; then
         echo "SNES: $(tail -c +513 "$rom" | md5sum | grep -oE '^[^ ]{32}')"
 
-    else if [[ ! "$extension" =~ ^(${EXTENSIONS['atarilynx']})$ ]]; then
+    elif [[ ! "$extension" =~ ^(${EXTENSIONS['atarilynx']})$ ]]; then
         echo "Lynx: $(tail -c +65 "$rom" | md5sum | grep -oE '^[^ ]{32}')"
     fi
 
