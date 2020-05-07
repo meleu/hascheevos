@@ -554,12 +554,11 @@ function validate_rom_file() {
 # returns 0 if yes; 1 if not; 2 if an error occurred
 function rom_has_cheevos() {
     local rom="$1"
-    validate_rom_file "$rom" || return 1
+    local gameid
 
     echo "Checking \"$rom\"..." >&2
     [[ "$TAB_FLAG" == 1 ]] && echo -en "${rom/ (*/}"
 
-    local gameid
     gameid="$(get_game_id "$rom")"
     if [[ -z "$gameid" ]]; then
         echo -e "\t"
@@ -853,6 +852,7 @@ function process_files() {
     fi
 
     for f in "$@"; do
+        validate_rom_file "$f" || continue
         if rom_has_cheevos "$f"; then
             if [[ "$TAB_FLAG" == 1 ]]; then
                 echo -e "\tx"
