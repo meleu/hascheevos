@@ -392,7 +392,7 @@ function get_game_id() {
 
     # if the logic reaches this point, we have a valid game ID
 
-    [[ -n "$console_shortname" ]] && download_hashlibrary "$console_id"
+    [[ -n "$console_shortname" ]] && download_hashlibrary "$console_shortname"
 
     echo "$gameid"
 }
