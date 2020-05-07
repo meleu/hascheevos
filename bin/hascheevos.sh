@@ -17,10 +17,7 @@ readonly DATA_DIR="$SCRIPT_DIR/../data"
 readonly GAMEID_REGEX='^[1-9][0-9]{0,9}$'
 readonly HASH_REGEX='[A-Fa-f0-9]{32}'
 readonly URL="https://retroachievements.org"
-
-
-# the extensions below were taken from RetroPie's configs (es_systems.cfg)
-readonly EXTENSIONS='zip|7z|nes|fds|gb|gba|gbc|sms|bin|smd|gen|md|sg|smc|sfc|fig|swc|mgd|iso|cue|z64|n64|v64|pce|ccd|cue|a26|fba|lnx|ngp|ngc|gg'
+#readonly URL='http://localhost'
 
 # flags
 CHECK_FALSE_FLAG=0
@@ -38,40 +35,39 @@ TMP_DIR="/tmp/hascheevos-$$"
 mkdir -p "$TMP_DIR"
 GAME_CONSOLE_NAME="$(mktemp -p "$TMP_DIR")"
 
-SUPPORTED_SYSTEMS=(megadrive n64 snes gb gba gbc nes pcengine mastersystem atarilynx ngp gamegear atari2600 arcade virtualboy)
+# these will be increased later, based on extensions supported by the systems
+EXTENSIONS='zip|7z'
+SUPPORTED_SYSTEMS=()
+declare -A CONSOLE_IDS
 
-CONSOLE_NAME=()
-CONSOLE_NAME[1]=megadrive
-CONSOLE_NAME[2]=n64
-CONSOLE_NAME[3]=snes
-CONSOLE_NAME[4]=gb
-CONSOLE_NAME[5]=gba
-CONSOLE_NAME[6]=gbc
-CONSOLE_NAME[7]=nes
-CONSOLE_NAME[8]=pcengine
-CONSOLE_NAME[9]=segacd
-CONSOLE_NAME[10]=sega32x
-CONSOLE_NAME[11]=mastersystem
-CONSOLE_NAME[12]=psx
-CONSOLE_NAME[13]=atarilynx
-CONSOLE_NAME[14]=ngp
-CONSOLE_NAME[15]=gamegear
-CONSOLE_NAME[16]=gamecube
-CONSOLE_NAME[17]=jaguar
-CONSOLE_NAME[18]=nds
-CONSOLE_NAME[19]=wii
-CONSOLE_NAME[20]=wiiu
-CONSOLE_NAME[21]=ps2
-CONSOLE_NAME[22]=xbox
-CONSOLE_NAME[23]=skynet
-CONSOLE_NAME[24]=xone
-CONSOLE_NAME[25]=atari2600
-CONSOLE_NAME[26]=dos
-CONSOLE_NAME[27]=arcade
-CONSOLE_NAME[28]=virtualboy
-CONSOLE_NAME[29]=msx
-CONSOLE_NAME[30]=commodore64
-CONSOLE_NAME[31]=zx81
+# format: [shortname]='consoleId:extension1|extensionN:Long Name:alias'
+declare -A SYSTEMS_INFO=(
+    [megadrive]='1:bin|gen|md|sg|smd:Sega Mega Drive:genesis'
+    [n64]='2:z64|n64|v64:Nintendo 64'
+    [snes]='3:fig|mgd|sfc|smc|swc:Super Nintendo Entertainment System'
+    [gb]='4:gb:GameBoy'
+    [gba]='5:gba:GameBoy Advance'
+    [gbc]='6:gbc:GameBoy Color'
+    [nes]='7:nes|fds:fds:Nintendo Entertainment System:fds'
+    [pcengine]='8:ccd|chd|cue|:PC Engine:pcenginecd'
+    [segacd]='9:bin|chd|cue|iso:Sega CD'
+    [sega32x]='10:32x|bin|md|smd:Sega 32X'
+    [mastersystem]='11:bin|sms:Sega Master System'
+    [psx]='12:cue|ccd|chd|exe|iso|m3u|pbp|toc:PlayStation'
+    [atarilynx]='13:lnx:Atari Lynx'
+    [ngp]='14:ngp|ngc:NeoGeo Pocket [Color]:ngpc'
+    [gamegear]='15:bin|gg|sms:Game Gear'
+    [atarijaguar]='17:j64|jag:Atari Jaguar'
+    [nds]='18:nds:Nintendo DS'
+    [pokemini]='24:min:Pokemon Mini'
+    [atari2600]='25:a26|bin|rom:Atari 2600'
+    [arcade]='27:fba:Arcade:fbneo|fba'
+    [virtualboy]='28:vb:VirtualBoy'
+    [sg-1000]='33:bin|sg:SG-1000'
+    [coleco]='44:col|rom:ColecoVision'
+    [atari7800]='51:a78|bin:Atari 7800'
+    [wonderswan]='53:ws|wsc:WonderSwan [Color]:wonderswancolor'
+)
 
 # RetroPie specific variables
 readonly RP_ROMS_DIR="$HOME/RetroPie/roms"
@@ -90,8 +86,68 @@ function safe_exit() {
     if [[ -f "$GAMELIST" && -f "$GAMELIST_BAK" ]]; then
         diff "$GAMELIST" "$GAMELIST_BAK" > /dev/null && rm -f "$GAMELIST_BAK"
     fi
-    exit $1
+    exit "$1"
 }
+
+
+
+function urlencode() {
+    local LC_ALL=C
+    local string="$*"
+    local length="${#string}"
+    local char
+
+    for (( i = 0; i < length; i++ )); do
+        char="${string:i:1}"
+        if [[ "$char" == [a-zA-Z0-9.~_-] ]]; then
+            printf "$char" 
+        else
+            printf '%%%02X' "'$char" 
+        fi
+    done
+    printf '\n' # opcional
+}
+
+
+
+function join_by() {
+    local IFS="$1"
+    echo "${*:2}"
+}
+
+
+function fill_data() {
+    local shortname
+    local entry
+    local temp_extensions
+
+    for shortname in "${!SYSTEMS_INFO[@]}"; do
+        entry="${SYSTEMS_INFO[$shortname]}"
+
+        SUPPORTED_SYSTEMS+=("$shortname")
+        CONSOLE_IDS[$shortname]="$(cut -d: -f1 <<< "$entry")"
+        temp_extensions="$(
+            join_by '|' "$temp_extensions" "$(cut -d: -f2 <<< "$entry" )" 
+        )"
+    done
+    EXTENSIONS="$(join_by '|' "$EXTENSIONS" $(tr '|' '\n' <<< "$temp_extensions" | sort -u) )"
+    #  this subshell must NOT be quoted! ---^
+}
+
+
+
+function get_console_shortname_by_id() {
+    local id="$1"
+    local shortname
+    for shortname in "${!CONSOLE_IDS[@]}"; do
+        if [[ "$id" == "${CONSOLE_IDS[$shortname]}" ]]; then
+            echo "$shortname"
+            return 0
+        fi
+    done
+    return 1
+}
+
 
 
 function help_message() {
@@ -101,7 +157,7 @@ function help_message() {
     echo
     # getting the help message from the comments in this source code
     sed -n 's/^#H //p' "$0"
-    safe_exit
+    safe_exit 0
 }
 
 
@@ -223,27 +279,15 @@ function is_supported_system() {
 
 
 # download hashlibrary for a specific console
-# $1 is the console_id
+# $1 is the system shortname
 function download_hashlibrary() {
-    local console_id="$1"
+    local system="$1"
+    local json_file="$DATA_DIR/${system}_hashlibrary.json"
 
-    if [[ "$console_id" -le 0 || "$console_id" -gt "${#CONSOLE_NAME[@]}" ]]; then
-        echo "ERROR: invalid console ID: $console_id" >&2
-        safe_exit 1
-    fi
-
-    if ! is_supported_system "${CONSOLE_NAME[console_id]}"; then
-        # XXX: print the line below when --verbose (but I didn't implement --verbose yet)
-#        echo "WARNING: ignoring unsupported system ${CONSOLE_NAME[console_id]} (console ID=$console_id)" >&2
-        return
-    fi
-
-    local json_file="$DATA_DIR/${CONSOLE_NAME[console_id]}_hashlibrary.json"
-
-    echo "--- getting the console hash library for \"${CONSOLE_NAME[console_id]}\"..." >&2
-    curl -s "$URL/dorequest.php?r=hashlibrary&c=$console_id" \
+    echo "--- getting the console hash library for \"$system\"..." >&2
+    curl -s "$URL/dorequest.php?r=hashlibrary&c=${CONSOLE_IDS[$system]}" \
         | jq '.' > "$json_file" 2> /dev/null \
-        || echo "ERROR: failed to download hash library for \"${CONSOLE_NAME[console_id]}\"!" >&2
+        || echo "ERROR: failed to download hash library for \"$system\"!" >&2
 
     [[ -s "$json_file" ]] || rm -f "$json_file"
 }
@@ -254,45 +298,37 @@ function download_hashlibrary() {
 # Otherwise update hashlibraries older than 1 day.
 function update_hashlib() {
     local line
-    local system="$1"
+    local given_system="$1"
     local file
-    local i
+    local sys
 
     echo "Checking JSON hash libraries..." >&2
-    for i in "${!CONSOLE_NAME[@]}"; do
-        [[ -f "$DATA_DIR/${CONSOLE_NAME[i]}_hashlibrary.json" ]] || download_hashlibrary "$i"
+    for sys in "${SUPPORTED_SYSTEMS[@]}"; do
+        [[ -f "$DATA_DIR/${sys}_hashlibrary.json" ]] || download_hashlibrary "$sys"
     done
     echo "Done!" >&2
 
-    if [[ -n "$system" ]]; then
-        file="$DATA_DIR/${system}_hashlibrary.json"
+    if [[ -n "$given_system" ]]; then
+        file="$DATA_DIR/${given_system}_hashlibrary.json"
         # check if the file exists and is older than 1 minute
         if [[ -n "$(find "$file" -mmin +1 2>/dev/null)" ]]; then
-            echo "Updating \"$system\" hashlib..." >&2
-            for i in "${!CONSOLE_NAME[@]}"; do
-                if [[ "${CONSOLE_NAME[i]}" == "$system" ]]; then
-                    download_hashlibrary "$i" && echo "Done!" >&2
-                    return "$?"
-                fi
-            done
+            echo "Updating \"$given_system\" hashlib..." >&2
+            download_hashlibrary "$given_system" && echo "Done!" >&2
+            return "$?"
         else
             if [[ -f "$file" ]]; then
-                echo "The \"$system\" hashlib is already up-to-date." >&2
+                echo "The \"$given_system\" hashlib is already up-to-date." >&2
                 return 0
             else
-                echo "ERROR: invalid system: \"$system\""
+                echo "ERROR: invalid system: \"$given_system\""
                 return 1
             fi
         fi
     else
+        # update hashlibs older than one day
         while read -r line; do
             system="$(basename "${line%_hashlibrary.json*}")"
-            for i in "${!CONSOLE_NAME[@]}"; do
-                if [[ "${CONSOLE_NAME[i]}" == "$system" ]]; then
-                    download_hashlibrary "$i"
-                    break
-                fi
-            done
+            download_hashlibrary "$system"
         done < <(find "$DATA_DIR" -type f -name '*_hashlibrary.json' -mtime +1)
     fi
 }
@@ -311,6 +347,8 @@ function get_game_id() {
     local hash_i
     local gameid
     local console_id=0
+    local console_shortname
+
     echo -n > "$GAME_CONSOLE_NAME"
 
     hash="$(get_rom_hash "$rom")" || return 1
@@ -335,7 +373,8 @@ function get_game_id() {
                     curl -s "$URL/dorequest.php?r=patch&u=${RA_USER}&g=${gameid}&f=3&l=1&t=${RA_TOKEN}" \
                         | jq '.PatchData.ConsoleID'
                 )"
-                echo -n "${CONSOLE_NAME[console_id]}" > "$GAME_CONSOLE_NAME"
+                console_shortname="$(get_console_shortname_by_id "$console_id")"
+                echo "$console_shortname" > "$GAME_CONSOLE_NAME"
                 break
             fi
         done
@@ -353,7 +392,7 @@ function get_game_id() {
 
     # if the logic reaches this point, we have a valid game ID
 
-    [[ "$console_id" -ne 0 ]] && download_hashlibrary "$console_id"
+    [[ -n "$console_shortname" ]] && download_hashlibrary "$console_id"
 
     echo "$gameid"
 }
@@ -366,6 +405,10 @@ function game_has_cheevos() {
     local hascheevos_file
     local boolean
     local game_title
+    local patch_json
+    local console_id
+    local console_shortname
+    local number_of_cheevos
 
     if [[ ! $gameid =~ $GAMEID_REGEX ]]; then
         echo "ERROR: \"$gameid\" invalid game ID." >&2
@@ -400,19 +443,22 @@ function game_has_cheevos() {
     fi
 
     echo "--- checking at RetroAchievements.org server..." >&2
-    local patch_json="$(curl -s "$URL/dorequest.php?r=patch&u=${RA_USER}&g=${gameid}&f=3&l=1&t=${RA_TOKEN}")"
+    patch_json="$(curl -s "$URL/dorequest.php?r=patch&u=${RA_USER}&g=${gameid}&f=3&l=1&t=${RA_TOKEN}")"
 
-    local console_id="$(echo "$patch_json" | jq -e '.PatchData.ConsoleID')"
-    if [[ "$?" -ne 0 || "$console_id" -lt 1 || "$console_id" -gt "${#CONSOLE_NAME[@]}" || -z "$console_id" ]]; then
+    console_id="$(echo "$patch_json" | jq -e '.PatchData.ConsoleID')"
+    if [[ "$?" -ne 0 || "$console_id" -lt 1 || -z "$console_id" ]]; then
         echo "--- WARNING: unable to find the Console ID for Game #$gameid!" >&2
         return 1
     fi
-    hascheevos_file="$DATA_DIR/${CONSOLE_NAME[console_id]}_hascheevos-local.txt"
+
+    console_shortname="$(get_console_shortname_by_id "$console_id")"
+
+    hascheevos_file="$DATA_DIR/${console_shortname}_hascheevos-local.txt"
 
     game_title="$(echo "$patch_json" | jq -e '.PatchData.Title')" || game_title=
     [[ -n "$game_title" ]] && echo "--- Game Title: $game_title" >&2
 
-    local number_of_cheevos="$(echo "$patch_json" | jq '.PatchData.Achievements | length')"
+    number_of_cheevos="$(echo "$patch_json" | jq '.PatchData.Achievements | length')"
 
     # if the game has no cheevos...
     if [[ -z "$number_of_cheevos" || "$number_of_cheevos" -lt 1 ]]; then
@@ -879,7 +925,7 @@ function parse_args() {
             -p|--password)
                 check_argument "$1" "$2" || safe_exit 1
                 shift
-                RA_PASSWORD="$1"
+                RA_PASSWORD="$(urlencode "$1")"
                 ;;
 
 # TODO: is it really necessary?
@@ -1016,7 +1062,7 @@ function parse_args() {
             --print-token)
                 get_cheevos_token
                 echo "$RA_TOKEN"
-                safe_exit
+                safe_exit 0
                 ;;
 
 # TODO: will it be useful? this feature will be useful only if the related PR will be merged on ES.
@@ -1126,6 +1172,8 @@ function main() {
     check_dependencies
 
     [[ -z "$1" ]] && help_message
+
+    fill_data
 
     update_hashlib
 
