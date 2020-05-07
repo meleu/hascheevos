@@ -200,12 +200,12 @@ function is_retropie() {
 
 
 function regex_safe() {
-    echo "$@" |  sed -e 's/[]\/$*.^|[]/\\&/g'
+    sed -e 's/[]\/$*.^|[]/\\&/g' <<< "$@"
 }
 
 
 function get_game_title_hascheevos() {
-    echo "$@" | sed 's/^[^:]\+:[^:]\+://'
+    cut -d: -f3- <<< "$@"
 }
 
 
