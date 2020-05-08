@@ -12,7 +12,7 @@ $(basename "$0") [OPTIONS] romfile1 [romfile2 ...]"
 
 readonly GIT_REPO="https://github.com/meleu/hascheevos.git"
 readonly SCRIPT_URL="https://raw.githubusercontent.com/meleu/hascheevos/master/bin/hascheevos.sh"
-readonly SCRIPT_DIR="$(cd "$(dirname $0)" && pwd)"
+readonly SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 readonly DATA_DIR="$SCRIPT_DIR/../data"
 readonly GAMEID_REGEX='^[1-9][0-9]{0,9}$'
 readonly HASH_REGEX='[A-Fa-f0-9]{32}'
@@ -106,6 +106,13 @@ function urlencode() {
         fi
     done
     printf '\n' # opcional
+}
+
+
+
+function get_password() {
+    local password
+    IFS= read -rsp 'Enter the password: ' password < /dev/tty && urlencode "$password"
 }
 
 
@@ -232,10 +239,6 @@ function update() {
         safe_exit 1
     fi
 
-    # after updating, silently check hascheevos-local.txt files
-    check_hascheevos_file >/dev/null 2>&1
-    rm "$DATA_DIR/*.bkp" 2> /dev/null
-
     echo
     echo "UPDATE: The files have been successfully updated."
     safe_exit 0
@@ -278,46 +281,55 @@ function is_supported_system() {
 }
 
 
-# download hashlibrary for a specific console
-# $1 is the system shortname
-function download_hashlibrary() {
-    local system="$1"
-    local json_file="$DATA_DIR/${system}_hashlibrary.json"
 
-    echo "--- getting the console hash library for \"$system\"..." >&2
-    curl -s "$URL/dorequest.php?r=hashlibrary&c=${CONSOLE_IDS[$system]}" \
+# download ra_data for a specific console
+# $1 is the type of data you want: hashlibrary or officialgameslist
+# $2 is the system shortname
+function download_ra_data() {
+    local data_type="$1"
+    local system="$2"
+    local json_file="$DATA_DIR/${system}_${data_type}.json"
+
+    [[ $data_type =~ ^(officialgameslist|hashlibrary)$ ]] || return 1
+
+    echo "--- getting the $data_type for \"$system\"..." >&2
+    curl -s "$URL/dorequest.php?r=${data_type}&c=${CONSOLE_IDS[$system]}" \
         | jq '.' > "$json_file" 2> /dev/null \
-        || echo "ERROR: failed to download hash library for \"$system\"!" >&2
+        || echo "ERROR: failed to download $data_type for \"$system\"!" >&2
 
     [[ -s "$json_file" ]] || rm -f "$json_file"
 }
 
 
-# if a valid system is given in $1, the function tries to update only the
-# hashlib for that system.
-# Otherwise update hashlibraries older than 1 day.
-function update_hashlib() {
+
+# If a valid system is given in $2, the function tries to update only the
+# data for that system.
+# Otherwise update data older than 1 day.
+function update_ra_data() {
+    local data_type="$1"
+    local given_system="$2"
     local line
-    local given_system="$1"
     local file
     local sys
 
-    echo "Checking JSON hash libraries..." >&2
+    [[ $data_type =~ ^(officialgameslist|hashlibrary)$ ]] || return 1
+
+    echo "Checking local files..." >&2
     for sys in "${SUPPORTED_SYSTEMS[@]}"; do
-        [[ -f "$DATA_DIR/${sys}_hashlibrary.json" ]] || download_hashlibrary "$sys"
+        [[ -f "$DATA_DIR/${sys}_${data_type}.json" ]] || download_ra_data "$data_type" "$sys"
     done
     echo "Done!" >&2
 
     if [[ -n "$given_system" ]]; then
-        file="$DATA_DIR/${given_system}_hashlibrary.json"
+        file="$DATA_DIR/${given_system}_${data_type}.json"
         # check if the file exists and is older than 1 minute
         if [[ -n "$(find "$file" -mmin +1 2>/dev/null)" ]]; then
-            echo "Updating \"$given_system\" hashlib..." >&2
-            download_hashlibrary "$given_system" && echo "Done!" >&2
+            echo "Updating $data_type for \"$given_system\"..." >&2
+            download_ra_data "$data_type" "$given_system" && echo "Done!" >&2
             return "$?"
         else
             if [[ -f "$file" ]]; then
-                echo "The \"$given_system\" hashlib is already up-to-date." >&2
+                echo "The $data_type for \"$given_system\" is already up-to-date." >&2
                 return 0
             else
                 echo "ERROR: invalid system: \"$given_system\""
@@ -325,13 +337,14 @@ function update_hashlib() {
             fi
         fi
     else
-        # update hashlibs older than one day
+        # update data older than one day
         while read -r line; do
-            system="$(basename "${line%_hashlibrary.json*}")"
-            download_hashlibrary "$system"
-        done < <(find "$DATA_DIR" -type f -name '*_hashlibrary.json' -mtime +1)
+            system="$(basename "${line%_${data_type}.json*}")"
+            download_ra_data "$data_type" "$system"
+        done < <(find "$DATA_DIR" -type f -name "*_${data_type}.json" -mtime +1)
     fi
 }
+
 
 
 # Print (echo) the game ID of a given rom file
@@ -392,12 +405,20 @@ function get_game_id() {
 
     # if the logic reaches this point, we have a valid game ID
 
-    [[ -n "$console_shortname" ]] && download_hashlibrary "$console_shortname"
+    [[ -n "$console_shortname" ]] && download_ra_data hashlibrary "$console_shortname"
 
     echo "$gameid"
 }
 
-
+##############################################################
+# _____     ____        
+#|_   _|__ |  _ \  ___  
+#  | |/ _ \| | | |/ _ \ 
+#  | | (_) | |_| | (_) |
+#  |_|\___/|____/ \___/ 
+#                       
+##############################################################
+#
 # Check if a game has cheevos.
 # returns 0 if yes; 1 if not; 2 if an error occurred
 function game_has_cheevos() {
@@ -584,152 +605,6 @@ function is_updated() {
     version_remote=$(git ls-remote "$GIT_REPO" | head -1 | cut -f1) || return 2
 
     [[ "$version_local" == "$version_remote" ]]
-}
-
-
-
-function check_hascheevos_files() {
-    local file_local
-    local file_orig
-    local file_pr # file for Pull Request
-    local line_local
-    local line_orig
-    local gameid
-    local bool_local
-    local bool_orig
-    local title_local
-    local title_orig
-    local ret
-    local updated
-    local pr_files
-    local ret=0
-    local tmp_ret
-
-    is_updated
-    ret="$?"
-    case "$ret" in
-        0)  updated=true
-            ;;
-        1)  update=false
-            echo "ERROR: your hascheevos files are outdated. Perform an '--update' and try again." >&2
-            return "$ret"
-            ;;
-        2)  updated=false
-            echo "WARNING: unable to compare your local files with remote ones from hascheevos repository." >&2
-            return "$ret"
-            ;;
-    esac
-
-    while read -r file_local; do
-        tmp_ret=0
-        file_orig="${file_local/-local/}"
-        file_pr="${file_orig/.txt/-PR.txt}"
-        [[ "$updated" == true ]] && cat "$file_orig" > "$file_pr"
-
-        echo
-        echo "Checking \"$(basename "$file_orig")\"..."
-
-        while read -r line_local; do
-            gameid=$(echo "$line_local" | cut -d: -f1)
-            line_orig=$(grep "^$gameid:" "$file_orig")
-            bool_local=$(echo "$line_local" | cut -d: -f2)
-            bool_orig=$( echo "$line_orig"  | cut -d: -f2)
-            title_local="$(get_game_title_hascheevos "$line_local")"
-            title_orig="$( get_game_title_hascheevos "$line_orig")"
-
-            if [[ -z "$line_orig" ]]; then
-                echo "* there's no Game ID #$gameid ($title_local) on your \"$(basename "$file_orig")\"."
-                ret=3
-                tmp_ret=1
-            elif [[ "$bool_local" == "$bool_orig" ]]; then
-                if [[ "$title_local" == "$title_orig" ]]; then
-                    sed -i "/$(regex_safe "$line_local")/d" "$file_local"
-                    [[ -s "$file_local" ]] || rm "$file_local"
-                else
-                    echo "* Game ID #$gameid is named $title_local locally but it's $title_orig in the original file."
-                    ret=3
-                    tmp_ret=1
-                fi
-            else
-                echo "* Game ID #$gameid ($title_local) is marked as \"$bool_local\" locally but it's \"$bool_orig\" in the original file."
-                ret=3
-                tmp_ret=1
-            fi
-
-            if [[ "$updated" == true && "$ret" != 0 ]]; then
-                sed -i "/^$gameid/d" "$file_pr"
-                echo "$line_local" >> "$file_pr"
-                sort -o "$file_pr" -un "$file_pr"
-            fi
-
-        done < "$file_local"
-        if [[ "$updated" == true ]]; then
-            diff -q "$file_pr" "$file_orig" >/dev/null && rm "$file_pr"
-        fi
-    done < <(find "$DATA_DIR" -type f -name '*_hascheevos-local.txt')
-
-    while read -r file_pr; do
-        file_orig="${file_pr/-PR.txt/.txt}"
-        if diff -q "$file_pr" "$file_orig" >/dev/null; then
-            rm "$file_pr"
-        else
-            pr_files+=("$file_pr")
-        fi
-    done < <(find "$DATA_DIR" -maxdepth 1 -name '*-PR.txt')
-
-    if [[ -n "$pr_files" ]]; then
-        # XXX: yeah! I shouldn't hardcode this thing, but it helps to keep the repo updated! :)
-        if [[ "$updated" == true && "$RA_USER" == meleu ]]; then
-            update_repository || echo "WARNING: hascheevos repository was NOT updated!" >&2
-        else
-            echo -e "\n-----"
-            echo "Consider helping to keep the hascheevos files synchronized with RetroAchievements.org data."
-            echo "Please, copy the output's content above and paste it in a new issue at https://github.com/meleu/hascheevos/issues"
-            echo "Attaching the file(s) below to your issue would be really useful:"
-            echo "${pr_files[@]}"
-        fi
-    fi
-
-    return "$ret"
-}
-
-
-# this function exists only for me, sorry :)
-# needs to be called from check_hascheevos_files() to access its variables
-function update_repository() {
-    [[ "$RA_USER" != meleu ]] && return 1
-
-    local file_bkp
-    local commit_msg=()
-
-    commit_msg=(-m "updated *_hascheevos.txt files ($(date +'%d-%b-%Y %H:%M'))")
-
-    pushd "$dir" > /dev/null
-    for file_pr in "${pr_files[@]}"; do
-        file_orig="${file_pr/-PR.txt/.txt}"
-        file_bkp="${file_orig/.txt/.bkp}"
-
-        cat "$file_orig" > "$file_bkp"
-        cat "$file_pr" > "$file_orig"
-
-        git add "$file_orig"
-        commit_msg+=(-m "$(basename "$file_orig")" )
-    done
-    echo
-    git commit "${commit_msg[@]}"
-    git push origin master
-
-    # revert things if failed to push
-    if [[ "$?" != 0 ]]; then
-        for file_pr in "${pr_files[@]}"; do
-            file_orig="${file_pr/-PR.txt/.txt}"
-            file_bkp="${file_orig/.txt/.bkp}"
-            cat "$file_bkp" > "$file_orig"
-        done
-        git reset --soft HEAD^
-    fi
-
-    popd > /dev/null
 }
 
 
@@ -923,9 +798,8 @@ function parse_args() {
 #H -p|--password PASSWORD   PASSWORD is your RetroAchievements.org password.
 #H 
             -p|--password)
-                check_argument "$1" "$2" || safe_exit 1
-                shift
-                RA_PASSWORD="$(urlencode "$1")"
+                RA_PASSWORD="$(get_password)"
+                echo
                 ;;
 
 # TODO: is it really necessary?
@@ -995,16 +869,8 @@ function parse_args() {
             --get-hashlib)
                 check_argument "$1" "$2" || safe_exit 1
                 shift
-                update_hashlib "$1"
+                update_ra_data hashlibrary "$1"
                 safe_exit "$?"
-                ;;
-
-#H -f|--check-false         Check at RetroAchievements.org server even if the
-#H                          game ID is marked as "has no cheevos" (false) in
-#H                          the local *_hascheevos.txt files.
-#H 
-            -f|--check-false)
-                CHECK_FALSE_FLAG=1
                 ;;
 
 #H -a|--arcade              Arcade hashes are calculated agains the ROM filename
@@ -1043,17 +909,6 @@ function parse_args() {
                 shift
                 COPY_ROMS_FLAG=1
                 COPY_ROMS_DIR="$1"
-                ;;
-
-#H -c|--check-hascheevos    Check if your local data is synchronized with the
-#H                          repository, print a report and exit.
-#H 
-            -c|--check-hascheevos)
-                if check_hascheevos_files; then
-                    echo "Your hascheevos files are up-to-date."
-                    safe_exit "0"
-                fi
-                safe_exit "1"
                 ;;
 
 # TODO: is it really necessary?
@@ -1161,7 +1016,7 @@ function parse_args() {
 # START HERE ##################################################################
 
 function main() {
-    trap safe_exit SIGHUP SIGINT SIGQUIT SIGKILL SIGTERM
+    trap 'safe_exit 1' SIGHUP SIGINT SIGQUIT SIGKILL SIGTERM
 
     if [[ "$(id -u)" == 0 ]]; then
         echo "ERROR: You can't use this script as super user." >&2
@@ -1175,9 +1030,10 @@ function main() {
 
     fill_data
 
-    update_hashlib
-
     parse_args "$@"
+
+    update_ra_data hashlibrary
+    update_ra_data officialgameslist
 
     if is_retropie && [[ -n "$ROMS_DIR" ]]; then
         local line
