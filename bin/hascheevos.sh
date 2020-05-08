@@ -26,9 +26,6 @@ CHECK_RA_SERVER_FLAG=0
 TAB_FLAG=0
 ARCADE_FLAG=0
 
-RA_USER=
-RA_PASSWORD=
-RA_TOKEN=
 FILES_TO_CHECK=()
 COPY_ROMS_DIR=
 TMP_DIR="/tmp/hascheevos-$$"
@@ -255,31 +252,6 @@ function update() {
 }
 
 
-# Getting the RetroAchievements token
-# input: RA_USER, RA_PASSWORD
-# updates: RA_TOKEN
-# exit if fails
-# TODO: cache the token in some file?
-function get_cheevos_token() {
-    if [[ -z "$RA_USER" ]]; then
-        echo "WARNING: undefined RetroAchievements.org user (see \"--user\" option)." >&2
-        return 1
-    fi
-
-    [[ -n "$RA_TOKEN" ]] && return 0
-
-    if [[ -z "$RA_PASSWORD" ]]; then
-        echo "WARNING: undefined RetroAchievements.org password (see \"--password\" option)." >&2
-        return 1
-    fi
-
-    RA_TOKEN="$(curl -s "$URL/dorequest.php?r=login&u=${RA_USER}&p=${RA_PASSWORD}" | jq -e -r .Token)"
-    if [[ "$?" -ne 0 || "$RA_TOKEN" == null || -z "$RA_TOKEN" ]]; then
-        echo "ERROR: cheevos authentication failed. Aborting..."
-        safe_exit 1
-    fi
-}
-
 
 function is_supported_system() {
     local sys
@@ -370,12 +342,19 @@ function update_ra_data() {
 
 
 
+##############################################################
+# _____     ____        
+#|_   _|__ |  _ \  ___  
+#  | |/ _ \| | | |/ _ \ 
+#  | | (_) | |_| | (_) |
+#  |_|\___/|____/ \___/ 
+#                       
+##############################################################
 # Print (echo) the game ID of a given rom file
 # This function try to get the game id from local *_hashlibrary.json files, if
 # these files don't exist the script will try to get them from RA server.
 # input:
 # $1 is a rom file (should be previously validated with validate_rom_file())
-# also needs RA_TOKEN
 function get_game_id() {
     local rom="$1"
     local line
@@ -810,31 +789,6 @@ function parse_args() {
                 update
                 ;;
 
-#H -u|--user USER           USER is your RetroAchievements.org username.
-#H 
-            -u|--user)
-                check_argument "$1" "$2" || safe_exit 1
-                shift
-                RA_USER="$1"
-                ;;
-
-#H -p|--password PASSWORD   PASSWORD is your RetroAchievements.org password.
-#H 
-            -p|--password)
-                RA_PASSWORD="$(get_password)"
-                echo
-                ;;
-
-# TODO: is it really necessary?
-##H --token TOKEN         TOKEN is your RetroAchievements.org token.
-##H 
-           --token)
-                check_argument "$1" "$2" || safe_exit 1
-                shift
-                RA_TOKEN="$1"
-                get_cheevos_token
-                ;;
-
 #H -g|--game-id GAME_ID     Check if there are cheevos for a given GAME_ID and 
 #H                          exit. Accept game IDs separated by commas, ex: 1,2,3
 #H                          Note: this option should be the last argument.
@@ -932,15 +886,6 @@ function parse_args() {
                 shift
                 COPY_ROMS_FLAG=1
                 COPY_ROMS_DIR="$1"
-                ;;
-
-# TODO: is it really necessary?
-##H --print-token            Print the user's RetroAchievements.org token and exit.
-##H 
-            --print-token)
-                get_cheevos_token
-                echo "$RA_TOKEN"
-                safe_exit 0
                 ;;
 
 # TODO: will it be useful? this feature will be useful only if the related PR will be merged on ES.
