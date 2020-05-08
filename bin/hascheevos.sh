@@ -40,33 +40,34 @@ EXTENSIONS='zip|7z'
 SUPPORTED_SYSTEMS=()
 declare -A CONSOLE_IDS
 
-# format: [shortname]='consoleId:extension1|extensionN:Long Name:alias'
+# format: [consoleId]='sysname|sysalias:ext1|extN:Long Name'
+# see the console IDs here: https://github.com/RetroAchievements/RAWeb/blob/master/lib/database/release.php
 declare -A SYSTEMS_INFO=(
-    [megadrive]='1:bin|gen|md|sg|smd:Sega Mega Drive:genesis'
-    [n64]='2:z64|n64|v64:Nintendo 64'
-    [snes]='3:fig|mgd|sfc|smc|swc:Super Nintendo Entertainment System'
-    [gb]='4:gb:GameBoy'
-    [gba]='5:gba:GameBoy Advance'
-    [gbc]='6:gbc:GameBoy Color'
-    [nes]='7:nes|fds:fds:Nintendo Entertainment System:fds'
-    [pcengine]='8:ccd|chd|cue|:PC Engine:pcenginecd'
-    [segacd]='9:bin|chd|cue|iso:Sega CD'
-    [sega32x]='10:32x|bin|md|smd:Sega 32X'
-    [mastersystem]='11:bin|sms:Sega Master System'
-    [psx]='12:cue|ccd|chd|exe|iso|m3u|pbp|toc:PlayStation'
-    [atarilynx]='13:lnx:Atari Lynx'
-    [ngp]='14:ngp|ngc:NeoGeo Pocket [Color]:ngpc'
-    [gamegear]='15:bin|gg|sms:Game Gear'
-    [atarijaguar]='17:j64|jag:Atari Jaguar'
-    [nds]='18:nds:Nintendo DS'
-    [pokemini]='24:min:Pokemon Mini'
-    [atari2600]='25:a26|bin|rom:Atari 2600'
-    [arcade]='27:fba:Arcade:fbneo|fba'
-    [virtualboy]='28:vb:VirtualBoy'
-    [sg-1000]='33:bin|sg:SG-1000'
-    [coleco]='44:col|rom:ColecoVision'
-    [atari7800]='51:a78|bin:Atari 7800'
-    [wonderswan]='53:ws|wsc:WonderSwan [Color]:wonderswancolor'
+    [1]='megadrive|genesis:bin|gen|md|sg|smd:Sega Mega Drive:genesis'
+    [2]='n64:z64|n64|v64:Nintendo 64'
+    [3]='snes:fig|mgd|sfc|smc|swc:Super Nintendo Entertainment System'
+    [4]='gb:gb:GameBoy'
+    [5]='gba:gba:GameBoy Advance'
+    [6]='gbc:gbc:GameBoy Color'
+    [7]='nes|fds:nes|fds:fds:Nintendo Entertainment System'
+    [8]='pcengine|pcenginecd|tg16|tg16cd:ccd|chd|cue|:PC Engine'
+    [9]='segacd:bin|chd|cue|iso:Sega CD'
+    [10]='sega32x:32x|bin|md|smd:Sega 32X'
+    [11]='mastersystem:bin|sms:Sega Master System'
+    [12]='psx:cue|ccd|chd|exe|iso|m3u|pbp|toc:PlayStation'
+    [13]='atarilynx:lnx:Atari Lynx'
+    [14]='ngp|ngpc:ngp|ngc:NeoGeo Pocket [Color]'
+    [15]='gamegear:bin|gg|sms:Game Gear'
+    [17]='atarijaguar:j64|jag:Atari Jaguar'
+    [18]='nds:nds:Nintendo DS'
+    [24]='pokemini:min:Pokemon Mini'
+    [25]='atari2600:a26|bin|rom:Atari 2600'
+    [27]='arcade|fba|fbneo:fba:Arcade'
+    [28]='virtualboy:vb:VirtualBoy'
+    [33]='sg-1000:bin|sg:SG-1000'
+    [44]='coleco:col|rom:ColecoVision'
+    [51]='atari7800:a78|bin:Atari 7800'
+    [53]='wonderswan|wonderswancolor:ws|wsc:WonderSwan [Color]'
 )
 
 # RetroPie specific variables
@@ -105,7 +106,6 @@ function urlencode() {
             printf '%%%02X' "'$char" 
         fi
     done
-    printf '\n' # opcional
 }
 
 
@@ -123,20 +123,30 @@ function join_by() {
 }
 
 
+
 function fill_data() {
-    local shortname
+    local sysnames
+    local sysname
+    local id
     local entry
     local temp_extensions
 
-    for shortname in "${!SYSTEMS_INFO[@]}"; do
-        entry="${SYSTEMS_INFO[$shortname]}"
+    for id in "${!SYSTEMS_INFO[@]}"; do
+        entry="${SYSTEMS_INFO[$id]}"
+        sysnames="$(cut -d: -f1 <<< "$entry" | tr '|' ' ' )"
 
-        SUPPORTED_SYSTEMS+=("$shortname")
-        CONSOLE_IDS[$shortname]="$(cut -d: -f1 <<< "$entry")"
+        SUPPORTED_SYSTEMS+=( $sysnames ) # <--- no quotes is mandatory
+
+        # no quotes in $sysnames below is mandatory
+        for sysname in $sysnames; do
+            CONSOLE_IDS[$sysname]="$id"
+        done
+
         temp_extensions="$(
             join_by '|' "$temp_extensions" "$(cut -d: -f2 <<< "$entry" )" 
         )"
     done
+
     EXTENSIONS="$(join_by '|' "$EXTENSIONS" $(tr '|' '\n' <<< "$temp_extensions" | sort -u) )"
     #  this subshell must NOT be quoted! ---^
 }
