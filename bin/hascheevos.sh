@@ -302,34 +302,41 @@ function download_ra_data() {
 
 
 
-# If a valid system is given in $2, the function tries to update only the
+# If a valid system is given in $1, the function tries to update only the
 # data for that system.
 # Otherwise update data older than 1 day.
 function update_ra_data() {
-    local data_type="$1"
-    local given_system="$2"
+    local given_system="$1"
     local line
     local file
-    local sys
-
-    [[ $data_type =~ ^(officialgameslist|hashlibrary)$ ]] || return 1
+    local system
+    local data_type
 
     echo "Checking local files..." >&2
-    for sys in "${SUPPORTED_SYSTEMS[@]}"; do
-        [[ -f "$DATA_DIR/${sys}_${data_type}.json" ]] || download_ra_data "$data_type" "$sys"
+    for system in "${SUPPORTED_SYSTEMS[@]}"; do
+        if ! [[ \
+            -f "$DATA_DIR/${system}_hashlibrary.json" \
+            || -f "$DATA_DIR/${system}_officialgameslist.json" \
+        ]]; then
+            download_ra_data officialgameslist "$system" \
+                && download_ra_data hashlibrary "$system"
+        fi
     done
     echo "Done!" >&2
 
     if [[ -n "$given_system" ]]; then
-        file="$DATA_DIR/${given_system}_${data_type}.json"
+        file="$DATA_DIR/${given_system}_officialgameslist.json"
+
         # check if the file exists and is older than 1 minute
         if [[ -n "$(find "$file" -mmin +1 2>/dev/null)" ]]; then
-            echo "Updating $data_type for \"$given_system\"..." >&2
-            download_ra_data "$data_type" "$given_system" && echo "Done!" >&2
+            echo "Updating data for \"$given_system\"..." >&2
+            download_ra_data officialgameslist "$given_system" \
+                && download_ra_data hashlibrary "$given_system" \
+                && echo "Done!" >&2
             return "$?"
         else
             if [[ -f "$file" ]]; then
-                echo "The $data_type for \"$given_system\" is already up-to-date." >&2
+                echo "The data for \"$given_system\" is already up-to-date." >&2
                 return 0
             else
                 echo "ERROR: invalid system: \"$given_system\""
@@ -339,9 +346,15 @@ function update_ra_data() {
     else
         # update data older than one day
         while read -r line; do
-            system="$(basename "${line%_${data_type}.json*}")"
+            file="${line##*/}"
+            file="${file%.json}"
+            system="${file%_*}"
+            data_type="${file#*_}"
+
             download_ra_data "$data_type" "$system"
-        done < <(find "$DATA_DIR" -type f -name "*_${data_type}.json" -mtime +1)
+        done < <(find "$DATA_DIR" -maxdepth 1 -type f -mtime +1 \
+            \( -name "*_officialgameslist.json" -o -name "*_haslibrary.json" \)
+        )
     fi
 }
 
@@ -863,13 +876,13 @@ function parse_args() {
                 safe_exit "$ret"
                 ;;
 
-#H --get-hashlib SYSTEM     Download JSON hash library for a given SYSTEM (console)
+#H --get-data SYSTEM        Download JSON hash library for a given SYSTEM (console)
 #H                          and exit.
 #H 
-            --get-hashlib)
+            --get-data)
                 check_argument "$1" "$2" || safe_exit 1
                 shift
-                update_ra_data hashlibrary "$1"
+                update_ra_data "$1"
                 safe_exit "$?"
                 ;;
 
@@ -1032,8 +1045,7 @@ function main() {
 
     parse_args "$@"
 
-    update_ra_data hashlibrary
-    update_ra_data officialgameslist
+    update_ra_data
 
     if is_retropie && [[ -n "$ROMS_DIR" ]]; then
         local line
