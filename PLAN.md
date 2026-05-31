@@ -3,7 +3,7 @@
 CLI that hashes NES ROMs via the rcheevos `rc_hash` C library (Cgo).
 Invocation: `rah nes <file>` → prints `<md5hash> <basename>`.
 
-Acceptance: `rah nes cmd/rah/testdata/Zooming-Secretary.zip` →
+Acceptance: `rah nes testdata/Zooming-Secretary.zip` →
 `bed0f7b12673dd762eed665c5c61927b Zooming-Secretary.zip`, exit 0.
 
 ## Locked decisions
@@ -21,7 +21,7 @@ Acceptance: `rah nes cmd/rah/testdata/Zooming-Secretary.zip` →
 | Diagnostics | generic error, no rc_hash callbacks (additive upgrade later) |
 | Module | `github.com/meleu/hascheevos`, binary `cmd/rah` |
 | Build trigger | manual `make lib` then `go build` (no go:generate, `.a` gitignored) |
-| Testdata | `cmd/rah/testdata/` |
+| Testdata | `testdata/` (project root; shared by unit + e2e tests) |
 | Distribution | CI: lint+test job (ubuntu only) + separate build matrix (ubuntu/macos/windows-msys2) |
 
 ## Target layout
@@ -36,7 +36,7 @@ hascheevos/
   cmd/rah/
     rah.go                     # main + hashFile(system, path) (hash, name string, err error)
     rah_test.go                # TestNESHash
-    testdata/Zooming-Secretary.zip
+  testdata/Zooming-Secretary.zip
   internal/rchash/
     rchash.go                  # cgo wrapper: Hash(id uint32, data []byte) (string, error)
     Makefile                   # builds librchash.a
@@ -54,7 +54,7 @@ Goal: repo skeleton compiles as a pure-Go no-op; submodule lives in its new home
 1. `go mod init github.com/meleu/hascheevos`.
 2. Move submodule: `git mv rcheevos internal/rchash/rcheevos`; edit `.gitmodules`
    `path = internal/rchash/rcheevos`; `git submodule sync`.
-3. Move testdata: `git mv testdata cmd/rah/testdata`.
+3. Testdata lives at project root: `testdata/` (shared by unit + e2e tests).
 4. `.gitignore`: add `internal/rchash/librchash.a`, `internal/rchash/**/*.o`.
 5. Stub `cmd/rah/rah.go` with empty `main()`.
 
@@ -127,11 +127,11 @@ Goal: real `rah nes <file>` works; acceptance test green.
    - `main()`: `len(os.Args) != 3` → usage + exit 2; call `hashFile`;
      error → `fmt.Fprintf(os.Stderr, "error: could not hash %s\n", file)` + exit 1;
      success → `fmt.Printf("%s %s\n", hash, name)`.
-2. `cmd/rah/rah_test.go`: `TestNESHash` → `hashFile("nes", "testdata/Zooming-Secretary.zip")`
+2. `cmd/rah/rah_test.go`: `TestNESHash` → `hashFile("nes", "../../testdata/Zooming-Secretary.zip")`
    asserts hash `== bed0f7b12673dd762eed665c5c61927b`.
 
 Verify: `make -C internal/rchash lib && go test ./...` green;
-manual `go run ./cmd/rah nes cmd/rah/testdata/Zooming-Secretary.zip` prints expected line.
+manual `go run ./cmd/rah nes testdata/Zooming-Secretary.zip` prints expected line.
 
 ---
 

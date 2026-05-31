@@ -9,7 +9,7 @@ import (
 func TestHashNESFromZip(t *testing.T) {
 	const want = "bed0f7b12673dd762eed665c5c61927b"
 
-	zr, err := zip.OpenReader("../../cmd/rah/testdata/Zooming-Secretary.zip")
+	zr, err := zip.OpenReader("../../testdata/Zooming-Secretary.zip")
 	if err != nil {
 		t.Fatalf("open zip: %v", err)
 	}
