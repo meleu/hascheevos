@@ -96,6 +96,7 @@ func TestWholeFileSystems(t *testing.T) {
 		"msx",
 		"neogeopocket",
 		"oric",
+		"pc8800",
 		// later phases append their key here
 	}
 	for _, key := range cases {
