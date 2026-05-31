@@ -1,4 +1,4 @@
-# `rah` — Super Nintendo (SNES) support
+# [DONE!] `rah` — Super Nintendo (SNES) support
 
 Add `rah snes <file>` → `<md5hash> <basename>`.
 
