@@ -24,6 +24,7 @@ const (
 	ConsoleArcadia2001  = uint32(C.RC_CONSOLE_ARCADIA_2001)
 	ConsoleAtariJaguar  = uint32(C.RC_CONSOLE_ATARI_JAGUAR)
 	ConsoleColecoVision = uint32(C.RC_CONSOLE_COLECOVISION)
+	ConsoleElektor      = uint32(C.RC_CONSOLE_ELEKTOR_TV_GAMES_COMPUTER)
 	ConsoleCommodore64  = uint32(C.RC_CONSOLE_COMMODORE_64)
 )
 
