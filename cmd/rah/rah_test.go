@@ -86,6 +86,7 @@ func TestWholeFileSystems(t *testing.T) {
 		"channelf",
 		"gb",
 		"gba",
+		"gbc",
 		// later phases append their key here
 	}
 	for _, key := range cases {

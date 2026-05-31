@@ -34,6 +34,7 @@ var systems = map[string]uint32{
 	"channelf":     rchash.ConsoleChannelF,
 	"gb":           rchash.ConsoleGameBoy,
 	"gba":          rchash.ConsoleGameBoyAdvance,
+	"gbc":          rchash.ConsoleGameBoyColor,
 }
 
 func main() {
