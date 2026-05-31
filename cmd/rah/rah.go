@@ -23,6 +23,7 @@ var systems = map[string]uint32{
 	"nes":       rchash.ConsoleNES,
 	"snes":      rchash.ConsoleSNES,
 	"atari2600": rchash.ConsoleAtari2600,
+	"megadrive": rchash.ConsoleMegaDrive,
 }
 
 func main() {

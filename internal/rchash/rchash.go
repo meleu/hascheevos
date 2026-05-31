@@ -18,6 +18,7 @@ const (
 	ConsoleNES       = uint32(C.RC_CONSOLE_NINTENDO)
 	ConsoleSNES      = uint32(C.RC_CONSOLE_SUPER_NINTENDO)
 	ConsoleAtari2600 = uint32(C.RC_CONSOLE_ATARI_2600)
+	ConsoleMegaDrive = uint32(C.RC_CONSOLE_MEGA_DRIVE)
 )
 
 // hashBufSize is the buffer rc_hash_generate_from_buffer writes into:

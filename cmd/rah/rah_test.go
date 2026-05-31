@@ -53,6 +53,23 @@ func TestAtari2600Hash(t *testing.T) {
 	}
 }
 
+func TestMegaDriveHash(t *testing.T) {
+	hash, name, err := hashFile("megadrive", "../../testdata/megadrive/Abbaye-des-Morts.zip")
+	if err != nil {
+		t.Fatalf("hashFile: %v", err)
+	}
+
+	const wantHash = "bc2e5590cc0e7b6e863b4275343839d4"
+	if hash != wantHash {
+		t.Errorf("hash = %q, want %q", hash, wantHash)
+	}
+
+	const wantName = "Abbaye-des-Morts.zip"
+	if name != wantName {
+		t.Errorf("name = %q, want %q", name, wantName)
+	}
+}
+
 func TestUnknownSystem(t *testing.T) {
 	if _, _, err := hashFile("bogus", "../../testdata/nes/Zooming-Secretary.zip"); err == nil {
 		t.Fatal("expected error for unknown system, got nil")

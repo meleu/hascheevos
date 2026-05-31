@@ -79,6 +79,44 @@ func TestHashAtari2600FromZip(t *testing.T) {
 	}
 }
 
+// TestHashMegaDriveFromZip checks the generic full-file MD5 path: Mega Drive
+// ROMs hashed via the buffer API are the MD5 of the entire payload (no header
+// parsing, no SMD de-interleave).
+func TestHashMegaDriveFromZip(t *testing.T) {
+	zr, err := zip.OpenReader("../../testdata/megadrive/Abbaye-des-Morts.zip")
+	if err != nil {
+		t.Fatalf("open zip: %v", err)
+	}
+	defer zr.Close()
+
+	if len(zr.File) == 0 {
+		t.Fatal("zip has no entries")
+	}
+
+	rc, err := zr.File[0].Open()
+	if err != nil {
+		t.Fatalf("open entry: %v", err)
+	}
+	defer rc.Close()
+
+	data, err := io.ReadAll(rc)
+	if err != nil {
+		t.Fatalf("read entry: %v", err)
+	}
+
+	// Mega Drive hash == MD5 of the whole payload.
+	wantSum := md5.Sum(data)
+	want := hex.EncodeToString(wantSum[:])
+
+	got, err := Hash(ConsoleMegaDrive, data)
+	if err != nil {
+		t.Fatalf("Hash: %v", err)
+	}
+	if got != want {
+		t.Errorf("Hash = %q, want %q", got, want)
+	}
+}
+
 // TestHashSNESHeadered checks the path where a 512-byte SNES (SMC/SFC) copier
 // header is detected and stripped before hashing. The ROM is 8704 bytes
 // (0x2000 + 512), so rc_hash_snes ignores the header and hashes only the
