@@ -51,6 +51,7 @@ var systems = map[string]uint32{
 	"supervision":    rchash.ConsoleSupervision,
 	"ti83":           rchash.ConsoleTI83,
 	"tic80":          rchash.ConsoleTIC80,
+	"uzebox":         rchash.ConsoleUzebox,
 }
 
 func main() {
