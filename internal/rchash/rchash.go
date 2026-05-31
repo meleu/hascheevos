@@ -27,6 +27,7 @@ const (
 	ConsoleGameBoyAdvance   = uint32(C.RC_CONSOLE_GAMEBOY_ADVANCE)
 	ConsoleIntertonVC4000   = uint32(C.RC_CONSOLE_INTERTON_VC_4000)
 	ConsoleMagnavoxOdyssey2 = uint32(C.RC_CONSOLE_MAGNAVOX_ODYSSEY2)
+	ConsoleZXSpectrum       = uint32(C.RC_CONSOLE_ZX_SPECTRUM)
 	ConsoleWonderSwan       = uint32(C.RC_CONSOLE_WONDERSWAN)
 	ConsoleWASM4            = uint32(C.RC_CONSOLE_WASM4)
 	ConsoleVirtualBoy       = uint32(C.RC_CONSOLE_VIRTUAL_BOY)

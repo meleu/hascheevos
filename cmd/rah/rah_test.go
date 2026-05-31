@@ -108,7 +108,7 @@ func TestWholeFileSystems(t *testing.T) {
 		"virtualboy",
 		"wasm4",
 		"wonderswan",
-		// later phases append their key here
+		"zxspectrum",
 	}
 	for _, key := range cases {
 		t.Run(key, func(t *testing.T) {
