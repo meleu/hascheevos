@@ -42,6 +42,7 @@ var systems = map[string]uint32{
 	"mastersystem":   rchash.ConsoleMasterSystem,
 	"megaduck":       rchash.ConsoleMegaDuck,
 	"msx":            rchash.ConsoleMSX,
+	"neogeopocket":   rchash.ConsoleNeoGeoPocket,
 }
 
 func main() {
