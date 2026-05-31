@@ -10,7 +10,7 @@ Acceptance: `rah nes testdata/Zooming-Secretary.zip` →
 
 | Topic | Decision |
 |---|---|
-| C consumption | Prebuilt static lib `librchash.a` (option B), cgo links it |
+| C consumption | Prebuilt static lib `librchash.a`, cgo links it |
 | rcheevos | git submodule, moved to `internal/rchash/rcheevos/` |
 | Build flags | `-DRC_HASH_NO_DISC -DRC_HASH_NO_ENCRYPTED -DRC_HASH_NO_ZIP` (no zlib/aes) |
 | Zip | unzip in Go (`archive/zip`), first entry; zero-entry → generic failure (exit 1) |
@@ -86,6 +86,7 @@ shows the symbol defined (T).
 Goal: Go can hash a raw NES byte buffer through the C lib.
 
 1. `internal/rchash/rchash.go`:
+
    ```go
    package rchash
 
@@ -101,6 +102,7 @@ Goal: Go can hash a raw NES byte buffer through the C lib.
 
    func Hash(consoleID uint32, data []byte) (string, error) { ... }
    ```
+
    - Pass `&data[0]` + `C.size_t(len(data))` to `C.rc_hash_generate_from_buffer`
      into a `[33]C.char`; guard empty `data`.
    - Return `C.GoString` on non-zero; error on zero.
@@ -158,5 +160,4 @@ Verify: CI green on a PR; artifacts present per platform.
   stay within `RC_HASH_NO_*` boundaries (avoid pulling disc/zip/encrypted deps).
 - **Windows cgo**: needs msys2 `make`+`gcc`; `${SRCDIR}` + `-lrchash` path must
   resolve on all platforms (static `.a`, so no runtime lib path issues).
-- **Submodule move**: contributors must `git submodule update --init` after pulling.
 - **`go install` not supported** (needs prebuilt `.a`); distribution is via CI binaries.
