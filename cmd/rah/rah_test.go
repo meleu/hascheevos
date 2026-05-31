@@ -106,6 +106,7 @@ func TestWholeFileSystems(t *testing.T) {
 		"uzebox",
 		"vectrex",
 		"virtualboy",
+		"wasm4",
 		// later phases append their key here
 	}
 	for _, key := range cases {
