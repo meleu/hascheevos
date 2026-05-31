@@ -1,5 +1,11 @@
 RALibretro/
 
+# built artifacts
+internal/rchash/librchash.a
+internal/rchash/**/*.o
+/rah
+/dist/
+
 # Created by https://www.toptal.com/developers/gitignore/api/vim,emacs,visualstudiocode,linux,windows,macos,dotenv,go
 # Edit at https://www.toptal.com/developers/gitignore?templates=vim,emacs,visualstudiocode,linux,windows,macos,dotenv,go
 
@@ -101,7 +107,7 @@ go.work
 .LSOverride
 
 # Icon must end with two \r
-Icon
+Icon
 
 # Thumbnails
 ._*
