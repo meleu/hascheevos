@@ -3,8 +3,10 @@
 // Usage:
 //
 //	rah <system> <file>
+//	rah -list
 //
-// It prints "<hash> <basename>" to stdout on success.
+// It prints "<hash> <basename>" to stdout on success. With -list it prints
+// every supported system key, one per line, sorted.
 package main
 
 import (
@@ -13,6 +15,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 
 	"github.com/meleu/hascheevos/internal/rchash"
@@ -60,8 +63,15 @@ var systems = map[string]uint32{
 }
 
 func main() {
+	if len(os.Args) == 2 && os.Args[1] == "-list" {
+		for _, key := range listSystems() {
+			fmt.Println(key)
+		}
+		os.Exit(0)
+	}
+
 	if len(os.Args) != 3 {
-		fmt.Fprintf(os.Stderr, "usage: %s <system> <file>\n", filepath.Base(os.Args[0]))
+		fmt.Fprintf(os.Stderr, "usage: %s <system> <file>\n       %s -list\n", filepath.Base(os.Args[0]), filepath.Base(os.Args[0]))
 		os.Exit(2)
 	}
 
@@ -74,6 +84,16 @@ func main() {
 	}
 
 	fmt.Printf("%s %s\n", hash, name)
+}
+
+// listSystems returns all supported system keys, sorted.
+func listSystems() []string {
+	keys := make([]string, 0, len(systems))
+	for key := range systems {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+	return keys
 }
 
 // hashFile hashes the ROM at path for the given system, returning the hash and

@@ -1,6 +1,9 @@
 package main
 
-import "testing"
+import (
+	"sort"
+	"testing"
+)
 
 func TestNESHash(t *testing.T) {
 	hash, name, err := hashFile("nes", "../../testdata/nes/Zooming-Secretary.zip")
@@ -123,6 +126,22 @@ func TestWholeFileSystems(t *testing.T) {
 				t.Errorf("name = %q, want %q", name, wantName)
 			}
 		})
+	}
+}
+
+func TestListSystems(t *testing.T) {
+	keys := listSystems()
+
+	if !sort.StringsAreSorted(keys) {
+		t.Errorf("listSystems() not sorted: %v", keys)
+	}
+
+	want := []string{"nes", "megadrive", "zxspectrum"}
+	for _, w := range want {
+		idx := sort.SearchStrings(keys, w)
+		if idx >= len(keys) || keys[idx] != w {
+			t.Errorf("listSystems() missing %q", w)
+		}
 	}
 }
 
