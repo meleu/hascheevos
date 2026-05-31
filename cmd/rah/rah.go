@@ -52,6 +52,7 @@ var systems = map[string]uint32{
 	"ti83":           rchash.ConsoleTI83,
 	"tic80":          rchash.ConsoleTIC80,
 	"uzebox":         rchash.ConsoleUzebox,
+	"vectrex":        rchash.ConsoleVectrex,
 }
 
 func main() {
