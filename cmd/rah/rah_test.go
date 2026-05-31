@@ -70,6 +70,31 @@ func TestMegaDriveHash(t *testing.T) {
 	}
 }
 
+func TestWholeFileSystems(t *testing.T) {
+	const (
+		wantHash = "6ed56530d641cd3cc1c9921fe3327b4a"
+		wantName = "generic-file.rom"
+	)
+	cases := []string{
+		"amstradpc",
+		// later phases append their key here
+	}
+	for _, key := range cases {
+		t.Run(key, func(t *testing.T) {
+			hash, name, err := hashFile(key, "../../testdata/generic-file.rom")
+			if err != nil {
+				t.Fatalf("hashFile: %v", err)
+			}
+			if hash != wantHash {
+				t.Errorf("hash = %q, want %q", hash, wantHash)
+			}
+			if name != wantName {
+				t.Errorf("name = %q, want %q", name, wantName)
+			}
+		})
+	}
+}
+
 func TestUnknownSystem(t *testing.T) {
 	if _, _, err := hashFile("bogus", "../../testdata/nes/Zooming-Secretary.zip"); err == nil {
 		t.Fatal("expected error for unknown system, got nil")
