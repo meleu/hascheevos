@@ -46,6 +46,7 @@ var systems = map[string]uint32{
 	"oric":           rchash.ConsoleOric,
 	"pc8800":         rchash.ConsolePC8800,
 	"pokemonmini":    rchash.ConsolePokemonMini,
+	"sega32x":        rchash.ConsoleSega32X,
 }
 
 func main() {
