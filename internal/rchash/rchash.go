@@ -1,4 +1,4 @@
-// rchash wraps the rcheevos rc_hash C library to hash console ROMs.
+// Package rchash wraps the rcheevos rc_hash C library to hash console ROMs.
 package rchash
 
 /*
@@ -14,7 +14,10 @@ import (
 )
 
 // Exported console ids (extend as systems are added).
-const ConsoleNES = uint32(C.RC_CONSOLE_NINTENDO)
+const (
+	ConsoleNES  = uint32(C.RC_CONSOLE_NINTENDO)
+	ConsoleSNES = uint32(C.RC_CONSOLE_SUPER_NINTENDO)
+)
 
 // hashBufSize is the buffer rc_hash_generate_from_buffer writes into:
 // 32 hex MD5 chars + NUL terminator.
