@@ -25,6 +25,7 @@ const (
 	ConsoleAtariJaguar    = uint32(C.RC_CONSOLE_ATARI_JAGUAR)
 	ConsoleColecoVision   = uint32(C.RC_CONSOLE_COLECOVISION)
 	ConsoleGameBoyAdvance = uint32(C.RC_CONSOLE_GAMEBOY_ADVANCE)
+	ConsoleIntellivision  = uint32(C.RC_CONSOLE_INTELLIVISION)
 	ConsoleGameGear       = uint32(C.RC_CONSOLE_GAME_GEAR)
 	ConsoleGameBoyColor   = uint32(C.RC_CONSOLE_GAMEBOY_COLOR)
 	ConsoleGameBoy        = uint32(C.RC_CONSOLE_GAMEBOY)
