@@ -1,4 +1,4 @@
-// Package rchash wraps the rcheevos rc_hash C library to hash console ROMs.
+// rchash wraps the rcheevos rc_hash C library to hash console ROMs.
 package rchash
 
 /*
@@ -16,13 +16,17 @@ import (
 // Exported console ids (extend as systems are added).
 const ConsoleNES = uint32(C.RC_CONSOLE_NINTENDO)
 
+// hashBufSize is the buffer rc_hash_generate_from_buffer writes into:
+// 32 hex MD5 chars + NUL terminator.
+const hashBufSize = 33
+
 // Hash returns the rcheevos hash for the given console's ROM bytes.
 func Hash(consoleID uint32, data []byte) (string, error) {
 	if len(data) == 0 {
 		return "", errors.New("rchash: empty data")
 	}
 
-	var hash [33]C.char
+	var hash [hashBufSize]C.char
 	ok := C.rc_hash_generate_from_buffer(
 		&hash[0],
 		C.uint32_t(consoleID),
