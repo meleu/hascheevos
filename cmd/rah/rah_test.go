@@ -3,7 +3,7 @@ package main
 import "testing"
 
 func TestNESHash(t *testing.T) {
-	hash, name, err := hashFile("nes", "../../testdata/Zooming-Secretary.zip")
+	hash, name, err := hashFile("nes", "../../testdata/nes/Zooming-Secretary.zip")
 	if err != nil {
 		t.Fatalf("hashFile: %v", err)
 	}
@@ -20,7 +20,7 @@ func TestNESHash(t *testing.T) {
 }
 
 func TestUnknownSystem(t *testing.T) {
-	if _, _, err := hashFile("bogus", "../../testdata/Zooming-Secretary.zip"); err == nil {
+	if _, _, err := hashFile("bogus", "../../testdata/nes/Zooming-Secretary.zip"); err == nil {
 		t.Fatal("expected error for unknown system, got nil")
 	}
 }
