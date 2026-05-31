@@ -2,7 +2,10 @@ package rchash
 
 import (
 	"archive/zip"
+	"crypto/md5"
+	"encoding/hex"
 	"io"
+	"os"
 	"testing"
 )
 
@@ -36,5 +39,40 @@ func TestHashNESFromZip(t *testing.T) {
 	}
 	if got != want {
 		t.Errorf("Hash = %q, want %q", got, want)
+	}
+}
+
+// TestHashSNESHeadered checks the path where a 512-byte SNES (SMC/SFC) copier
+// header is detected and stripped before hashing. The ROM is 8704 bytes
+// (0x2000 + 512), so rc_hash_snes ignores the header and hashes only the
+// remaining 8192 bytes.
+func TestHashSNESHeadered(t *testing.T) {
+	data, err := os.ReadFile("../../testdata/snes/FakeHeaderedROM.sfc")
+	if err != nil {
+		t.Fatalf("read ROM: %v", err)
+	}
+
+	const header = 512
+	if (len(data)-header)%0x2000 != 0 || len(data) <= header {
+		t.Fatalf("ROM size %d does not exercise the header path", len(data))
+	}
+
+	// With the header stripped, the hash is the MD5 of the payload.
+	wantSum := md5.Sum(data[header:])
+	want := hex.EncodeToString(wantSum[:])
+
+	got, err := Hash(ConsoleSNES, data)
+	if err != nil {
+		t.Fatalf("Hash: %v", err)
+	}
+	if got != want {
+		t.Errorf("Hash = %q, want %q (header not stripped?)", got, want)
+	}
+
+	// Sanity: hashing the whole file (header included) must differ, proving
+	// the header was actually ignored rather than hashed.
+	fullSum := md5.Sum(data)
+	if full := hex.EncodeToString(fullSum[:]); got == full {
+		t.Errorf("Hash = full-file MD5 %q, header was not stripped", full)
 	}
 }
