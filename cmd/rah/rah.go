@@ -31,6 +31,7 @@ var systems = map[string]uint32{
 	"colecovision": rchash.ConsoleColecoVision,
 	"c64":          rchash.ConsoleCommodore64,
 	"elektor":      rchash.ConsoleElektor,
+	"channelf":     rchash.ConsoleChannelF,
 }
 
 func main() {
