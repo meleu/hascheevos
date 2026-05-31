@@ -78,6 +78,7 @@ func TestWholeFileSystems(t *testing.T) {
 	cases := []string{
 		"amstradpc",
 		"appleii",
+		"arcadia2001",
 		// later phases append their key here
 	}
 	for _, key := range cases {
