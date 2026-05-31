@@ -92,6 +92,7 @@ func TestWholeFileSystems(t *testing.T) {
 		"intertonvc4000",
 		"odyssey2",
 		"mastersystem",
+		"megaduck",
 		// later phases append their key here
 	}
 	for _, key := range cases {

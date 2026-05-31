@@ -40,6 +40,7 @@ var systems = map[string]uint32{
 	"intertonvc4000": rchash.ConsoleIntertonVC4000,
 	"odyssey2":       rchash.ConsoleMagnavoxOdyssey2,
 	"mastersystem":   rchash.ConsoleMasterSystem,
+	"megaduck":       rchash.ConsoleMegaDuck,
 }
 
 func main() {
