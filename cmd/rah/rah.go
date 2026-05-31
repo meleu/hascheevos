@@ -41,6 +41,7 @@ var systems = map[string]uint32{
 	"odyssey2":       rchash.ConsoleMagnavoxOdyssey2,
 	"mastersystem":   rchash.ConsoleMasterSystem,
 	"megaduck":       rchash.ConsoleMegaDuck,
+	"msx":            rchash.ConsoleMSX,
 }
 
 func main() {
