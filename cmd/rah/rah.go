@@ -20,8 +20,9 @@ import (
 
 // systems maps user-facing system names to rcheevos console ids.
 var systems = map[string]uint32{
-	"nes":  rchash.ConsoleNES,
-	"snes": rchash.ConsoleSNES,
+	"nes":       rchash.ConsoleNES,
+	"snes":      rchash.ConsoleSNES,
+	"atari2600": rchash.ConsoleAtari2600,
 }
 
 func main() {

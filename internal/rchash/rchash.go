@@ -15,8 +15,9 @@ import (
 
 // Exported console ids (extend as systems are added).
 const (
-	ConsoleNES  = uint32(C.RC_CONSOLE_NINTENDO)
-	ConsoleSNES = uint32(C.RC_CONSOLE_SUPER_NINTENDO)
+	ConsoleNES       = uint32(C.RC_CONSOLE_NINTENDO)
+	ConsoleSNES      = uint32(C.RC_CONSOLE_SUPER_NINTENDO)
+	ConsoleAtari2600 = uint32(C.RC_CONSOLE_ATARI_2600)
 )
 
 // hashBufSize is the buffer rc_hash_generate_from_buffer writes into:
