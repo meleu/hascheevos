@@ -55,6 +55,7 @@ var systems = map[string]uint32{
 	"vectrex":        rchash.ConsoleVectrex,
 	"virtualboy":     rchash.ConsoleVirtualBoy,
 	"wasm4":          rchash.ConsoleWASM4,
+	"wonderswan":     rchash.ConsoleWonderSwan,
 }
 
 func main() {
