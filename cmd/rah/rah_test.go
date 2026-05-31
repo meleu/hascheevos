@@ -87,6 +87,7 @@ func TestWholeFileSystems(t *testing.T) {
 		"gb",
 		"gba",
 		"gbc",
+		"gamegear",
 		// later phases append their key here
 	}
 	for _, key := range cases {
