@@ -1,0 +1,57 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - master
+      - go
+  pull_request:
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          submodules: recursive
+
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: "go.mod"
+
+      - name: Build static lib
+        run: make -C internal/rchash lib
+
+      - name: gofmt
+        run: |
+          fmt=$(gofmt -l cmd internal/rchash/rchash.go internal/rchash/rchash_test.go)
+          if [ -n "$fmt" ]; then
+            echo "These files are not gofmt-formatted:"
+            echo "$fmt"
+            exit 1
+          fi
+
+      - name: go vet
+        run: go vet ./...
+
+  test:
+    name: Run Tests with Coverage
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          submodules: recursive
+
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: "go.mod"
+
+      - name: Build static lib
+        run: make -C internal/rchash lib
+
+      - name: Run Tests with Coverage
+        run: |
+          go test -coverprofile=coverage.out ./...
+          go tool cover -func=coverage.out
+
+  # TODO: create a build job with a matrix to build for Windows/Linux/MacOS.

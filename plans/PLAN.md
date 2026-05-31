@@ -1,4 +1,4 @@
-# `rah` v1 — Implementation Plan
+# [already implemented!] - `rah` v1 — Implementation Plan
 
 CLI that hashes NES ROMs via the rcheevos `rc_hash` C library (Cgo).
 Invocation: `rah nes <file>` → prints `<md5hash> <basename>`.
