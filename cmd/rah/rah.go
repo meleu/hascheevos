@@ -45,6 +45,7 @@ var systems = map[string]uint32{
 	"neogeopocket":   rchash.ConsoleNeoGeoPocket,
 	"oric":           rchash.ConsoleOric,
 	"pc8800":         rchash.ConsolePC8800,
+	"pokemonmini":    rchash.ConsolePokemonMini,
 }
 
 func main() {
