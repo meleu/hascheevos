@@ -100,6 +100,7 @@ func TestWholeFileSystems(t *testing.T) {
 		"pokemonmini",
 		"sega32x",
 		"sg1000",
+		"supervision",
 		// later phases append their key here
 	}
 	for _, key := range cases {

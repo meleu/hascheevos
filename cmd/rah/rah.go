@@ -48,6 +48,7 @@ var systems = map[string]uint32{
 	"pokemonmini":    rchash.ConsolePokemonMini,
 	"sega32x":        rchash.ConsoleSega32X,
 	"sg1000":         rchash.ConsoleSG1000,
+	"supervision":    rchash.ConsoleSupervision,
 }
 
 func main() {
