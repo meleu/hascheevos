@@ -29,6 +29,7 @@ var systems = map[string]uint32{
 	"arcadia2001":  rchash.ConsoleArcadia2001,
 	"atarijaguar":  rchash.ConsoleAtariJaguar,
 	"colecovision": rchash.ConsoleColecoVision,
+	"c64":          rchash.ConsoleCommodore64,
 }
 
 func main() {
