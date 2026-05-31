@@ -27,6 +27,7 @@ var systems = map[string]uint32{
 	"amstradpc":   rchash.ConsoleAmstradPC,
 	"appleii":     rchash.ConsoleAppleII,
 	"arcadia2001": rchash.ConsoleArcadia2001,
+	"atarijaguar": rchash.ConsoleAtariJaguar,
 }
 
 func main() {

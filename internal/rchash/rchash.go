@@ -22,6 +22,7 @@ const (
 	ConsoleAmstradPC   = uint32(C.RC_CONSOLE_AMSTRAD_PC)
 	ConsoleAppleII     = uint32(C.RC_CONSOLE_APPLE_II)
 	ConsoleArcadia2001 = uint32(C.RC_CONSOLE_ARCADIA_2001)
+	ConsoleAtariJaguar = uint32(C.RC_CONSOLE_ATARI_JAGUAR)
 )
 
 // hashBufSize is the buffer rc_hash_generate_from_buffer writes into:

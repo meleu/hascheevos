@@ -79,6 +79,7 @@ func TestWholeFileSystems(t *testing.T) {
 		"amstradpc",
 		"appleii",
 		"arcadia2001",
+		"atarijaguar",
 		// later phases append their key here
 	}
 	for _, key := range cases {
