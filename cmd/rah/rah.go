@@ -49,6 +49,7 @@ var systems = map[string]uint32{
 	"sega32x":        rchash.ConsoleSega32X,
 	"sg1000":         rchash.ConsoleSG1000,
 	"supervision":    rchash.ConsoleSupervision,
+	"ti83":           rchash.ConsoleTI83,
 }
 
 func main() {

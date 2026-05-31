@@ -27,6 +27,7 @@ const (
 	ConsoleGameBoyAdvance   = uint32(C.RC_CONSOLE_GAMEBOY_ADVANCE)
 	ConsoleIntertonVC4000   = uint32(C.RC_CONSOLE_INTERTON_VC_4000)
 	ConsoleMagnavoxOdyssey2 = uint32(C.RC_CONSOLE_MAGNAVOX_ODYSSEY2)
+	ConsoleTI83             = uint32(C.RC_CONSOLE_TI83)
 	ConsoleSupervision      = uint32(C.RC_CONSOLE_SUPERVISION)
 	ConsoleSG1000           = uint32(C.RC_CONSOLE_SG1000)
 	ConsoleSega32X          = uint32(C.RC_CONSOLE_SEGA_32X)
