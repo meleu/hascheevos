@@ -117,6 +117,107 @@ func TestHashMegaDriveFromZip(t *testing.T) {
 	}
 }
 
+// readZipFirstEntry is a test helper that reads the first entry of a zip.
+func readZipFirstEntry(t *testing.T, path string) []byte {
+	t.Helper()
+
+	zr, err := zip.OpenReader(path)
+	if err != nil {
+		t.Fatalf("open zip: %v", err)
+	}
+	defer zr.Close()
+
+	if len(zr.File) == 0 {
+		t.Fatal("zip has no entries")
+	}
+
+	rc, err := zr.File[0].Open()
+	if err != nil {
+		t.Fatalf("open entry: %v", err)
+	}
+	defer rc.Close()
+
+	data, err := io.ReadAll(rc)
+	if err != nil {
+		t.Fatalf("read entry: %v", err)
+	}
+	return data
+}
+
+// TestHashN64FromZip checks the z64 (big-endian, native) path: the test ROM
+// begins with 0x80, so rc_hash_n64 performs no byteswap and the hash is the
+// MD5 of the whole payload.
+func TestHashN64FromZip(t *testing.T) {
+	data := readZipFirstEntry(t, "../../testdata/n64/pyoro64-ntsc.zip")
+
+	if data[0] != 0x80 {
+		t.Fatalf("ROM first byte = %#x, want 0x80 (z64); test pins the no-swap path", data[0])
+	}
+
+	// z64 hash == MD5 of the whole payload (no conversion).
+	wantSum := md5.Sum(data)
+	want := hex.EncodeToString(wantSum[:])
+
+	got, err := Hash(ConsoleNintendo64, data)
+	if err != nil {
+		t.Fatalf("Hash: %v", err)
+	}
+	if got != want {
+		t.Errorf("Hash = %q, want %q", got, want)
+	}
+}
+
+// TestHashN64FormatsMatch proves format normalization: the same ROM in z64,
+// v64 (byteswapped), and n64 (little-endian) formats all hash identically,
+// because rc_hash_n64 converts v64/n64 back to z64 before hashing.
+func TestHashN64FormatsMatch(t *testing.T) {
+	z64 := readZipFirstEntry(t, "../../testdata/n64/pyoro64-ntsc.zip")
+	if len(z64)%4 != 0 {
+		t.Fatalf("ROM size %d not divisible by 4; cannot synthesize n64", len(z64))
+	}
+
+	// v64: byteswap every 16-bit word (first byte 0x80 -> 0x37).
+	v64 := make([]byte, len(z64))
+	copy(v64, z64)
+	for i := 0; i+1 < len(v64); i += 2 {
+		v64[i], v64[i+1] = v64[i+1], v64[i]
+	}
+	if v64[0] != 0x37 {
+		t.Fatalf("synthesized v64 first byte = %#x, want 0x37", v64[0])
+	}
+
+	// n64: reverse every 32-bit word (first byte 0x80 -> 0x40).
+	n64 := make([]byte, len(z64))
+	copy(n64, z64)
+	for i := 0; i+3 < len(n64); i += 4 {
+		n64[i], n64[i+1], n64[i+2], n64[i+3] = n64[i+3], n64[i+2], n64[i+1], n64[i]
+	}
+	if n64[0] != 0x40 {
+		t.Fatalf("synthesized n64 first byte = %#x, want 0x40", n64[0])
+	}
+
+	want, err := Hash(ConsoleNintendo64, z64)
+	if err != nil {
+		t.Fatalf("Hash z64: %v", err)
+	}
+
+	for _, tc := range []struct {
+		name string
+		data []byte
+	}{
+		{"v64", v64},
+		{"n64", n64},
+	} {
+		got, err := Hash(ConsoleNintendo64, tc.data)
+		if err != nil {
+			t.Fatalf("Hash %s: %v", tc.name, err)
+		}
+		if got != want {
+			t.Errorf("%s hash = %q, want %q (z64)", tc.name, got, want)
+		}
+	}
+}
+
 // TestHashSNESHeadered checks the path where a 512-byte SNES (SMC/SFC) copier
 // header is detected and stripped before hashing. The ROM is 8704 bytes
 // (0x2000 + 512), so rc_hash_snes ignores the header and hashes only the

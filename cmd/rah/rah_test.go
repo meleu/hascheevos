@@ -73,6 +73,23 @@ func TestMegaDriveHash(t *testing.T) {
 	}
 }
 
+func TestN64Hash(t *testing.T) {
+	hash, name, err := hashFile("n64", "../../testdata/n64/pyoro64-ntsc.zip")
+	if err != nil {
+		t.Fatalf("hashFile: %v", err)
+	}
+
+	const wantHash = "2ac0f88bea02d67896ffeae9e8ec72e7"
+	if hash != wantHash {
+		t.Errorf("hash = %q, want %q", hash, wantHash)
+	}
+
+	const wantName = "pyoro64-ntsc.zip"
+	if name != wantName {
+		t.Errorf("name = %q, want %q", name, wantName)
+	}
+}
+
 func TestWholeFileSystems(t *testing.T) {
 	const (
 		wantHash = "6ed56530d641cd3cc1c9921fe3327b4a"

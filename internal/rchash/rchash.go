@@ -16,6 +16,7 @@ import (
 // Exported console ids (extend as systems are added).
 const (
 	ConsoleNES              = uint32(C.RC_CONSOLE_NINTENDO)
+	ConsoleNintendo64       = uint32(C.RC_CONSOLE_NINTENDO_64)
 	ConsoleSNES             = uint32(C.RC_CONSOLE_SUPER_NINTENDO)
 	ConsoleAtari2600        = uint32(C.RC_CONSOLE_ATARI_2600)
 	ConsoleMegaDrive        = uint32(C.RC_CONSOLE_MEGA_DRIVE)
