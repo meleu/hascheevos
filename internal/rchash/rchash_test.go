@@ -12,26 +12,7 @@ import (
 func TestHashNESFromZip(t *testing.T) {
 	const want = "bed0f7b12673dd762eed665c5c61927b"
 
-	zr, err := zip.OpenReader("../../testdata/nes/Zooming-Secretary.zip")
-	if err != nil {
-		t.Fatalf("open zip: %v", err)
-	}
-	defer zr.Close()
-
-	if len(zr.File) == 0 {
-		t.Fatal("zip has no entries")
-	}
-
-	rc, err := zr.File[0].Open()
-	if err != nil {
-		t.Fatalf("open entry: %v", err)
-	}
-	defer rc.Close()
-
-	data, err := io.ReadAll(rc)
-	if err != nil {
-		t.Fatalf("read entry: %v", err)
-	}
+	data := readZipFirstEntry(t, "../../testdata/nes/Zooming-Secretary.zip")
 
 	got, err := Hash(ConsoleNES, data)
 	if err != nil {
@@ -45,26 +26,7 @@ func TestHashNESFromZip(t *testing.T) {
 // TestHashAtari2600FromZip checks the generic full-file MD5 path: Atari 2600
 // ROMs are hashed as the MD5 of the entire payload (no header, no parsing).
 func TestHashAtari2600FromZip(t *testing.T) {
-	zr, err := zip.OpenReader("../../testdata/atari2600/Wall-Jump-Ninja.zip")
-	if err != nil {
-		t.Fatalf("open zip: %v", err)
-	}
-	defer zr.Close()
-
-	if len(zr.File) == 0 {
-		t.Fatal("zip has no entries")
-	}
-
-	rc, err := zr.File[0].Open()
-	if err != nil {
-		t.Fatalf("open entry: %v", err)
-	}
-	defer rc.Close()
-
-	data, err := io.ReadAll(rc)
-	if err != nil {
-		t.Fatalf("read entry: %v", err)
-	}
+	data := readZipFirstEntry(t, "../../testdata/atari2600/Wall-Jump-Ninja.zip")
 
 	// Atari 2600 hash == MD5 of the whole payload.
 	wantSum := md5.Sum(data)
@@ -83,26 +45,7 @@ func TestHashAtari2600FromZip(t *testing.T) {
 // ROMs hashed via the buffer API are the MD5 of the entire payload (no header
 // parsing, no SMD de-interleave).
 func TestHashMegaDriveFromZip(t *testing.T) {
-	zr, err := zip.OpenReader("../../testdata/megadrive/Abbaye-des-Morts.zip")
-	if err != nil {
-		t.Fatalf("open zip: %v", err)
-	}
-	defer zr.Close()
-
-	if len(zr.File) == 0 {
-		t.Fatal("zip has no entries")
-	}
-
-	rc, err := zr.File[0].Open()
-	if err != nil {
-		t.Fatalf("open entry: %v", err)
-	}
-	defer rc.Close()
-
-	data, err := io.ReadAll(rc)
-	if err != nil {
-		t.Fatalf("read entry: %v", err)
-	}
+	data := readZipFirstEntry(t, "../../testdata/megadrive/Abbaye-des-Morts.zip")
 
 	// Mega Drive hash == MD5 of the whole payload.
 	wantSum := md5.Sum(data)
@@ -115,33 +58,6 @@ func TestHashMegaDriveFromZip(t *testing.T) {
 	if got != want {
 		t.Errorf("Hash = %q, want %q", got, want)
 	}
-}
-
-// readZipFirstEntry is a test helper that reads the first entry of a zip.
-func readZipFirstEntry(t *testing.T, path string) []byte {
-	t.Helper()
-
-	zr, err := zip.OpenReader(path)
-	if err != nil {
-		t.Fatalf("open zip: %v", err)
-	}
-	defer zr.Close()
-
-	if len(zr.File) == 0 {
-		t.Fatal("zip has no entries")
-	}
-
-	rc, err := zr.File[0].Open()
-	if err != nil {
-		t.Fatalf("open entry: %v", err)
-	}
-	defer rc.Close()
-
-	data, err := io.ReadAll(rc)
-	if err != nil {
-		t.Fatalf("read entry: %v", err)
-	}
-	return data
 }
 
 // TestHashN64FromZip checks the z64 (big-endian, native) path: the test ROM
@@ -251,4 +167,31 @@ func TestHashSNESHeadered(t *testing.T) {
 	if full := hex.EncodeToString(fullSum[:]); got == full {
 		t.Errorf("Hash = full-file MD5 %q, header was not stripped", full)
 	}
+}
+
+// readZipFirstEntry is a test helper that reads the first entry of a zip.
+func readZipFirstEntry(t *testing.T, path string) []byte {
+	t.Helper()
+
+	zr, err := zip.OpenReader(path)
+	if err != nil {
+		t.Fatalf("open zip: %v", err)
+	}
+	defer zr.Close()
+
+	if len(zr.File) == 0 {
+		t.Fatal("zip has no entries")
+	}
+
+	rc, err := zr.File[0].Open()
+	if err != nil {
+		t.Fatalf("open entry: %v", err)
+	}
+	defer rc.Close()
+
+	data, err := io.ReadAll(rc)
+	if err != nil {
+		t.Fatalf("read entry: %v", err)
+	}
+	return data
 }
