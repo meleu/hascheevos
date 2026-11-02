@@ -1,0 +1,17 @@
+[package]
+name = "hascheevos"
+version = "0.1.0"
+edition = "2024"
+license = "GPL-3.0-only"
+publish = false
+
+[dependencies]
+clap = { version = "4", features = ["derive"] }
+tempfile = "3"
+zip = { version = "2", default-features = false, features = ["deflate"] }
+
+[dev-dependencies]
+bindgen = "0.72"
+
+[build-dependencies]
+cc = "1"
