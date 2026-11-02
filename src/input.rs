@@ -5,12 +5,13 @@
 //! archive.
 
 use crate::rc_hash::RC_CONSOLE_ARCADE;
-use std::ffi::OsStr;
 use std::fs::{self, File};
 use std::io;
 use std::path::{Path, PathBuf};
 use tempfile::TempDir;
 use zip::ZipArchive;
+
+const MAX_PLAYLIST_DEPTH: usize = 8;
 
 /// A path ready for hashing. An extracted file lives as long as this value.
 pub struct Input {
@@ -46,30 +47,41 @@ pub fn prepare(file: &Path, console: Option<u32>) -> Result<Input, String> {
         return extract_first_file(file);
     }
     reject_unsupported(file)?;
-    if has_extension(file, "m3u") {
-        let playlist = fs::read(file).map_err(|error| error.to_string())?;
-        reject_unsupported(Path::new(&first_playlist_item(&playlist)))?;
-    }
     Ok(Input::at(file))
 }
 
+// Matches how rcheevos finds an extension: a file named `.zip` has one.
 fn has_extension(path: &Path, extension: &str) -> bool {
-    path.extension()
-        .and_then(OsStr::to_str)
-        .is_some_and(|ext| ext.eq_ignore_ascii_case(extension))
+    let name = path.file_name().unwrap_or_default().to_string_lossy();
+    name.rsplit_once('.')
+        .is_some_and(|(_, ext)| ext.eq_ignore_ascii_case(extension))
 }
 
 fn not_supported(format: &str) -> String {
     format!("{format} files are not supported yet")
 }
 
-fn reject_unsupported(path: &Path) -> Result<(), String> {
-    for (extension, format) in [("chd", "CHD"), ("7z", "7z"), ("zip", "nested zip")] {
-        if has_extension(path, extension) {
-            return Err(not_supported(format));
+/// Rejects files rcheevos can't hash correctly, following playlists the way
+/// it does: through the first item of each one.
+fn reject_unsupported(file: &Path) -> Result<(), String> {
+    let mut current = file.to_owned();
+    for _ in 0..MAX_PLAYLIST_DEPTH {
+        if !has_extension(&current, "m3u") {
+            for (extension, format) in [("chd", "CHD"), ("7z", "7z"), ("zip", "nested zip")] {
+                if has_extension(&current, extension) {
+                    return Err(not_supported(format));
+                }
+            }
+            return Ok(());
         }
+        // rcheevos reports playlists it can't read.
+        let Ok(playlist) = fs::read(&current) else {
+            return Ok(());
+        };
+        let item = first_playlist_item(&playlist);
+        current = current.parent().unwrap_or(Path::new("")).join(item);
     }
-    Ok(())
+    Err("playlists are nested too deeply".to_owned())
 }
 
 fn first_playlist_item(playlist: &[u8]) -> String {
@@ -96,12 +108,12 @@ fn extract_first_file(file: &Path) -> Result<Input, String> {
             .enclosed_name()
             .and_then(|path| path.file_name().map(PathBuf::from))
             .ok_or_else(|| format!("unsafe zip entry name: {}", entry.name()))?;
-        reject_unsupported(&name)?;
 
         let directory = TempDir::new().map_err(|error| error.to_string())?;
         let path = directory.path().join(name);
         let mut output = File::create(&path).map_err(|error| error.to_string())?;
         io::copy(&mut entry, &mut output).map_err(|error| error.to_string())?;
+        reject_unsupported(&path)?;
         return Ok(Input {
             path,
             _extracted_to: Some(directory),

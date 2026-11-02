@@ -289,3 +289,77 @@ fn playlists_of_unsupported_files_are_rejected() {
         assert_fails(&[path.to_str().unwrap()], "not supported yet");
     }
 }
+
+#[test]
+fn nested_playlists_of_unsupported_files_are_rejected() {
+    let dir = tempfile::tempdir().unwrap();
+    fs::write(dir.path().join("inner.m3u"), "game.zip\n").unwrap();
+    let outer = dir.path().join("outer.m3u");
+    fs::write(&outer, "inner.m3u\n").unwrap();
+
+    assert_fails(&[outer.to_str().unwrap()], "not supported yet");
+}
+
+#[test]
+fn playlists_that_refer_to_themselves_are_rejected() {
+    let dir = tempfile::tempdir().unwrap();
+    let path = dir.path().join("loop.m3u");
+    fs::write(&path, "loop.m3u\n").unwrap();
+
+    assert_fails(&[path.to_str().unwrap()], "nested too deeply");
+}
+
+#[test]
+fn playlists_inside_a_zip_are_checked_too() {
+    let dir = tempfile::tempdir().unwrap();
+    let path = dir.path().join("outer.zip");
+    let mut archive = zip::ZipWriter::new(fs::File::create(&path).unwrap());
+    archive
+        .start_file("list.m3u", zip::write::SimpleFileOptions::default())
+        .unwrap();
+    archive.write_all(b"/somewhere/game.zip\n").unwrap();
+    archive.finish().unwrap();
+
+    assert_fails(&[path.to_str().unwrap()], "not supported yet");
+}
+
+#[test]
+fn names_that_are_only_an_extension_count_as_that_extension() {
+    let dir = tempfile::tempdir().unwrap();
+    for name in [".7z", ".chd"] {
+        let path = dir.path().join(name);
+        fs::write(&path, b"not read").unwrap();
+        assert_fails(&[path.to_str().unwrap()], "not supported yet");
+    }
+    let path = dir.path().join(".zip");
+    fs::write(&path, b"not a zip").unwrap();
+    let output = hash(&[path.to_str().unwrap()]);
+    assert_eq!(stdout(&output), "");
+    assert!(!output.status.success());
+}
+
+#[test]
+fn verbose_still_warns_about_unknown_extensions() {
+    let dir = tempfile::tempdir().unwrap();
+    let path = dir.path().join("file.unknownext");
+    fs::copy("testdata/generic-file.rom", &path).unwrap();
+
+    let output = hash(&["-v", path.to_str().unwrap()]);
+    assert!(
+        stderr(&output).contains("warning"),
+        "stderr: {}",
+        stderr(&output)
+    );
+}
+
+#[test]
+fn a_closed_stdout_is_not_a_failure() {
+    let (reader, writer) = std::io::pipe().unwrap();
+    drop(reader);
+    let output = Command::new(env!("CARGO_BIN_EXE_hascheevos"))
+        .args(["hash", "testdata/disc/both.cue"])
+        .stdout(writer)
+        .output()
+        .unwrap();
+    assert!(output.status.success(), "stderr: {}", stderr(&output));
+}

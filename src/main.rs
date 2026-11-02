@@ -3,6 +3,7 @@ mod input;
 mod rc_hash;
 
 use clap::{Parser, Subcommand};
+use std::io::{self, Write};
 use std::path::PathBuf;
 use std::process::ExitCode;
 
@@ -55,7 +56,15 @@ fn main() -> ExitCode {
     let report = rc_hash::hash_file(&input.path, console, verbose);
 
     for hash in &report.hashes {
-        println!("{hash}");
+        match writeln!(io::stdout(), "{hash}") {
+            Ok(()) => {}
+            // Whoever was reading has what they wanted, like `... | head -1`.
+            Err(error) if error.kind() == io::ErrorKind::BrokenPipe => break,
+            Err(error) => {
+                eprintln!("error: {error}");
+                return ExitCode::FAILURE;
+            }
+        }
     }
     if report.hashes.is_empty() {
         if !verbose {
@@ -66,7 +75,7 @@ fn main() -> ExitCode {
         eprintln!("error: {}: no hash produced", file.display());
         return ExitCode::FAILURE;
     }
-    if report.used_fallback() && !verbose {
+    if report.used_fallback() {
         eprintln!("warning: unknown file extension; printed a hash of the whole file");
     }
     ExitCode::SUCCESS
