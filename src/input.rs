@@ -4,7 +4,7 @@
 //! name, so anything that isn't explicitly arcade must not reach it as an
 //! archive.
 
-use crate::rc_hash::RC_CONSOLE_ARCADE;
+use crate::rc_hash::{RC_CONSOLE_ARCADE, RC_CONSOLE_MS_DOS};
 use std::fs::{self, File};
 use std::io;
 use std::path::{Path, PathBuf};
@@ -44,6 +44,10 @@ pub fn prepare(file: &Path, console: Option<u32>) -> Result<Input, String> {
         return Ok(Input::at(file));
     }
     if has_extension(file, "zip") {
+        // The DOS hash covers the contents of the zip itself.
+        if console == Some(RC_CONSOLE_MS_DOS) {
+            return Ok(Input::at(file));
+        }
         return extract_first_file(file);
     }
     reject_unsupported(file)?;

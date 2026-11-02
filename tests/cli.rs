@@ -363,3 +363,16 @@ fn a_closed_stdout_is_not_a_failure() {
         .unwrap();
     assert!(output.status.success(), "stderr: {}", stderr(&output));
 }
+
+#[test]
+fn dos_hashes_the_zip_itself_instead_of_extracting_it() {
+    // rcheevos reads a .dosz as a zip, without any extraction on our side.
+    let dir = tempfile::tempdir().unwrap();
+    let dosz = dir.path().join("game.dosz");
+    fs::copy("testdata/nes/Zooming-Secretary.zip", &dosz).unwrap();
+    let expected = stdout(&hash(&[dosz.to_str().unwrap()]));
+    assert_eq!(expected.trim().len(), 32);
+
+    let zip = "testdata/nes/Zooming-Secretary.zip";
+    assert_hashes(&["--console", "dos", zip], &[expected.trim()]);
+}
