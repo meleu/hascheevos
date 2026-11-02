@@ -1,4 +1,5 @@
 mod console;
+mod input;
 mod rc_hash;
 
 use clap::{Parser, Subcommand};
@@ -32,23 +33,26 @@ enum Commands {
 
 fn parse_console(value: &str) -> Result<u32, String> {
     console::parse(value).ok_or_else(|| {
-        format!("unknown console; see `hascheevos hash --help` for the list of names")
+        "unknown console; see `hascheevos hash --help` for the list of names".to_owned()
     })
 }
 
 fn main() -> ExitCode {
-    let Commands::Hash { console, verbose, file } = Cli::parse().command;
+    let Commands::Hash {
+        console,
+        verbose,
+        file,
+    } = Cli::parse().command;
 
-    if !file.exists() {
-        eprintln!("error: {}: no such file", file.display());
-        return ExitCode::FAILURE;
-    }
-    if !file.is_file() && console != Some(rc_hash::RC_CONSOLE_ARCADE) {
-        eprintln!("error: {}: not a file", file.display());
-        return ExitCode::FAILURE;
-    }
+    let input = match input::prepare(&file, console) {
+        Ok(input) => input,
+        Err(error) => {
+            eprintln!("error: {}: {error}", file.display());
+            return ExitCode::FAILURE;
+        }
+    };
 
-    let report = rc_hash::hash_file(&file, console, verbose);
+    let report = rc_hash::hash_file(&input.path, console, verbose);
 
     for hash in &report.hashes {
         println!("{hash}");

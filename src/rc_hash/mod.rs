@@ -1,6 +1,7 @@
 //! Safe wrapper around the rcheevos `rc_hash` iterator API.
 
 #[allow(non_camel_case_types, non_upper_case_globals, dead_code)]
+#[rustfmt::skip]
 mod bindings;
 
 pub use bindings::*;
@@ -25,7 +26,9 @@ pub struct Report {
 impl Report {
     /// Whether rcheevos fell back to a whole-file hash.
     pub fn used_fallback(&self) -> bool {
-        self.errors.iter().any(|error| error.contains(NO_CONSOLE_MAPPING))
+        self.errors
+            .iter()
+            .any(|error| error.contains(NO_CONSOLE_MAPPING))
     }
 }
 
@@ -36,7 +39,9 @@ struct Messages {
 
 unsafe fn message_text(message: *const c_char) -> String {
     // SAFETY: rcheevos passes a NUL-terminated string that outlives the call.
-    unsafe { CStr::from_ptr(message) }.to_string_lossy().into_owned()
+    unsafe { CStr::from_ptr(message) }
+        .to_string_lossy()
+        .into_owned()
 }
 
 // The callbacks must not unwind into C, so they ignore stderr write failures.
@@ -58,7 +63,10 @@ unsafe extern "C" fn on_error(message: *const c_char, iterator: *const rc_hash_i
 /// Hashes `path` as `console`, or as every candidate console for its extension.
 pub fn hash_file(path: &Path, console: Option<u32>, verbose: bool) -> Report {
     let c_path = CString::new(path.as_os_str().as_encoded_bytes()).expect("paths have no NUL");
-    let mut messages = Messages { verbose, errors: Vec::new() };
+    let mut messages = Messages {
+        verbose,
+        errors: Vec::new(),
+    };
     let mut hashes: Vec<String> = Vec::new();
     let mut hash = [0 as c_char; 33];
 
@@ -98,5 +106,8 @@ pub fn hash_file(path: &Path, console: Option<u32>, verbose: bool) -> Report {
         rc_hash_destroy_iterator(iterator);
     }
 
-    Report { hashes, errors: messages.errors }
+    Report {
+        hashes,
+        errors: messages.errors,
+    }
 }

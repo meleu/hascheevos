@@ -65,9 +65,17 @@ const CONSOLES: &[Console] = &[
     console(ffi::RC_CONSOLE_ATARI_5200, "atari5200", &[]),
     console(ffi::RC_CONSOLE_ATARI_7800, "atari7800", &[]),
     console(ffi::RC_CONSOLE_X68K, "x68000", &[]),
-    console(ffi::RC_CONSOLE_WONDERSWAN, "wonderswan", &["wonderswancolor"]),
+    console(
+        ffi::RC_CONSOLE_WONDERSWAN,
+        "wonderswan",
+        &["wonderswancolor"],
+    ),
     console(ffi::RC_CONSOLE_CASSETTEVISION, "cassettevision", &[]),
-    console(ffi::RC_CONSOLE_SUPER_CASSETTEVISION, "supercassettevision", &[]),
+    console(
+        ffi::RC_CONSOLE_SUPER_CASSETTEVISION,
+        "supercassettevision",
+        &[],
+    ),
     console(ffi::RC_CONSOLE_NEO_GEO_CD, "neogeocd", &[]),
     console(ffi::RC_CONSOLE_FAIRCHILD_CHANNEL_F, "channelf", &[]),
     console(ffi::RC_CONSOLE_FM_TOWNS, "fmtowns", &[]),
@@ -87,7 +95,11 @@ const CONSOLES: &[Console] = &[
     console(ffi::RC_CONSOLE_WASM4, "wasm4", &[]),
     console(ffi::RC_CONSOLE_ARCADIA_2001, "arcadia2001", &[]),
     console(ffi::RC_CONSOLE_INTERTON_VC_4000, "vc4000", &[]),
-    console(ffi::RC_CONSOLE_ELEKTOR_TV_GAMES_COMPUTER, "tvgamescomputer", &[]),
+    console(
+        ffi::RC_CONSOLE_ELEKTOR_TV_GAMES_COMPUTER,
+        "tvgamescomputer",
+        &[],
+    ),
     console(ffi::RC_CONSOLE_PC_ENGINE_CD, "pcenginecd", &[]),
     console(ffi::RC_CONSOLE_ATARI_JAGUAR_CD, "atarijaguarcd", &[]),
     console(ffi::RC_CONSOLE_NINTENDO_DSI, "dsi", &[]),
@@ -144,9 +156,14 @@ mod tests {
             .lines()
             .filter_map(|line| {
                 let (name, id) = line.trim().trim_end_matches(',').split_once(" = ")?;
-                Some((id.parse().ok()?, name.strip_prefix("RC_CONSOLE_")?.to_owned()))
+                Some((
+                    id.parse().ok()?,
+                    name.strip_prefix("RC_CONSOLE_")?.to_owned(),
+                ))
             })
-            .filter(|(_, name)| !["UNKNOWN", "HUBS", "EVENTS", "STANDALONE"].contains(&name.as_str()))
+            .filter(|(_, name)| {
+                !["UNKNOWN", "HUBS", "EVENTS", "STANDALONE"].contains(&name.as_str())
+            })
             .collect()
     }
 
@@ -175,11 +192,31 @@ mod tests {
     fn script_system_names_keep_their_ids() {
         // From SYSTEMS_INFO in bin/hascheevos.sh.
         let systems = [
-            ("megadrive", 1), ("n64", 2), ("snes", 3), ("gb", 4), ("gba", 5), ("gbc", 6),
-            ("nes", 7), ("pcengine", 8), ("segacd", 9), ("sega32x", 10), ("mastersystem", 11),
-            ("psx", 12), ("atarilynx", 13), ("ngp", 14), ("gamegear", 15), ("atarijaguar", 17),
-            ("nds", 18), ("pokemini", 24), ("atari2600", 25), ("arcade", 27), ("virtualboy", 28),
-            ("sg-1000", 33), ("coleco", 44), ("atari7800", 51), ("wonderswan", 53),
+            ("megadrive", 1),
+            ("n64", 2),
+            ("snes", 3),
+            ("gb", 4),
+            ("gba", 5),
+            ("gbc", 6),
+            ("nes", 7),
+            ("pcengine", 8),
+            ("segacd", 9),
+            ("sega32x", 10),
+            ("mastersystem", 11),
+            ("psx", 12),
+            ("atarilynx", 13),
+            ("ngp", 14),
+            ("gamegear", 15),
+            ("atarijaguar", 17),
+            ("nds", 18),
+            ("pokemini", 24),
+            ("atari2600", 25),
+            ("arcade", 27),
+            ("virtualboy", 28),
+            ("sg-1000", 33),
+            ("coleco", 44),
+            ("atari7800", 51),
+            ("wonderswan", 53),
         ];
         for (name, id) in systems {
             assert_eq!(parse(name), Some(id), "{name}");
@@ -189,8 +226,13 @@ mod tests {
     #[test]
     fn aliases_resolve_to_their_console() {
         let aliases = [
-            ("genesis", 1), ("ngpc", 14), ("wonderswancolor", 53), ("fbneo", 27), ("fba", 27),
-            ("fds", 81), ("pcenginecd", 76),
+            ("genesis", 1),
+            ("ngpc", 14),
+            ("wonderswancolor", 53),
+            ("fbneo", 27),
+            ("fba", 27),
+            ("fds", 81),
+            ("pcenginecd", 76),
         ];
         for (name, id) in aliases {
             assert_eq!(parse(name), Some(id), "{name}");

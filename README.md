@@ -1,6 +1,21 @@
 # hascheevos
 A way to check if your ROM is OK for RetroAchievements.
 
+## Rust rewrite (work in progress)
+
+The hash calculation is being rewritten in Rust on top of
+[rcheevos](https://github.com/RetroAchievements/rcheevos). The script below
+doesn't use it yet.
+
+```
+git submodule update --init
+cargo build --release
+target/release/hascheevos hash [--console <name|id>] [-v] <file>
+```
+
+`.chd` files and non-arcade `.7z` files aren't supported yet. Run
+`hascheevos hash --help` for the list of console names.
+
 ## installing
 
 0. **Dependencies**: `jq`, `curl`, `unzip`, `gzip` and `p7zip-full`. On typical Linux distro you'll probably already have most of these packages installed and the only new one will be `jq` (it's a tool to parse JSON data). On a Debian based system the command below should install everything you need:
