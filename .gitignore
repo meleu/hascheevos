@@ -1,3 +1,7 @@
+ra-openapi-v2.json
+.env
+.scratch/
+
 # Created by https://www.toptal.com/developers/gitignore/api/rust,vim,linux,macos,windows,visualstudiocode,visualstudio,c++
 # Edit at https://www.toptal.com/developers/gitignore?templates=rust,vim,linux,macos,windows,visualstudiocode,visualstudio,c++
 
