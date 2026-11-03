@@ -10,7 +10,9 @@ use clap::{Parser, Subcommand};
 use rc_hash::{ConsoleHash, Hashes};
 use serde_json::Value;
 use std::fmt::Display;
+use std::fs;
 use std::io::{self, Write};
+use std::os::unix::fs::MetadataExt;
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 
@@ -74,6 +76,16 @@ enum Commands {
         #[arg(long)]
         refresh: bool,
 
+        /// Print `name<TAB>gameID<TAB>x` for each ROM, for pasting into a
+        /// spreadsheet; the `x` is blank when there are no achievements
+        #[arg(long)]
+        tab_output: bool,
+
+        /// Copy ROMs with achievements to DIR/<console>/, overwriting existing
+        /// files
+        #[arg(long, value_name = "DIR")]
+        copy_roms_to: Option<PathBuf>,
+
         #[arg(required = true, value_name = "FILE")]
         files: Vec<PathBuf>,
     },
@@ -129,8 +141,18 @@ fn main() -> ExitCode {
         Commands::Check {
             console,
             refresh,
+            tab_output,
+            copy_roms_to,
             files,
-        } => check_roms(&files, console, refresh),
+        } => check_roms(
+            &files,
+            &CheckOptions {
+                console,
+                refresh,
+                tab_output,
+                copy_roms_to,
+            },
+        ),
         Commands::FetchSystem {
             format: _,
             system_id,
@@ -273,6 +295,14 @@ fn check_games(ids: &[u32], refresh: bool) -> ExitCode {
     final_exit_code(any_achievements, any_failed)
 }
 
+/// How `check` treats every ROM in a run.
+struct CheckOptions {
+    console: Option<u32>,
+    refresh: bool,
+    tab_output: bool,
+    copy_roms_to: Option<PathBuf>,
+}
+
 /// What came of checking one ROM.
 #[derive(Default)]
 struct RomResult {
@@ -296,6 +326,7 @@ impl RomResult {
 
 /// A list consulted for a ROM, and the ROM's hash for that list's console.
 struct Consulted {
+    console: u32,
     list: Entry,
     hash: String,
 }
@@ -310,12 +341,12 @@ impl Consulted {
     }
 }
 
-fn check_roms(files: &[PathBuf], console: Option<u32>, refresh: bool) -> ExitCode {
+fn check_roms(files: &[PathBuf], options: &CheckOptions) -> ExitCode {
     let mut entries = Entries::default();
     let mut any_achievements = false;
     let mut any_failed = false;
     for file in files {
-        let result = check_rom(file, console, refresh, &mut entries);
+        let result = check_rom(file, options, &mut entries);
         any_achievements |= result.has_achievements;
         any_failed |= result.failed;
         if result.stop_run {
@@ -325,12 +356,12 @@ fn check_roms(files: &[PathBuf], console: Option<u32>, refresh: bool) -> ExitCod
     final_exit_code(any_achievements, any_failed)
 }
 
-fn check_rom(
-    file: &Path,
-    named_console: Option<u32>,
-    refresh: bool,
-    entries: &mut Entries,
-) -> RomResult {
+fn check_rom(file: &Path, options: &CheckOptions, entries: &mut Entries) -> RomResult {
+    let CheckOptions {
+        console: named_console,
+        refresh,
+        ..
+    } = *options;
     let name = file.display();
     let mut result = RomResult::default();
     let input = match input::prepare(file, named_console) {
@@ -370,7 +401,11 @@ fn check_rom(
         if refresh && let Err(error) = entries.update(&mut list) {
             result.record_failed_update(&error);
         }
-        let item = Consulted { list, hash };
+        let item = Consulted {
+            console,
+            list,
+            hash,
+        };
         let found = item.game().is_some();
         consulted.push(item);
         if found || result.stop_run {
@@ -405,7 +440,7 @@ fn check_rom(
         }
     }
 
-    report_rom(file, &consulted, &mut result);
+    report_rom(file, &consulted, options, &mut result);
     if !result.has_achievements
         && !result.excluded
         && named_console.is_none()
@@ -421,29 +456,108 @@ fn check_rom(
     result
 }
 
-fn report_rom(file: &Path, consulted: &[Consulted], result: &mut RomResult) {
+fn report_rom(
+    file: &Path,
+    consulted: &[Consulted],
+    options: &CheckOptions,
+    result: &mut RomResult,
+) {
     let name = file.display();
     let matched = consulted
         .iter()
         .find(|item| item.has_achievements())
         .or_else(|| consulted.iter().find(|item| item.game().is_some()));
-    let Some(game) = matched.and_then(Consulted::game) else {
+    let game = matched.and_then(Consulted::game);
+    if let Some(game) = game {
+        let title = game["title"].as_str().unwrap_or_default();
+        let achievements = achievements(game);
+        eprintln!("{name}: {title}: {achievements} achievements");
+        if let Some(reason) = exclusion_reason(game) {
+            warn_excluded(&name, &reason);
+            result.excluded = true;
+        } else if achievements > 0 {
+            result.has_achievements = true;
+        }
+    } else {
         eprintln!("{name}: hash not found");
-        return;
+    }
+
+    let printed = if options.tab_output {
+        print_result(&tab_row(file, game, result.has_achievements))
+    } else if result.has_achievements {
+        print_result(file.as_os_str().as_encoded_bytes())
+    } else {
+        Ok(())
     };
-    let title = game["title"].as_str().unwrap_or_default();
-    let achievements = achievements(game);
-    eprintln!("{name}: {title}: {achievements} achievements");
-    if let Some(reason) = exclusion_reason(game) {
-        warn_excluded(name, &reason);
-        result.excluded = true;
-    } else if achievements > 0 {
-        result.has_achievements = true;
-        if let Err(error) = print_result(file.as_os_str().as_encoded_bytes()) {
-            eprintln!("error: {error}");
+    if let Err(error) = printed {
+        eprintln!("error: {error}");
+        result.failed = true;
+    }
+
+    if result.has_achievements
+        && let Some(directory) = &options.copy_roms_to
+        && let Some(item) = matched
+    {
+        let directory = directory.join(console::name(item.console));
+        if let Err(error) = copy_rom(file, &directory) {
+            eprintln!(
+                "error: {name}: can't copy to {}: {error}",
+                directory.display()
+            );
             result.failed = true;
         }
     }
+}
+
+/// Copies a ROM as it is, so an archive stays an archive.
+fn copy_rom(file: &Path, directory: &Path) -> io::Result<()> {
+    let name = file
+        .file_name()
+        .ok_or_else(|| io::Error::other("the path has no file name"))?;
+    fs::create_dir_all(directory)?;
+    let destination = directory.join(name);
+    // Copying a file onto itself would empty it.
+    if !is_same_file(file, &destination)? {
+        fs::copy(file, destination)?;
+    }
+    Ok(())
+}
+
+/// Whether two paths lead to the same file, through a link or not.
+fn is_same_file(file: &Path, other: &Path) -> io::Result<bool> {
+    let file = fs::metadata(file)?;
+    match fs::metadata(other) {
+        Ok(other) => Ok(file.dev() == other.dev() && file.ino() == other.ino()),
+        Err(error) if error.kind() == io::ErrorKind::NotFound => Ok(false),
+        Err(error) => Err(error),
+    }
+}
+
+/// The row `--tab-output` prints for a ROM, always with all three columns so
+/// they line up when pasted.
+fn tab_row(file: &Path, game: Option<&Value>, has_achievements: bool) -> Vec<u8> {
+    let id = game
+        .and_then(|game| game["id"].as_str())
+        .unwrap_or_default();
+    let marker = if has_achievements { "x" } else { "" };
+    let mut row = without_tags(file).to_vec();
+    row.extend_from_slice(format!("\t{id}\t{marker}").as_bytes());
+    row
+}
+
+/// A ROM's path up to the first " (" in its file name, which leaves out tags
+/// like "(USA)" and, with them, the extension.
+fn without_tags(file: &Path) -> &[u8] {
+    let path = file.as_os_str().as_encoded_bytes();
+    let name_start = path
+        .iter()
+        .rposition(|byte| *byte == b'/')
+        .map_or(0, |slash| slash + 1);
+    let tags_start = path[name_start..]
+        .windows(2)
+        .position(|pair| pair == b" (")
+        .map_or(path.len(), |offset| name_start + offset);
+    &path[..tags_start]
 }
 
 fn final_exit_code(any_achievements: bool, any_failed: bool) -> ExitCode {

@@ -122,6 +122,14 @@ pub fn parse(value: &str) -> Option<u32> {
         .map(|console| console.id)
 }
 
+/// The short name of a console, or "unknown" for an ID outside the table.
+pub fn name(id: u32) -> &'static str {
+    CONSOLES
+        .iter()
+        .find(|console| console.id == id)
+        .map_or("unknown", |console| console.name)
+}
+
 /// Lists the valid names in alphabetical order, wrapped for `--help`.
 pub fn help_list() -> String {
     let mut names: Vec<String> = CONSOLES

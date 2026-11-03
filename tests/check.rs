@@ -5,7 +5,7 @@ use std::path::{Path, PathBuf};
 use std::process::Output;
 use std::sync::atomic::{AtomicU32, Ordering};
 use std::time::Duration;
-use support::{FakeServer, Reply, Request, Sandbox, age_files};
+use support::{FakeServer, Reply, Request, Sandbox, age_files, files_under};
 
 // From RAHasher 1.8.4, like the expected hashes in the CLI tests.
 const SNES_SFC: &str = "6556112372898c69e1de0bf689d8db26";
@@ -902,4 +902,224 @@ fn a_missing_key_gives_one_helpful_message() {
         "{stderr}"
     );
     assert!(requested_consoles(&sandbox).is_empty());
+}
+
+#[test]
+fn tab_output_gives_a_rom_with_achievements_its_game_id_and_an_x() {
+    let sandbox = sandbox_listing(SNES, has_cheevos(SNES_SFC));
+
+    let output = sandbox.run(&["check", "--tab-output", SFC_ROM]);
+
+    assert_eq!(exit_code(&output), 0, "stderr: {}", stderr(&output));
+    assert_eq!(stdout(&output), format!("{SFC_ROM}\t1\tx\n"));
+}
+
+#[test]
+fn tab_output_leaves_the_x_blank_when_there_are_no_achievements() {
+    let dir = tempfile::tempdir().unwrap();
+    let not_found = small_rom(dir.path(), "not-found.nes");
+    let sandbox = sandbox_listing(SNES, no_cheevos(SNES_SFC));
+
+    let output = sandbox.run(&["check", "--tab-output", SFC_ROM, text(&not_found)]);
+
+    assert_eq!(exit_code(&output), 1, "stderr: {}", stderr(&output));
+    assert_eq!(
+        stdout(&output),
+        format!("{SFC_ROM}\t2\t\n{}\t\t\n", text(&not_found))
+    );
+}
+
+#[test]
+fn tab_output_leaves_the_x_blank_on_an_excluded_hash() {
+    let sandbox = sandbox_marking(SNES, has_cheevos(SNES_SFC), "incompatible");
+
+    let output = sandbox.run(&["check", "--tab-output", SFC_ROM]);
+
+    assert_eq!(exit_code(&output), 1, "stderr: {}", stderr(&output));
+    assert_eq!(stdout(&output), format!("{SFC_ROM}\t1\t\n"));
+}
+
+#[test]
+fn tab_output_has_no_row_for_a_failed_or_skipped_rom() {
+    let dir = tempfile::tempdir().unwrap();
+    let skipped = small_rom(dir.path(), "gamelist.xml");
+    let missing = dir.path().join("missing.sfc");
+    let sandbox = sandbox_listing(SNES, has_cheevos(SNES_SFC));
+
+    let output = sandbox.run(&[
+        "check",
+        "--tab-output",
+        text(&missing),
+        text(&skipped),
+        SFC_ROM,
+    ]);
+
+    assert_eq!(exit_code(&output), 2, "stderr: {}", stderr(&output));
+    assert_eq!(stdout(&output), format!("{SFC_ROM}\t1\tx\n"));
+}
+
+#[test]
+fn tab_output_names_a_rom_without_the_tags_in_its_file_name() {
+    let dir = tempfile::tempdir().unwrap();
+    let tagged_dir = dir.path().join("roms (old)");
+    std::fs::create_dir(&tagged_dir).unwrap();
+    let rom = small_rom(&tagged_dir, "Some Game (USA) (Rev 1).bin");
+    let sandbox = sandbox_listing(MEGA_DRIVE, has_cheevos(SMALL_FILE));
+
+    let output = sandbox.run(&["check", "--tab-output", text(&rom)]);
+
+    assert_eq!(exit_code(&output), 0, "stderr: {}", stderr(&output));
+    assert_eq!(
+        stdout(&output),
+        format!("{}\t1\tx\n", text(&tagged_dir.join("Some Game")))
+    );
+}
+
+#[test]
+fn copy_roms_to_copies_a_rom_with_achievements_into_a_new_console_directory() {
+    let dir = tempfile::tempdir().unwrap();
+    let destination = dir.path().join("not/there/yet");
+    let sandbox = sandbox_listing(SNES, has_cheevos(SNES_SFC));
+
+    let output = sandbox.run(&["check", "--copy-roms-to", text(&destination), SFC_ROM]);
+
+    assert_eq!(exit_code(&output), 0, "stderr: {}", stderr(&output));
+    assert_eq!(stdout(&output), format!("{SFC_ROM}\n"));
+    assert_eq!(
+        std::fs::read(destination.join("snes/FakeHeaderedROM.sfc")).unwrap(),
+        std::fs::read(SFC_ROM).unwrap()
+    );
+}
+
+#[test]
+fn copy_roms_to_uses_the_console_that_matched() {
+    let dir = tempfile::tempdir().unwrap();
+    let sandbox = sandbox_listing(SATURN, has_cheevos(BOTH_SEGA_CD));
+
+    let output = sandbox.run(&["check", "--copy-roms-to", text(dir.path()), BOTH_CUE]);
+
+    assert_eq!(exit_code(&output), 0, "stderr: {}", stderr(&output));
+    assert_eq!(
+        files_under(dir.path()),
+        [dir.path().join("saturn/both.cue")]
+    );
+}
+
+#[test]
+fn copy_roms_to_copies_an_archive_as_it_is() {
+    let dir = tempfile::tempdir().unwrap();
+    let sandbox = sandbox_listing(SNES, has_cheevos(CHRISTMAS_CRAZE));
+
+    let output = sandbox.run(&["check", "--copy-roms-to", text(dir.path()), SNES_ZIP]);
+
+    assert_eq!(exit_code(&output), 0, "stderr: {}", stderr(&output));
+    assert_eq!(
+        std::fs::read(dir.path().join("snes/Christmas-Craze.zip")).unwrap(),
+        std::fs::read(SNES_ZIP).unwrap()
+    );
+}
+
+#[test]
+fn copy_roms_to_overwrites_an_existing_file() {
+    let dir = tempfile::tempdir().unwrap();
+    let existing = dir.path().join("snes/FakeHeaderedROM.sfc");
+    std::fs::create_dir_all(existing.parent().unwrap()).unwrap();
+    std::fs::write(&existing, "an older copy").unwrap();
+    let sandbox = sandbox_listing(SNES, has_cheevos(SNES_SFC));
+
+    let output = sandbox.run(&["check", "--copy-roms-to", text(dir.path()), SFC_ROM]);
+
+    assert_eq!(exit_code(&output), 0, "stderr: {}", stderr(&output));
+    assert_eq!(
+        std::fs::read(&existing).unwrap(),
+        std::fs::read(SFC_ROM).unwrap()
+    );
+}
+
+#[test]
+fn copy_roms_to_leaves_a_rom_that_is_already_there_intact() {
+    let dir = tempfile::tempdir().unwrap();
+    let console_dir = dir.path().join("megadrive");
+    std::fs::create_dir(&console_dir).unwrap();
+    let rom = small_rom(&console_dir, "game.bin");
+    let sandbox = sandbox_listing(MEGA_DRIVE, has_cheevos(SMALL_FILE));
+
+    let output = sandbox.run(&["check", "--copy-roms-to", text(dir.path()), text(&rom)]);
+
+    assert_eq!(exit_code(&output), 0, "stderr: {}", stderr(&output));
+    assert_eq!(std::fs::read_to_string(&rom).unwrap(), "hascheevos");
+}
+
+#[test]
+fn copy_roms_to_leaves_out_roms_without_achievements() {
+    let dir = tempfile::tempdir().unwrap();
+    let not_found = small_rom(dir.path(), "not-found.nes");
+    let destination = dir.path().join("copies");
+    let sandbox = sandbox_listing(SNES, no_cheevos(SNES_SFC));
+    let excluded = sandbox_marking(SNES, has_cheevos(SNES_SFC), "incompatible");
+
+    let output = sandbox.run(&[
+        "check",
+        "--copy-roms-to",
+        text(&destination),
+        SFC_ROM,
+        text(&not_found),
+    ]);
+    assert_eq!(exit_code(&output), 1, "stderr: {}", stderr(&output));
+
+    let output = excluded.run(&["check", "--copy-roms-to", text(&destination), SFC_ROM]);
+    assert_eq!(exit_code(&output), 1, "stderr: {}", stderr(&output));
+
+    assert!(!destination.exists());
+}
+
+#[test]
+fn a_failed_copy_is_reported_and_the_run_continues_to_exit_2() {
+    let dir = tempfile::tempdir().unwrap();
+    // A file where the first ROM's console directory has to go.
+    std::fs::write(dir.path().join("snes"), "in the way").unwrap();
+    let sandbox = Sandbox::new(FakeServer::start(|request| {
+        Reply::ok(match requested_console(request) {
+            SNES => games_page(&[has_cheevos(SNES_SFC)]),
+            MEGA_DRIVE => games_page(&[has_cheevos(SMALL_FILE)]),
+            _ => games_page(&[]),
+        })
+    }));
+    let rom_dir = tempfile::tempdir().unwrap();
+    let second = small_rom(rom_dir.path(), "second.bin");
+
+    let output = sandbox.run(&[
+        "check",
+        "--copy-roms-to",
+        text(dir.path()),
+        SFC_ROM,
+        text(&second),
+    ]);
+
+    assert_eq!(exit_code(&output), 2, "stderr: {}", stderr(&output));
+    assert_eq!(stdout(&output), format!("{SFC_ROM}\n{}\n", text(&second)));
+    let stderr = stderr(&output);
+    assert!(
+        stderr.contains("error: ") && stderr.contains("FakeHeaderedROM.sfc: can't copy"),
+        "{stderr}"
+    );
+    assert!(dir.path().join("megadrive/second.bin").exists());
+}
+
+#[test]
+fn tab_output_and_copy_roms_to_work_together() {
+    let dir = tempfile::tempdir().unwrap();
+    let sandbox = sandbox_listing(SNES, has_cheevos(SNES_SFC));
+
+    let output = sandbox.run(&[
+        "check",
+        "--tab-output",
+        "--copy-roms-to",
+        text(dir.path()),
+        SFC_ROM,
+    ]);
+
+    assert_eq!(exit_code(&output), 0, "stderr: {}", stderr(&output));
+    assert_eq!(stdout(&output), format!("{SFC_ROM}\t1\tx\n"));
+    assert!(dir.path().join("snes/FakeHeaderedROM.sfc").exists());
 }
