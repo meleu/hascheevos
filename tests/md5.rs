@@ -535,6 +535,39 @@ fn a_429_without_a_number_of_seconds_is_still_retried() {
     assert_eq!(sandbox.server.requests().len(), 2);
 }
 
+/// The real server's 429 has no `Retry-After`, and its limit lasts until a
+/// minute after the first request. Ignored because it takes that minute.
+#[test]
+#[ignore = "takes over a minute"]
+fn a_429_without_retry_after_outlasts_the_servers_one_minute_limit() {
+    let start = Instant::now();
+    let sandbox = Sandbox::new(FakeServer::start(move |_| {
+        if start.elapsed() < Duration::from_secs(60) {
+            return Reply::failure(429);
+        }
+        Reply::ok(games_page(&[]))
+    }));
+    let output = sandbox.run(&["md5", "--console", "nes", NOT_LISTED]);
+
+    assert_eq!(exit_code(&output), 1, "stderr: {}", stderr(&output));
+}
+
+#[test]
+fn a_429_without_retry_after_is_retried_soon_in_case_it_was_brief() {
+    let limited = AtomicBool::new(true);
+    let sandbox = Sandbox::new(FakeServer::start(move |_| {
+        if limited.swap(false, Ordering::Relaxed) {
+            return Reply::failure(429);
+        }
+        Reply::ok(games_page(&[]))
+    }));
+    let start = Instant::now();
+    let output = sandbox.run(&["md5", "--console", "nes", NOT_LISTED]);
+
+    assert_eq!(exit_code(&output), 1, "stderr: {}", stderr(&output));
+    assert!(start.elapsed() < Duration::from_secs(5));
+}
+
 #[test]
 fn a_download_fails_when_retries_run_out_and_the_next_run_tries_again() {
     let sandbox = Sandbox::new(FakeServer::start(|_| Reply::rate_limited("0")));

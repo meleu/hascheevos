@@ -16,9 +16,11 @@ pub const PAYLOAD_FORMAT: u32 = 1;
 pub const EXIT_REJECTED: u8 = 3;
 
 /// Retries of one request after a 429, on top of the first try.
-const MAX_RETRIES: u32 = 3;
-/// For a 429 whose `Retry-After` isn't a number of seconds.
-const DEFAULT_RETRY_WAIT_SECS: u64 = 1;
+const MAX_RETRIES: usize = 3;
+/// For a 429 whose `Retry-After` isn't a number of seconds. The real server
+/// sends none, and allows 60 requests in a minute counted from the first, so
+/// these have to add up to more than that minute.
+const DEFAULT_RETRY_WAITS_SECS: [u64; MAX_RETRIES] = [1, 20, 40];
 /// A longer limit isn't brief, and waiting it out would leave the run stuck.
 const MAX_RETRY_WAIT_SECS: u64 = 60;
 
@@ -117,7 +119,7 @@ fn fetch_page(
                     format!("still rate limited after {MAX_RETRIES} retries"),
                 ));
             }
-            let wait = retry_wait_secs(&response);
+            let wait = retry_wait_secs(&response, retries);
             if wait > MAX_RETRY_WAIT_SECS {
                 return Err(failed(
                     system_id,
@@ -149,13 +151,13 @@ fn failed(system_id: u32, message: impl fmt::Display) -> FetchError {
     FetchError::Failed(format!("console {system_id}: {message}"))
 }
 
-fn retry_wait_secs<B>(response: &ureq::http::Response<B>) -> u64 {
+fn retry_wait_secs<B>(response: &ureq::http::Response<B>, retries: usize) -> u64 {
     response
         .headers()
         .get("Retry-After")
         .and_then(|value| value.to_str().ok())
         .and_then(|value| value.trim().parse().ok())
-        .unwrap_or(DEFAULT_RETRY_WAIT_SECS)
+        .unwrap_or(DEFAULT_RETRY_WAITS_SECS[retries])
 }
 
 fn console_list(page: &Value) -> Option<Map<String, Value>> {
