@@ -55,7 +55,8 @@ fn main() -> ExitCode {
 
     let report = rc_hash::hash_file(&input.path, console, verbose);
 
-    for hash in &report.hashes {
+    let hashes = report.distinct_hashes();
+    for hash in &hashes {
         match writeln!(io::stdout(), "{hash}") {
             Ok(()) => {}
             // Whoever was reading has what they wanted, like `... | head -1`.
@@ -66,7 +67,7 @@ fn main() -> ExitCode {
             }
         }
     }
-    if report.hashes.is_empty() {
+    if hashes.is_empty() {
         if !verbose {
             for error in &report.errors {
                 eprintln!("error: {error}");
