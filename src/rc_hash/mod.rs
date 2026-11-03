@@ -204,6 +204,16 @@ impl Drop for Hashes {
     }
 }
 
+/// Whether rcheevos has a console for the extension of `path`.
+pub fn knows_extension(path: &Path) -> bool {
+    // rcheevos decides before opening anything, so ask about a file that can't
+    // exist, which leaves the real one unread.
+    let probe = Path::new("/dev/null").join(path.file_name().unwrap_or_default());
+    let mut hashes = Hashes::new(&probe, None, false);
+    hashes.next();
+    !hashes.used_fallback()
+}
+
 /// Hashes `path` as `console`, or as every candidate console for its extension.
 pub fn hash_file(path: &Path, console: Option<u32>, verbose: bool) -> Report {
     let mut hashes = Hashes::new(path, console, verbose);

@@ -65,6 +65,13 @@ pub fn has_extension(path: &Path, extension: &str) -> bool {
         .is_some_and(|(_, ext)| ext.eq_ignore_ascii_case(extension))
 }
 
+pub fn note_unrecognised(file: &Path) {
+    eprintln!(
+        "note: {}: unrecognised file extension; skipped",
+        file.display()
+    );
+}
+
 fn not_supported(format: &str) -> String {
     format!("{format} files are not supported yet")
 }

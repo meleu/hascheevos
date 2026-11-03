@@ -109,6 +109,9 @@ const CONSOLES: &[Console] = &[
     console(ffi::RC_CONSOLE_PLAYSTATION_3, "ps3", &[]),
 ];
 
+/// What to say about a value that isn't a console.
+pub const UNKNOWN: &str = "unknown console; see `--help` for the list of names";
+
 /// Finds a console by name, alias or numeric ID, ignoring case.
 pub fn parse(value: &str) -> Option<u32> {
     let value = value.to_lowercase();
@@ -120,6 +123,12 @@ pub fn parse(value: &str) -> Option<u32> {
                 || value.parse() == Ok(console.id)
         })
         .map(|console| console.id)
+}
+
+/// Finds a console by name or alias, ignoring case, for a value where a number
+/// can't mean an ID.
+pub fn parse_name(value: &str) -> Option<u32> {
+    parse(value).filter(|_| value.parse::<u32>().is_err())
 }
 
 /// The short name of a console, or "unknown" for an ID outside the table.

@@ -3,6 +3,7 @@ mod cache;
 mod console;
 mod input;
 mod rc_hash;
+mod retropie;
 
 use api::FetchError;
 use cache::{Entries, Entry, Source};
@@ -67,8 +68,8 @@ enum Commands {
     /// Say which ROMs have achievements
     #[command(after_help = format!("Consoles:\n{}", console::help_list()))]
     Check {
-        /// Console name or ID; tries each console the file extension could
-        /// belong to if omitted
+        /// Console name or ID for the listed files; tries each console the file
+        /// extension could belong to if omitted
         #[arg(long, value_name = "NAME|ID", value_parser = parse_console)]
         console: Option<u32>,
 
@@ -86,7 +87,17 @@ enum Commands {
         #[arg(long, value_name = "DIR")]
         copy_roms_to: Option<PathBuf>,
 
-        #[arg(required = true, value_name = "FILE")]
+        /// RetroPie systems to scan under ~/RetroPie/roms, or `all` for every
+        /// directory named after a console; a directory's name sets its console
+        #[arg(
+            long = "system",
+            value_name = "NAME,...",
+            value_delimiter = ',',
+            value_parser = retropie::parse_system,
+        )]
+        systems: Vec<retropie::System>,
+
+        #[arg(required_unless_present = "systems", value_name = "FILE")]
         files: Vec<PathBuf>,
     },
 
@@ -121,8 +132,7 @@ const EXIT_ERROR: u8 = 2;
 const SHARED_EXTENSIONS: [&str; 4] = ["bin", "rom", "tap", "nds"];
 
 fn parse_console(value: &str) -> Result<u32, String> {
-    console::parse(value)
-        .ok_or_else(|| "unknown console; see `--help` for the list of names".to_owned())
+    console::parse(value).ok_or_else(|| console::UNKNOWN.to_owned())
 }
 
 fn main() -> ExitCode {
@@ -143,11 +153,13 @@ fn main() -> ExitCode {
             refresh,
             tab_output,
             copy_roms_to,
+            systems,
             files,
         } => check_roms(
             &files,
+            console,
+            &systems,
             &CheckOptions {
-                console,
                 refresh,
                 tab_output,
                 copy_roms_to,
@@ -297,7 +309,6 @@ fn check_games(ids: &[u32], refresh: bool) -> ExitCode {
 
 /// How `check` treats every ROM in a run.
 struct CheckOptions {
-    console: Option<u32>,
     refresh: bool,
     tab_output: bool,
     copy_roms_to: Option<PathBuf>,
@@ -344,12 +355,23 @@ impl Consulted {
     }
 }
 
-fn check_roms(files: &[PathBuf], options: &CheckOptions) -> ExitCode {
+fn check_roms(
+    files: &[PathBuf],
+    console: Option<u32>,
+    systems: &[retropie::System],
+    options: &CheckOptions,
+) -> ExitCode {
+    let scan = retropie::scan(systems);
+    let roms = files.iter().map(|file| (file.as_path(), console)).chain(
+        scan.roms
+            .iter()
+            .map(|rom| (rom.path.as_path(), Some(rom.console))),
+    );
     let mut entries = Entries::default();
     let mut any_achievements = false;
-    let mut any_failed = false;
-    for file in files {
-        let result = check_rom(file, options, &mut entries);
+    let mut any_failed = scan.any_failed;
+    for (file, console) in roms {
+        let result = check_rom(file, console, options, &mut entries);
         any_achievements |= result.has_achievements;
         any_failed |= result.failed;
         if result.stop_run {
@@ -359,12 +381,13 @@ fn check_roms(files: &[PathBuf], options: &CheckOptions) -> ExitCode {
     final_exit_code(any_achievements, any_failed)
 }
 
-fn check_rom(file: &Path, options: &CheckOptions, entries: &mut Entries) -> RomResult {
-    let CheckOptions {
-        console: named_console,
-        refresh,
-        ..
-    } = *options;
+fn check_rom(
+    file: &Path,
+    named_console: Option<u32>,
+    options: &CheckOptions,
+    entries: &mut Entries,
+) -> RomResult {
+    let refresh = options.refresh;
     let name = file.display();
     let mut result = RomResult::default();
     let input = match input::prepare(file, named_console) {
@@ -385,7 +408,7 @@ fn check_rom(file: &Path, options: &CheckOptions, entries: &mut Entries) -> RomR
         any_hash = true;
         // After a fallback, the console is only the one rcheevos borrowed.
         if hashes.used_fallback() {
-            eprintln!("note: {name}: unrecognised file extension; skipped");
+            input::note_unrecognised(file);
             return result;
         }
         let mut list = match entries.load(Source::Console(console)) {

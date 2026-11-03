@@ -28,12 +28,15 @@ const SNES: u32 = 3;
 const NES: u32 = 7;
 const SEGA_CD: u32 = 9;
 const PSX: u32 = 12;
+const NEOGEO_POCKET: u32 = 14;
 const ARCADE: u32 = 27;
 const MSX: u32 = 29;
 const AMSTRAD: u32 = 37;
 const APPLE_II: u32 = 38;
 const SATURN: u32 = 39;
+const WONDERSWAN: u32 = 53;
 const ZX_SPECTRUM: u32 = 59;
+const FDS: u32 = 81;
 
 struct Game {
     id: u32,
@@ -118,6 +121,18 @@ fn sandbox_marking(console: u32, game: Game, compatibility: &'static str) -> San
     }))
 }
 
+/// A server listing one game for each of `consoles` and nothing for the others.
+fn sandbox_answering_by_console(consoles: &'static [(u32, &'static str)]) -> Sandbox {
+    let empty = games_page(&[]);
+    Sandbox::new(FakeServer::start(move |request| {
+        let console = requested_console(request);
+        match consoles.iter().find(|(id, _)| *id == console) {
+            Some((_, hash)) => Reply::ok(games_page(&[has_cheevos(hash)])),
+            None => Reply::ok(empty.clone()),
+        }
+    }))
+}
+
 fn requested_consoles(sandbox: &Sandbox) -> Vec<u32> {
     sandbox
         .server
@@ -177,6 +192,19 @@ fn small_rom(dir: &Path, name: &str) -> PathBuf {
     let path = dir.join(name);
     std::fs::write(&path, "hascheevos").unwrap();
     path
+}
+
+/// A directory for `system` under the sandbox's `~/RetroPie/roms`.
+fn system_dir(sandbox: &Sandbox, system: &str) -> PathBuf {
+    let dir = sandbox.home().join("RetroPie/roms").join(system);
+    std::fs::create_dir_all(&dir).unwrap();
+    dir
+}
+
+/// The files of a disc whose hash is [`BOTH_PSX`] for PlayStation.
+fn copy_disc(dir: &Path) {
+    std::fs::copy(BOTH_CUE, dir.join("both.cue")).unwrap();
+    std::fs::copy("testdata/disc/both.bin", dir.join("both.bin")).unwrap();
 }
 
 fn text(path: &Path) -> &str {
@@ -1164,4 +1192,232 @@ fn tab_output_keeps_the_cached_answer_when_an_update_fails() {
 
     assert_eq!(exit_code(&output), 2, "stderr: {}", stderr(&output));
     assert_eq!(stdout(&output), format!("{SFC_ROM}\t\t\n"));
+}
+
+#[test]
+fn a_named_system_is_scanned_including_subfolders() {
+    let sandbox = sandbox_listing(NES, has_cheevos(SMALL_FILE));
+    let nes = system_dir(&sandbox, "nes");
+    let top = small_rom(&nes, "top.nes");
+    std::fs::create_dir(nes.join("sub")).unwrap();
+    let nested = small_rom(&nes.join("sub"), "nested.nes");
+
+    let output = sandbox.run(&["check", "--system", "nes"]);
+
+    assert_eq!(exit_code(&output), 0, "stderr: {}", stderr(&output));
+    assert_eq!(
+        stdout(&output),
+        format!("{}\n{}\n", nested.display(), top.display())
+    );
+}
+
+#[test]
+fn several_systems_can_be_named_and_each_file_is_checked_on_its_own() {
+    let sandbox = sandbox_listing(PSX, has_cheevos(BOTH_PSX));
+    let psx = system_dir(&sandbox, "psx");
+    copy_disc(&psx);
+    let nes = system_dir(&sandbox, "nes");
+    small_rom(&nes, "game.nes");
+
+    let output = sandbox.run(&["check", "--system", "nes,psx"]);
+
+    assert_eq!(exit_code(&output), 0, "stderr: {}", stderr(&output));
+    assert_eq!(
+        stdout(&output),
+        format!(
+            "{}\n{}\n",
+            psx.join("both.bin").display(),
+            psx.join("both.cue").display()
+        )
+    );
+}
+
+#[test]
+fn a_directory_name_limits_the_search_to_its_console() {
+    let sandbox = sandbox_listing(NES, has_cheevos(SMALL_FILE));
+    let rom = small_rom(&system_dir(&sandbox, "nes"), "game.rom");
+
+    let output = sandbox.run(&["check", "--system", "nes"]);
+
+    assert_eq!(exit_code(&output), 0, "stderr: {}", stderr(&output));
+    assert_eq!(stdout(&output), format!("{}\n", rom.display()));
+    assert_eq!(requested_consoles(&sandbox), [NES]);
+}
+
+#[test]
+fn a_directory_named_with_an_alias_sets_its_console() {
+    for (system, console) in [
+        ("fds", FDS),
+        ("wonderswancolor", WONDERSWAN),
+        ("genesis", MEGA_DRIVE),
+    ] {
+        let sandbox = sandbox_listing(console, has_cheevos(SMALL_FILE));
+        let rom = small_rom(&system_dir(&sandbox, system), "game.bin");
+
+        let output = sandbox.run(&["check", "--system", system]);
+
+        assert_eq!(
+            stdout(&output),
+            format!("{}\n", rom.display()),
+            "{system}: {}",
+            stderr(&output)
+        );
+        assert_eq!(requested_consoles(&sandbox), [console], "{system}");
+    }
+}
+
+#[test]
+fn files_and_systems_can_be_combined() {
+    let sandbox = sandbox_answering_by_console(&[(SNES, SNES_SFC), (NES, SMALL_FILE)]);
+    let rom = small_rom(&system_dir(&sandbox, "nes"), "game.nes");
+
+    let output = sandbox.run(&["check", SFC_ROM, "--system", "nes"]);
+
+    assert_eq!(exit_code(&output), 0, "stderr: {}", stderr(&output));
+    assert_eq!(stdout(&output), format!("{SFC_ROM}\n{}\n", rom.display()));
+}
+
+#[test]
+fn a_named_system_with_no_directory_fails_and_the_run_continues() {
+    let sandbox = sandbox_listing(NES, has_cheevos(SMALL_FILE));
+    let rom = small_rom(&system_dir(&sandbox, "nes"), "game.nes");
+
+    let output = sandbox.run(&["check", "--system", "snes,nes"]);
+
+    assert_eq!(exit_code(&output), 2, "stderr: {}", stderr(&output));
+    assert_eq!(stdout(&output), format!("{}\n", rom.display()));
+    let stderr = stderr(&output);
+    assert!(
+        stderr.contains("error: ") && stderr.contains("RetroPie/roms/snes"),
+        "{stderr}"
+    );
+}
+
+#[test]
+fn system_all_scans_directories_matching_a_console_and_skips_the_rest() {
+    let sandbox = sandbox_answering_by_console(&[(NES, SMALL_FILE), (MEGA_DRIVE, SMALL_FILE)]);
+    let nes = small_rom(&system_dir(&sandbox, "nes"), "game.nes");
+    let genesis = small_rom(&system_dir(&sandbox, "genesis"), "game.md");
+    small_rom(&system_dir(&sandbox, "ports"), "game.nes");
+    // The name of a directory is never read as a console's numeric ID.
+    small_rom(&system_dir(&sandbox, "7"), "game.nes");
+    small_rom(&sandbox.home().join("RetroPie/roms"), "stray.nes");
+
+    let output = sandbox.run(&["check", "--system", "all"]);
+
+    assert_eq!(exit_code(&output), 0, "stderr: {}", stderr(&output));
+    assert_eq!(
+        stdout(&output),
+        format!("{}\n{}\n", genesis.display(), nes.display())
+    );
+}
+
+#[test]
+fn system_all_with_no_roms_directory_fails() {
+    let sandbox = sandbox_listing(NES, has_cheevos(SMALL_FILE));
+
+    let output = sandbox.run(&["check", "--system", "all"]);
+
+    assert_eq!(exit_code(&output), 2, "stderr: {}", stderr(&output));
+    assert!(stderr(&output).contains("RetroPie/roms"));
+}
+
+#[test]
+fn a_file_that_cannot_be_a_rom_is_skipped_with_a_note_when_scanning() {
+    let sandbox = sandbox_listing(PSX, has_cheevos(BOTH_PSX));
+    let psx = system_dir(&sandbox, "psx");
+    let xml = small_rom(&psx, "gamelist.xml");
+    copy_disc(&psx);
+
+    let output = sandbox.run(&["check", "--tab-output", "--system", "psx"]);
+
+    assert_eq!(exit_code(&output), 0, "stderr: {}", stderr(&output));
+    assert!(!stdout(&output).contains("gamelist"), "{}", stdout(&output));
+    let note = format!(
+        "note: {}: unrecognised file extension; skipped",
+        xml.display()
+    );
+    assert!(stderr(&output).contains(&note), "{}", stderr(&output));
+}
+
+#[test]
+fn a_directory_reached_twice_through_links_is_checked_once() {
+    let sandbox = sandbox_listing(MEGA_DRIVE, has_cheevos(SMALL_FILE));
+    let megadrive = system_dir(&sandbox, "megadrive");
+    small_rom(&megadrive, "game.md");
+    let roms = sandbox.home().join("RetroPie/roms");
+    std::os::unix::fs::symlink("megadrive", roms.join("genesis")).unwrap();
+    std::os::unix::fs::symlink(".", megadrive.join("loop")).unwrap();
+
+    let output = sandbox.run(&["check", "--system", "all"]);
+
+    assert_eq!(exit_code(&output), 0, "stderr: {}", stderr(&output));
+    assert_eq!(stdout(&output).lines().count(), 1, "{}", stdout(&output));
+}
+
+#[test]
+fn system_names_that_are_not_consoles_are_rejected() {
+    let sandbox = sandbox_listing(NES, has_cheevos(SMALL_FILE));
+    small_rom(&system_dir(&sandbox, "7"), "game.nes");
+    small_rom(&system_dir(&sandbox, "ports"), "game.nes");
+
+    for system in ["7", "ports", "nes,ports"] {
+        let output = sandbox.run(&["check", "--system", system]);
+
+        assert_eq!(exit_code(&output), 2, "{system}");
+        assert!(stderr(&output).contains("unknown console"), "{system}");
+        assert_eq!(stdout(&output), "", "{system}");
+    }
+    assert!(sandbox.server.requests().is_empty());
+}
+
+#[test]
+fn check_with_neither_files_nor_systems_is_a_usage_error() {
+    let sandbox = sandbox_listing(NES, has_cheevos(SMALL_FILE));
+
+    let output = sandbox.run(&["check"]);
+
+    assert_eq!(exit_code(&output), 2, "stderr: {}", stderr(&output));
+    assert!(stderr(&output).contains("required"));
+}
+
+#[test]
+fn rom_extensions_rcheevos_has_no_console_for_are_checked_when_scanning() {
+    let systems = [
+        ("wonderswan", WONDERSWAN, "game.ws"),
+        ("ngp", NEOGEO_POCKET, "game.ngp"),
+        ("megadrive", MEGA_DRIVE, "game.gen"),
+        ("megadrive", MEGA_DRIVE, "game.smd"),
+    ];
+    for (system, console, name) in systems {
+        let sandbox = sandbox_listing(console, has_cheevos(SMALL_FILE));
+        let rom = small_rom(&system_dir(&sandbox, system), name);
+
+        let output = sandbox.run(&["check", "--system", system]);
+
+        assert_eq!(
+            stdout(&output),
+            format!("{}\n", rom.display()),
+            "{name}: {}",
+            stderr(&output)
+        );
+    }
+}
+
+#[test]
+fn console_applies_to_the_listed_files_and_not_to_system_directories() {
+    let sandbox = sandbox_answering_by_console(&[(NES, SMALL_FILE), (SNES, SNES_SFC)]);
+    let dir = tempfile::tempdir().unwrap();
+    let file = small_rom(dir.path(), "game.xyz");
+    let snes = system_dir(&sandbox, "snes");
+    let scanned = snes.join("game.sfc");
+    std::fs::copy(SFC_ROM, &scanned).unwrap();
+
+    let output = sandbox.run(&["check", "--console", "nes", text(&file), "--system", "snes"]);
+
+    assert_eq!(exit_code(&output), 0, "stderr: {}", stderr(&output));
+    assert_eq!(
+        stdout(&output),
+        format!("{}\n{}\n", file.display(), scanned.display())
+    );
 }
