@@ -350,7 +350,7 @@ fn check_rom(
             result.record_failed_update(&error);
         }
         let item = Consulted { list, hash };
-        let found = item.has_achievements();
+        let found = item.game().is_some();
         consulted.push(item);
         if found || result.stop_run {
             break;

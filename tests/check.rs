@@ -260,24 +260,41 @@ fn every_candidate_is_tried_when_none_matches() {
 }
 
 #[test]
-fn a_game_without_achievements_on_one_candidate_does_not_end_the_search() {
+fn a_game_without_achievements_on_one_candidate_ends_the_search() {
     let dir = tempfile::tempdir().unwrap();
     let rom = small_rom(dir.path(), "disk.dsk");
     let msx = games_page(&[no_cheevos(SMALL_FILE)]);
-    let apple = games_page(&[has_cheevos(SMALL_FILE)]);
-    let empty = games_page(&[]);
+    let others = games_page(&[has_cheevos(SMALL_FILE)]);
     let sandbox = Sandbox::new(FakeServer::start(move |request| {
         Reply::ok(match requested_console(request) {
             MSX => msx.clone(),
-            APPLE_II => apple.clone(),
-            _ => empty.clone(),
+            _ => others.clone(),
         })
     }));
 
     let output = sandbox.run(&["check", text(&rom)]);
 
+    assert_eq!(exit_code(&output), 1, "stderr: {}", stderr(&output));
+    assert_eq!(stdout(&output), "");
+    let stderr = stderr(&output);
+    assert!(stderr.contains("No Cheevos: 0 achievements"), "{stderr}");
+    assert_eq!(requested_consoles(&sandbox), [MSX]);
+}
+
+#[test]
+fn a_match_without_achievements_in_an_old_list_is_looked_up_again() {
+    let dir = tempfile::tempdir().unwrap();
+    let rom = small_rom(dir.path(), "disk.dsk");
+    let list = games_page(&[has_cheevos(SMALL_FILE)]);
+    let sandbox = sandbox_answering(vec![no_cheevos(SMALL_FILE)], move || {
+        Reply::ok(list.clone())
+    });
+    cache_lists_aged(&sandbox, &["check", text(&rom)]);
+
+    let output = sandbox.run(&["check", text(&rom)]);
+
     assert_eq!(exit_code(&output), 0, "stderr: {}", stderr(&output));
-    assert!(stderr(&output).contains("Has Cheevos: 42 achievements"));
+    assert_eq!(requested_consoles(&sandbox), [MSX, MSX]);
 }
 
 #[test]
