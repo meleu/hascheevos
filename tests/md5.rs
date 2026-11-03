@@ -1,13 +1,20 @@
 mod support;
 
 use serde_json::json;
-use std::process::Output;
-use std::time::Duration;
-use support::{API_KEY, FakeServer, Reply, Sandbox, age_files, files_under};
+use std::io::{BufRead, BufReader};
+use std::process::{Output, Stdio};
+use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};
+use std::sync::mpsc;
+use std::time::{Duration, Instant};
+use support::{API_KEY, FakeServer, Reply, Request, Sandbox, age_files, files_under};
 
 const WITH_ACHIEVEMENTS: &str = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
 const NONE_PUBLISHED: &str = "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
 const NOT_LISTED: &str = "cccccccccccccccccccccccccccccccc";
+const ON_PAGE_2: &str = "dddddddddddddddddddddddddddddddd";
+const ON_PAGE_3: &str = "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee";
+const FETCH_SYSTEM: [&str; 4] = ["__fetch-system", "--format", "1", "7"];
+const EXIT_REJECTED: i32 = 3;
 
 struct Game {
     id: u32,
@@ -18,6 +25,11 @@ struct Game {
 
 /// A one-page response in the shape the OpenAPI document gives for `/games`.
 fn games_page(games: &[Game]) -> String {
+    page_of(games, 1, 1)
+}
+
+/// One page of a longer list, otherwise as [`games_page`].
+fn page_of(games: &[Game], current_page: u32, last_page: u32) -> String {
     let data: Vec<_> = games
         .iter()
         .map(|game| {
@@ -45,16 +57,15 @@ fn games_page(games: &[Game]) -> String {
         "jsonapi": {"version": "1.0"},
         "data": data,
         "included": included,
-        "meta": {"page": {"currentPage": 1, "lastPage": 1, "perPage": 50, "total": games.len()}}
+        "meta": {"page": {"currentPage": current_page, "lastPage": last_page, "perPage": 50}}
     })
     .to_string()
 }
 
 /// A server that lists the same two games for every console.
 fn two_game_sandbox() -> Sandbox {
-    Sandbox::new(FakeServer::start(|_| Reply {
-        status: 200,
-        body: games_page(&[
+    Sandbox::new(FakeServer::start(|_| {
+        Reply::ok(games_page(&[
             Game {
                 id: 1,
                 title: "Has Cheevos",
@@ -67,8 +78,62 @@ fn two_game_sandbox() -> Sandbox {
                 achievements: 0,
                 hash: NONE_PUBLISHED,
             },
-        ]),
+        ]))
     }))
+}
+
+/// A server capping pages at one game, with three games in the list.
+fn three_page_sandbox() -> Sandbox {
+    Sandbox::new(FakeServer::start(|request| {
+        Reply::ok(three_page_list(page_number(request)))
+    }))
+}
+
+/// A server answering with a 429 once and then with a one-page list.
+fn once_rate_limited_sandbox(retry_after: &'static str) -> Sandbox {
+    let limited = AtomicBool::new(true);
+    Sandbox::new(FakeServer::start(move |_| {
+        if limited.swap(false, Ordering::Relaxed) {
+            return Reply::rate_limited(retry_after);
+        }
+        Reply::ok(games_page(&[Game {
+            id: 1,
+            title: "Has Cheevos",
+            achievements: 42,
+            hash: WITH_ACHIEVEMENTS,
+        }]))
+    }))
+}
+
+fn three_page_list(page: u32) -> String {
+    let (id, hash) = match page {
+        1 => (1, WITH_ACHIEVEMENTS),
+        2 => (2, ON_PAGE_2),
+        3 => (3, ON_PAGE_3),
+        _ => panic!("request for page {page}"),
+    };
+    page_of(
+        &[Game {
+            id,
+            title: "Paged",
+            achievements: 1,
+            hash,
+        }],
+        page,
+        3,
+    )
+}
+
+fn page_number(request: &Request) -> u32 {
+    request
+        .query
+        .iter()
+        .find(|(name, _)| name == "page[number]")
+        .map_or(1, |(_, value)| value.parse().expect("page number"))
+}
+
+fn requested_pages(sandbox: &Sandbox) -> Vec<u32> {
+    sandbox.server.requests().iter().map(page_number).collect()
 }
 
 fn exit_code(output: &Output) -> i32 {
@@ -143,6 +208,7 @@ fn the_request_names_the_console_and_only_the_fields_lookups_need() {
             ("fields[games]", "title,achievementsPublished,hashes"),
             ("filter[systemId]", "7"),
             ("include", "hashes"),
+            ("page[number]", "1"),
             ("page[size]", "100"),
         ]
     );
@@ -320,10 +386,7 @@ fn md5_without_a_console_is_rejected() {
 
 #[test]
 fn a_failed_download_is_not_cached() {
-    let sandbox = Sandbox::new(FakeServer::start(|_| Reply {
-        status: 500,
-        body: String::new(),
-    }));
+    let sandbox = Sandbox::new(FakeServer::start(|_| Reply::failure(500)));
     for _ in 0..2 {
         let output = sandbox.run(&["md5", "--console", "nes", WITH_ACHIEVEMENTS]);
         assert_eq!(exit_code(&output), 2);
@@ -332,16 +395,230 @@ fn a_failed_download_is_not_cached() {
 }
 
 #[test]
-fn a_list_of_several_pages_fails_rather_than_caching_one_page() {
-    let sandbox = Sandbox::new(FakeServer::start(|_| {
-        let page = games_page(&[]).replace(r#""lastPage":1"#, r#""lastPage":2"#);
-        Reply {
-            status: 200,
-            body: page,
+fn every_page_is_fetched_in_order_when_the_server_caps_the_page_size() {
+    let sandbox = three_page_sandbox();
+
+    for hash in [WITH_ACHIEVEMENTS, ON_PAGE_2, ON_PAGE_3] {
+        let output = sandbox.run(&["md5", "--console", "nes", hash]);
+        assert_eq!(exit_code(&output), 0, "{hash}: {}", stderr(&output));
+    }
+
+    // The first run asks for 100 and is given 1 per page, and later runs answer
+    // from the cache.
+    assert_eq!(requested_pages(&sandbox), [1, 2, 3]);
+}
+
+#[test]
+fn a_failure_on_a_later_page_leaves_nothing_in_the_cache_and_the_next_run_tries_again() {
+    let first_try = AtomicBool::new(true);
+    let sandbox = Sandbox::new(FakeServer::start(move |request| {
+        let page = page_number(request);
+        if page == 2 && first_try.swap(false, Ordering::Relaxed) {
+            return Reply::failure(500);
         }
+        Reply::ok(three_page_list(page))
+    }));
+
+    // The hash is on the first page, which was fetched before the failure.
+    let failed = sandbox.run(&["md5", "--console", "nes", WITH_ACHIEVEMENTS]);
+    assert_eq!(exit_code(&failed), 2, "stderr: {}", stderr(&failed));
+    assert_eq!(stdout(&failed), "");
+
+    let output = sandbox.run(&["md5", "--console", "nes", ON_PAGE_3]);
+    assert_eq!(exit_code(&output), 0, "stderr: {}", stderr(&output));
+    assert_eq!(requested_pages(&sandbox), [1, 2, 1, 2, 3]);
+}
+
+#[test]
+fn progress_appears_on_stderr_while_the_download_runs() {
+    let (release, released) = mpsc::channel();
+    let sandbox = Sandbox::new(FakeServer::start(move |request| {
+        let page = page_number(request);
+        // Page 2 waits until the test has seen page 1 reported, so a parent
+        // that only showed progress afterwards would never get this far.
+        if page == 2 && released.recv_timeout(Duration::from_secs(10)).is_err() {
+            return Reply::failure(500);
+        }
+        Reply::ok(three_page_list(page))
+    }));
+
+    let mut child = sandbox
+        .command(&["md5", "--console", "nes", ON_PAGE_3])
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .spawn()
+        .expect("run hascheevos");
+    let mut lines = BufReader::new(child.stderr.take().expect("stderr")).lines();
+
+    let first = lines
+        .next()
+        .expect("a line of progress")
+        .expect("read stderr");
+    assert_eq!(first, "console 7: page 1/3");
+    release.send(()).expect("release page 2");
+
+    let rest: Vec<String> = lines.map(|line| line.expect("read stderr")).collect();
+    assert_eq!(rest[..2], ["console 7: page 2/3", "console 7: page 3/3"]);
+
+    let output = child.wait_with_output().expect("wait for hascheevos");
+    assert_eq!(exit_code(&output), 0, "stderr: {rest:?}");
+    assert_eq!(stdout(&output).trim(), ON_PAGE_3);
+}
+
+#[test]
+fn a_cache_hit_shows_no_progress() {
+    let sandbox = three_page_sandbox();
+    let download = sandbox.run(&["md5", "--console", "nes", ON_PAGE_3]);
+    assert!(
+        stderr(&download).contains("page 3/3"),
+        "{}",
+        stderr(&download)
+    );
+
+    let output = sandbox.run(&["md5", "--console", "nes", ON_PAGE_3]);
+    assert_eq!(exit_code(&output), 0, "stderr: {}", stderr(&output));
+    assert!(!stderr(&output).contains("page"), "{}", stderr(&output));
+}
+
+#[test]
+fn a_failed_download_with_no_cached_list_is_reported_once_as_a_failure() {
+    let sandbox = Sandbox::new(FakeServer::start(|_| Reply::failure(500)));
+    let output = sandbox.run(&["md5", "--console", "nes", WITH_ACHIEVEMENTS]);
+
+    assert_eq!(exit_code(&output), 2);
+    assert_eq!(stdout(&output), "");
+    let stderr = stderr(&output);
+    assert_eq!(stderr.matches("500").count(), 1, "stderr: {stderr}");
+    assert!(stderr.starts_with("error: console 7: "), "stderr: {stderr}");
+    assert!(!stderr.contains("not found"), "stderr: {stderr}");
+    assert!(!stderr.contains("achievements"), "stderr: {stderr}");
+}
+
+#[test]
+fn a_429_on_any_page_is_retried_and_the_download_carries_on() {
+    let page_2_requests = AtomicU32::new(0);
+    let sandbox = Sandbox::new(FakeServer::start(move |request| {
+        let page = page_number(request);
+        if page == 2 && page_2_requests.fetch_add(1, Ordering::Relaxed) < 3 {
+            return Reply::rate_limited("0");
+        }
+        Reply::ok(three_page_list(page))
+    }));
+
+    let output = sandbox.run(&["md5", "--console", "nes", ON_PAGE_3]);
+
+    assert_eq!(exit_code(&output), 0, "stderr: {}", stderr(&output));
+    assert!(
+        stderr(&output).contains("rate limited"),
+        "{}",
+        stderr(&output)
+    );
+    assert_eq!(requested_pages(&sandbox), [1, 2, 2, 2, 2, 3]);
+}
+
+#[test]
+fn a_429_waits_as_long_as_retry_after_says() {
+    let sandbox = once_rate_limited_sandbox("2");
+    let start = Instant::now();
+    let output = sandbox.run(&["md5", "--console", "nes", WITH_ACHIEVEMENTS]);
+
+    assert_eq!(exit_code(&output), 0, "stderr: {}", stderr(&output));
+    assert!(start.elapsed() >= Duration::from_secs(2));
+}
+
+#[test]
+fn a_429_without_a_number_of_seconds_is_still_retried() {
+    let sandbox = once_rate_limited_sandbox("Wed, 21 Oct 2026 07:28:00 GMT");
+    let output = sandbox.run(&["md5", "--console", "nes", WITH_ACHIEVEMENTS]);
+
+    assert_eq!(exit_code(&output), 0, "stderr: {}", stderr(&output));
+    assert_eq!(sandbox.server.requests().len(), 2);
+}
+
+#[test]
+fn a_download_fails_when_retries_run_out_and_the_next_run_tries_again() {
+    let sandbox = Sandbox::new(FakeServer::start(|_| Reply::rate_limited("0")));
+    for run in 1..=2 {
+        let output = sandbox.run(&["md5", "--console", "nes", WITH_ACHIEVEMENTS]);
+        assert_eq!(exit_code(&output), 2, "stderr: {}", stderr(&output));
+        assert!(stderr(&output).contains("error: "), "{}", stderr(&output));
+        // The first try and 3 retries.
+        assert_eq!(sandbox.server.requests().len(), run * 4);
+    }
+}
+
+#[test]
+fn a_very_long_retry_after_fails_rather_than_leaving_the_run_stuck() {
+    let sandbox = Sandbox::new(FakeServer::start(|_| Reply::rate_limited("86400")));
+    let output = sandbox.run(&["md5", "--console", "nes", WITH_ACHIEVEMENTS]);
+
+    assert_eq!(exit_code(&output), 2, "stderr: {}", stderr(&output));
+    assert_eq!(sandbox.server.requests().len(), 1);
+}
+
+#[test]
+fn a_rejected_key_has_its_own_exit_code_from_the_hidden_subcommand() {
+    for status in [401, 403] {
+        let sandbox = Sandbox::new(FakeServer::start(move |_| Reply::failure(status)));
+        let output = sandbox.run(&FETCH_SYSTEM);
+        assert_eq!(exit_code(&output), EXIT_REJECTED, "{status}");
+        assert_eq!(sandbox.server.requests().len(), 1, "{status}");
+    }
+}
+
+#[test]
+fn a_rejection_on_a_later_page_has_the_same_exit_code() {
+    let sandbox = Sandbox::new(FakeServer::start(|request| match page_number(request) {
+        1 => Reply::ok(three_page_list(1)),
+        _ => Reply::failure(401),
+    }));
+    assert_eq!(exit_code(&sandbox.run(&FETCH_SYSTEM)), EXIT_REJECTED);
+}
+
+#[test]
+fn other_failures_of_the_hidden_subcommand_exit_2() {
+    for reply in [
+        || Reply::failure(500),
+        || Reply::failure(404),
+        || Reply::ok("not json".to_owned()),
+    ] {
+        let sandbox = Sandbox::new(FakeServer::start(move |_| reply()));
+        assert_eq!(exit_code(&sandbox.run(&FETCH_SYSTEM)), 2);
+    }
+}
+
+#[test]
+fn a_rejected_key_is_reported_as_a_failure_and_not_cached() {
+    for status in [401, 403] {
+        let sandbox = Sandbox::new(FakeServer::start(move |_| Reply::failure(status)));
+        for run in 1..=2 {
+            let output = sandbox.run(&["md5", "--console", "nes", WITH_ACHIEVEMENTS]);
+            assert_eq!(exit_code(&output), 2, "{status}");
+            assert_eq!(stdout(&output), "");
+            let stderr = stderr(&output);
+            assert!(stderr.starts_with("error: "), "stderr: {stderr}");
+            assert!(stderr.contains("RA_API_KEY"), "stderr: {stderr}");
+            assert_eq!(sandbox.server.requests().len(), run);
+        }
+    }
+}
+
+#[test]
+fn a_console_with_no_games_has_an_empty_list() {
+    // A server may well report an empty list's last page as 0.
+    let sandbox = Sandbox::new(FakeServer::start(|_| Reply::ok(page_of(&[], 1, 0))));
+    let output = sandbox.run(&["md5", "--console", "nes", NOT_LISTED]);
+
+    assert_eq!(exit_code(&output), 1, "stderr: {}", stderr(&output));
+}
+
+#[test]
+fn a_response_without_a_last_page_fails_rather_than_caching_one_page() {
+    let sandbox = Sandbox::new(FakeServer::start(|_| {
+        Reply::ok(games_page(&[]).replace(r#""lastPage":1,"#, ""))
     }));
     for _ in 0..2 {
-        let output = sandbox.run(&["md5", "--console", "nes", WITH_ACHIEVEMENTS]);
+        let output = sandbox.run(&["md5", "--console", "nes", NOT_LISTED]);
         assert_eq!(exit_code(&output), 2);
     }
     assert_eq!(sandbox.server.requests().len(), 2);

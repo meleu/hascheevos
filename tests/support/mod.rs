@@ -19,8 +19,35 @@ pub struct Request {
 }
 
 pub struct Reply {
-    pub status: u16,
-    pub body: String,
+    status: u16,
+    retry_after: Option<&'static str>,
+    body: String,
+}
+
+impl Reply {
+    pub fn ok(body: String) -> Self {
+        Self {
+            status: 200,
+            retry_after: None,
+            body,
+        }
+    }
+
+    pub fn failure(status: u16) -> Self {
+        Self {
+            status,
+            retry_after: None,
+            body: String::new(),
+        }
+    }
+
+    /// A 429 with this `Retry-After` value.
+    pub fn rate_limited(retry_after: &'static str) -> Self {
+        Self {
+            retry_after: Some(retry_after),
+            ..Self::failure(429)
+        }
+    }
 }
 
 pub struct FakeServer {
@@ -41,11 +68,15 @@ impl FakeServer {
                 let request = read_request(&stream);
                 recorded.lock().unwrap().push(request.clone());
                 let reply = handler(&request);
+                let retry_after = reply
+                    .retry_after
+                    .map_or(String::new(), |value| format!("Retry-After: {value}\r\n"));
                 write!(
                     stream,
-                    "HTTP/1.1 {} Fake\r\nContent-Type: application/vnd.api+json\r\n\
+                    "HTTP/1.1 {} Fake\r\nContent-Type: application/vnd.api+json\r\n{}\
                      Content-Length: {}\r\nConnection: close\r\n\r\n{}",
                     reply.status,
+                    retry_after,
                     reply.body.len(),
                     reply.body
                 )

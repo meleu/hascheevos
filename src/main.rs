@@ -4,6 +4,7 @@ mod console;
 mod input;
 mod rc_hash;
 
+use api::FetchError;
 use clap::{Parser, Subcommand};
 use std::io::{self, Write};
 use std::path::{Path, PathBuf};
@@ -114,9 +115,14 @@ fn fetch_system(system_id: u32) -> ExitCode {
             print!("{list}");
             ExitCode::SUCCESS
         }
+        // Stdout, because the parent streams stderr to the user as progress
+        // and reports this itself.
         Err(error) => {
-            eprintln!("{error}");
-            ExitCode::from(EXIT_ERROR)
+            print!("{error}");
+            ExitCode::from(match error {
+                FetchError::Rejected(_) => api::EXIT_REJECTED,
+                FetchError::Failed(_) => EXIT_ERROR,
+            })
         }
     }
 }

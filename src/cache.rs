@@ -1,9 +1,10 @@
 //! Keeps each console's list on disk, using `bkt` to run the hidden
 //! `__fetch-system` subcommand of this same binary.
 
-use crate::api::PAYLOAD_FORMAT;
+use crate::api::{EXIT_REJECTED, FetchError, PAYLOAD_FORMAT};
 use bkt::{Bkt, CommandDesc};
 use serde_json::{Map, Value};
+use std::io::{self, Write};
 use std::path::PathBuf;
 use std::time::Duration;
 
@@ -12,8 +13,8 @@ use std::time::Duration;
 const TTL: Duration = Duration::from_secs(100 * 365 * 24 * 60 * 60);
 
 /// Returns a console's list, downloading it only if it isn't cached.
-pub fn system_list(system_id: u32) -> Result<Map<String, Value>, String> {
-    let exe = std::env::current_exe().map_err(|error| error.to_string())?;
+pub fn system_list(system_id: u32) -> Result<Map<String, Value>, FetchError> {
+    let exe = std::env::current_exe().map_err(|error| FetchError::Failed(error.to_string()))?;
     // RA_API_KEY reaches the subcommand by inheritance. `with_env` would make
     // it part of the cache key, and write it to disk.
     let command = CommandDesc::new([
@@ -25,15 +26,49 @@ pub fn system_list(system_id: u32) -> Result<Map<String, Value>, String> {
     ])
     .with_discard_failures(true);
 
-    let bkt = Bkt::create(cache_dir()?).map_err(|error| format!("{error:#}"))?;
+    let bkt = Bkt::create(cache_dir().map_err(FetchError::Failed)?)
+        .map_err(|error| FetchError::Failed(format!("{error:#}")))?;
     let (invocation, _) = bkt
-        .retrieve(&command, TTL)
-        .map_err(|error| format!("{error:#}"))?;
-    if invocation.exit_code() != 0 {
-        return Err(invocation.stderr_utf8().trim().to_owned());
+        .retrieve_streaming(&command, TTL, io::sink(), LiveProgress::default())
+        .map_err(|error| FetchError::Failed(format!("{error:#}")))?;
+    let code = invocation.exit_code();
+    if code != 0 {
+        // On stdout, because stderr has already been shown as progress.
+        let message = match invocation.stdout_utf8().trim() {
+            "" => format!("console {system_id}: download exited with code {code}"),
+            message => message.to_owned(),
+        };
+        return Err(if code == i32::from(EXIT_REJECTED) {
+            FetchError::Rejected(message)
+        } else {
+            FetchError::Failed(message)
+        });
     }
-    serde_json::from_slice(invocation.stdout())
-        .map_err(|error| format!("console {system_id}: invalid cached list: {error}"))
+    serde_json::from_slice(invocation.stdout()).map_err(|error| {
+        FetchError::Failed(format!("console {system_id}: invalid cached list: {error}"))
+    })
+}
+
+/// Shows a download's progress on stderr as it happens. `bkt` also replays a
+/// cached entry's stderr into its sink, which would repeat the progress of an
+/// old download on every lookup. The two can only be told apart by `bkt`
+/// flushing after each chunk of a running command but not after a replay, so
+/// only what gets flushed is shown.
+#[derive(Default)]
+struct LiveProgress(Vec<u8>);
+
+impl Write for LiveProgress {
+    fn write(&mut self, chunk: &[u8]) -> io::Result<usize> {
+        self.0.extend_from_slice(chunk);
+        Ok(chunk.len())
+    }
+
+    fn flush(&mut self) -> io::Result<()> {
+        // A closed stderr shouldn't fail the download it was only reporting on.
+        let _ = io::stderr().write_all(&self.0);
+        self.0.clear();
+        Ok(())
+    }
 }
 
 fn cache_dir() -> Result<PathBuf, String> {
