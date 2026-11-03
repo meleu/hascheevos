@@ -114,12 +114,15 @@ fn sorted_paths(directory: &Path) -> io::Result<Vec<PathBuf>> {
     Ok(paths)
 }
 
-fn roms_dir() -> Result<PathBuf, String> {
-    let home = std::env::var_os("HOME")
+pub fn home() -> Result<PathBuf, String> {
+    std::env::var_os("HOME")
         .map(PathBuf::from)
         .filter(|path| path.is_absolute())
-        .ok_or("HOME is not an absolute path")?;
-    Ok(home.join("RetroPie/roms"))
+        .ok_or_else(|| "HOME is not an absolute path".to_owned())
+}
+
+pub fn roms_dir(home: &Path) -> PathBuf {
+    home.join("RetroPie/roms")
 }
 
 /// Finds the ROMs of `systems`, reporting on stderr what it can't scan.
@@ -128,8 +131,8 @@ pub fn scan(systems: &[System]) -> Scan {
     if systems.is_empty() {
         return scan;
     }
-    let roms_dir = match roms_dir() {
-        Ok(roms_dir) => roms_dir,
+    let roms_dir = match home() {
+        Ok(home) => roms_dir(&home),
         Err(error) => {
             eprintln!("error: {error}");
             scan.any_failed = true;

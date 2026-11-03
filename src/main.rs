@@ -1,5 +1,6 @@
 mod api;
 mod cache;
+mod collection;
 mod console;
 mod input;
 mod rc_hash;
@@ -97,6 +98,16 @@ enum Commands {
         )]
         systems: Vec<retropie::System>,
 
+        /// Add ROMs with achievements to `custom-achievements <system>.cfg` in
+        /// ~/.emulationstation/collections; they must be under ~/RetroPie/roms
+        #[arg(long, conflicts_with = "single_collection")]
+        collection: bool,
+
+        /// Add ROMs with achievements to `custom-achievements.cfg` in
+        /// ~/.emulationstation/collections; they must be under ~/RetroPie/roms
+        #[arg(long)]
+        single_collection: bool,
+
         #[arg(required_unless_present = "systems", value_name = "FILE")]
         files: Vec<PathBuf>,
     },
@@ -154,6 +165,8 @@ fn main() -> ExitCode {
             tab_output,
             copy_roms_to,
             systems,
+            collection,
+            single_collection,
             files,
         } => check_roms(
             &files,
@@ -163,6 +176,11 @@ fn main() -> ExitCode {
                 refresh,
                 tab_output,
                 copy_roms_to,
+                collection: if single_collection {
+                    Some(collection::Layout::Single)
+                } else {
+                    collection.then_some(collection::Layout::PerSystem)
+                },
             },
         ),
         Commands::FetchSystem {
@@ -312,6 +330,7 @@ struct CheckOptions {
     refresh: bool,
     tab_output: bool,
     copy_roms_to: Option<PathBuf>,
+    collection: Option<collection::Layout>,
 }
 
 /// What came of checking one ROM.
@@ -390,6 +409,15 @@ fn check_rom(
     let refresh = options.refresh;
     let name = file.display();
     let mut result = RomResult::default();
+    let collection_entry = match options.collection.map(|layout| layout.entry(file)) {
+        Some(Ok(entry)) => Some(entry),
+        Some(Err(error)) => {
+            eprintln!("error: {name}: can't go in a collection: {error}");
+            result.failed = true;
+            None
+        }
+        None => None,
+    };
     let input = match input::prepare(file, named_console) {
         Ok(input) => input,
         Err(error) => {
@@ -467,7 +495,7 @@ fn check_rom(
         }
     }
 
-    report_rom(file, &consulted, options, &mut result);
+    report_rom(file, &consulted, options, collection_entry, &mut result);
     if !result.has_achievements
         && !result.excluded
         && named_console.is_none()
@@ -487,6 +515,7 @@ fn report_rom(
     file: &Path,
     consulted: &[Consulted],
     options: &CheckOptions,
+    collection_entry: Option<collection::Entry>,
     result: &mut RomResult,
 ) {
     let name = file.display();
@@ -534,6 +563,17 @@ fn report_rom(
             );
             result.failed = true;
         }
+    }
+
+    if result.has_achievements
+        && let Some(entry) = collection_entry
+        && let Err(error) = entry.add()
+    {
+        eprintln!(
+            "error: {name}: can't add to {}: {error}",
+            entry.collection_file().display()
+        );
+        result.failed = true;
     }
 }
 

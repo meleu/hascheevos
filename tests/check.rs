@@ -1421,3 +1421,320 @@ fn console_applies_to_the_listed_files_and_not_to_system_directories() {
         format!("{}\n{}\n", file.display(), scanned.display())
     );
 }
+
+/// The sandbox's `~/.emulationstation/collections`.
+fn collections_dir(sandbox: &Sandbox) -> PathBuf {
+    sandbox.home().join(".emulationstation/collections")
+}
+
+/// The lines of a collection file, or nothing if it doesn't exist.
+fn collection_lines(sandbox: &Sandbox, name: &str) -> Vec<String> {
+    std::fs::read_to_string(collections_dir(sandbox).join(name))
+        .unwrap_or_default()
+        .lines()
+        .map(str::to_owned)
+        .collect()
+}
+
+#[test]
+fn collection_writes_a_file_per_system_of_the_roms_with_achievements() {
+    let sandbox = sandbox_answering_by_console(&[(NES, SMALL_FILE), (SNES, SNES_SFC)]);
+    let nes = system_dir(&sandbox, "nes");
+    let nes_rom = small_rom(&nes, "game.nes");
+    std::fs::create_dir(nes.join("sub")).unwrap();
+    let nested = small_rom(&nes.join("sub"), "nested.nes");
+    let snes_rom = system_dir(&sandbox, "snes").join("game.sfc");
+    std::fs::copy(SFC_ROM, &snes_rom).unwrap();
+    // Not the hash the server lists for SNES.
+    small_rom(&system_dir(&sandbox, "snes"), "other.sfc");
+
+    let output = sandbox.run(&["check", "--collection", "--system", "nes,snes"]);
+
+    assert_eq!(exit_code(&output), 0, "stderr: {}", stderr(&output));
+    assert_eq!(
+        collection_lines(&sandbox, "custom-achievements nes.cfg"),
+        [text(&nes_rom), text(&nested)]
+    );
+    assert_eq!(
+        collection_lines(&sandbox, "custom-achievements snes.cfg"),
+        [text(&snes_rom)]
+    );
+}
+
+#[test]
+fn single_collection_writes_one_file_covering_all_systems() {
+    let sandbox = sandbox_answering_by_console(&[(NES, SMALL_FILE), (SNES, SNES_SFC)]);
+    let nes_rom = small_rom(&system_dir(&sandbox, "nes"), "game.nes");
+    let snes_rom = system_dir(&sandbox, "snes").join("game.sfc");
+    std::fs::copy(SFC_ROM, &snes_rom).unwrap();
+
+    let output = sandbox.run(&["check", "--single-collection", "--system", "nes,snes"]);
+
+    assert_eq!(exit_code(&output), 0, "stderr: {}", stderr(&output));
+    assert_eq!(
+        collection_lines(&sandbox, "custom-achievements.cfg"),
+        [text(&nes_rom), text(&snes_rom)]
+    );
+    assert!(collection_lines(&sandbox, "custom-achievements nes.cfg").is_empty());
+}
+
+#[test]
+fn collection_and_single_collection_cannot_be_used_together() {
+    let sandbox = sandbox_listing(NES, has_cheevos(SMALL_FILE));
+    let rom = small_rom(&system_dir(&sandbox, "nes"), "game.nes");
+
+    let output = sandbox.run(&["check", "--collection", "--single-collection", text(&rom)]);
+
+    assert_eq!(exit_code(&output), 2, "stderr: {}", stderr(&output));
+    assert!(
+        stderr(&output).contains("cannot be used with"),
+        "{}",
+        stderr(&output)
+    );
+    assert!(sandbox.server.requests().is_empty());
+}
+
+#[test]
+fn a_collection_keeps_existing_entries_sorted_and_repeat_runs_do_not_grow_it() {
+    let sandbox = sandbox_listing(NES, has_cheevos(SMALL_FILE));
+    let rom = small_rom(&system_dir(&sandbox, "nes"), "game.nes");
+    let collections = collections_dir(&sandbox);
+    std::fs::create_dir_all(&collections).unwrap();
+    std::fs::write(
+        collections.join("custom-achievements nes.cfg"),
+        "/zzz/last.nes\n/aaa/first.nes\n/aaa/first.nes\n",
+    )
+    .unwrap();
+
+    for _ in 0..2 {
+        let output = sandbox.run(&["check", "--collection", "--system", "nes"]);
+        assert_eq!(exit_code(&output), 0, "stderr: {}", stderr(&output));
+    }
+
+    assert_eq!(
+        collection_lines(&sandbox, "custom-achievements nes.cfg"),
+        ["/aaa/first.nes", text(&rom), "/zzz/last.nes"]
+    );
+}
+
+#[test]
+fn a_rom_that_no_longer_has_achievements_stays_in_its_collection() {
+    let empty = games_page(&[]);
+    let sandbox = sandbox_answering(vec![has_cheevos(SMALL_FILE)], move || {
+        Reply::ok(empty.clone())
+    });
+    let rom = small_rom(&system_dir(&sandbox, "nes"), "game.nes");
+    sandbox.run(&["check", "--collection", "--system", "nes"]);
+
+    let output = sandbox.run(&["check", "--refresh", "--collection", "--system", "nes"]);
+
+    assert_eq!(exit_code(&output), 1, "stderr: {}", stderr(&output));
+    assert_eq!(
+        collection_lines(&sandbox, "custom-achievements nes.cfg"),
+        [text(&rom)]
+    );
+}
+
+#[test]
+fn a_collection_leaves_out_excluded_hashes_and_roms_without_achievements() {
+    let sandbox = sandbox_marking(NES, has_cheevos(SMALL_FILE), "incompatible");
+    small_rom(&system_dir(&sandbox, "nes"), "game.nes");
+
+    let output = sandbox.run(&["check", "--collection", "--system", "nes"]);
+
+    assert_eq!(exit_code(&output), 1, "stderr: {}", stderr(&output));
+    assert!(collection_lines(&sandbox, "custom-achievements nes.cfg").is_empty());
+}
+
+#[test]
+fn a_collection_for_a_rom_outside_the_roms_directory_is_an_error_and_the_run_continues() {
+    for option in ["--collection", "--single-collection"] {
+        let sandbox = sandbox_listing(NES, has_cheevos(SMALL_FILE));
+        let dir = tempfile::tempdir().unwrap();
+        let outside = small_rom(dir.path(), "outside.nes");
+        let inside = small_rom(&system_dir(&sandbox, "nes"), "inside.nes");
+
+        let output = sandbox.run(&["check", option, text(&outside), text(&inside)]);
+
+        assert_eq!(exit_code(&output), 2, "stderr: {}", stderr(&output));
+        assert_eq!(
+            stdout(&output),
+            format!("{}\n{}\n", outside.display(), inside.display())
+        );
+        let stderr = stderr(&output);
+        assert!(
+            stderr.contains(&format!("error: {}: ", outside.display())),
+            "{stderr}"
+        );
+        let file = if option == "--collection" {
+            "custom-achievements nes.cfg"
+        } else {
+            "custom-achievements.cfg"
+        };
+        assert_eq!(collection_lines(&sandbox, file), [text(&inside)]);
+    }
+}
+
+#[test]
+fn a_collection_for_a_rom_outside_the_roms_directory_fails_without_achievements_too() {
+    let sandbox = sandbox_listing(NES, has_cheevos(SMALL_FILE));
+    let output = sandbox.run(&["check", "--collection", "--console", "snes", SFC_ROM]);
+
+    assert_eq!(exit_code(&output), 2, "stderr: {}", stderr(&output));
+}
+
+#[test]
+fn a_path_leaving_the_roms_directory_through_dots_is_outside_it() {
+    let sandbox = sandbox_listing(NES, has_cheevos(SMALL_FILE));
+    let nes = system_dir(&sandbox, "nes");
+    small_rom(&sandbox.home(), "outside.nes");
+    let dotted = nes.join("../../../outside.nes");
+
+    let output = sandbox.run(&["check", "--collection", "--console", "nes", text(&dotted)]);
+
+    assert_eq!(exit_code(&output), 2, "stderr: {}", stderr(&output));
+    assert!(files_under(&collections_dir(&sandbox)).is_empty());
+}
+
+#[test]
+fn a_rom_directly_in_the_roms_directory_cannot_go_in_a_collection() {
+    let sandbox = sandbox_listing(NES, has_cheevos(SMALL_FILE));
+    system_dir(&sandbox, "nes");
+    let rom = small_rom(&sandbox.home().join("RetroPie/roms"), "loose.nes");
+
+    let output = sandbox.run(&["check", "--single-collection", text(&rom)]);
+
+    assert_eq!(exit_code(&output), 2, "stderr: {}", stderr(&output));
+    assert!(files_under(&collections_dir(&sandbox)).is_empty());
+}
+
+#[test]
+fn a_listed_file_goes_in_a_collection_by_its_full_path() {
+    let sandbox = sandbox_listing(NES, has_cheevos(SMALL_FILE));
+    let nes = system_dir(&sandbox, "nes");
+    let rom = small_rom(&nes, "game.nes");
+
+    let output = sandbox
+        .command(&[
+            "check",
+            "--collection",
+            "--console",
+            "nes",
+            "../nes/./game.nes",
+        ])
+        .current_dir(&nes)
+        .output()
+        .unwrap();
+
+    assert_eq!(exit_code(&output), 0, "stderr: {}", stderr(&output));
+    assert_eq!(
+        collection_lines(&sandbox, "custom-achievements nes.cfg"),
+        [text(&rom)]
+    );
+}
+
+#[test]
+fn an_archive_goes_in_a_collection_as_it_is() {
+    let sandbox = sandbox_listing(SNES, has_cheevos(CHRISTMAS_CRAZE));
+    let rom = system_dir(&sandbox, "snes").join("game.zip");
+    std::fs::copy(SNES_ZIP, &rom).unwrap();
+
+    let output = sandbox.run(&["check", "--collection", "--system", "snes"]);
+
+    assert_eq!(exit_code(&output), 0, "stderr: {}", stderr(&output));
+    assert_eq!(
+        collection_lines(&sandbox, "custom-achievements snes.cfg"),
+        [text(&rom)]
+    );
+}
+
+#[test]
+fn collections_work_together_with_tab_output() {
+    let sandbox = sandbox_listing(NES, has_cheevos(SMALL_FILE));
+    let rom = small_rom(&system_dir(&sandbox, "nes"), "game.nes");
+
+    let output = sandbox.run(&["check", "--tab-output", "--collection", "--system", "nes"]);
+
+    assert_eq!(exit_code(&output), 0, "stderr: {}", stderr(&output));
+    assert_eq!(stdout(&output), format!("{}\t1\tx\n", rom.display()));
+    assert_eq!(
+        collection_lines(&sandbox, "custom-achievements nes.cfg"),
+        [text(&rom)]
+    );
+}
+
+#[test]
+fn a_collection_that_cannot_be_written_is_reported_and_the_run_continues_to_exit_2() {
+    let sandbox = sandbox_listing(NES, has_cheevos(SMALL_FILE));
+    let rom = small_rom(&system_dir(&sandbox, "nes"), "game.nes");
+    // A file where the collections directory has to go.
+    std::fs::create_dir(sandbox.home().join(".emulationstation")).unwrap();
+    std::fs::write(collections_dir(&sandbox), "in the way").unwrap();
+
+    let output = sandbox.run(&["check", "--collection", "--system", "nes"]);
+
+    assert_eq!(exit_code(&output), 2, "stderr: {}", stderr(&output));
+    assert_eq!(stdout(&output), format!("{}\n", rom.display()));
+    assert!(
+        stderr(&output).contains("can't add to"),
+        "{}",
+        stderr(&output)
+    );
+}
+
+#[test]
+fn a_collection_that_cannot_be_read_is_left_alone() {
+    let sandbox = sandbox_listing(NES, has_cheevos(SMALL_FILE));
+    small_rom(&system_dir(&sandbox, "nes"), "game.nes");
+    let file = collections_dir(&sandbox).join("custom-achievements nes.cfg");
+    // A directory can't be read as a file, which stands in for a read error.
+    std::fs::create_dir_all(&file).unwrap();
+
+    let output = sandbox.run(&["check", "--collection", "--system", "nes"]);
+
+    assert_eq!(exit_code(&output), 2, "stderr: {}", stderr(&output));
+    assert!(file.is_dir());
+    assert!(
+        stderr(&output).contains("can't add to"),
+        "{}",
+        stderr(&output)
+    );
+}
+
+#[test]
+fn a_collection_keeps_an_existing_entry_that_is_not_utf8() {
+    let sandbox = sandbox_listing(NES, has_cheevos(SMALL_FILE));
+    let rom = small_rom(&system_dir(&sandbox, "nes"), "game.nes");
+    let collections = collections_dir(&sandbox);
+    std::fs::create_dir_all(&collections).unwrap();
+    let file = collections.join("custom-achievements nes.cfg");
+    std::fs::write(&file, b"/\xff.nes\n").unwrap();
+
+    let output = sandbox.run(&["check", "--collection", "--system", "nes"]);
+
+    assert_eq!(exit_code(&output), 0, "stderr: {}", stderr(&output));
+    let expected = [text(&rom).as_bytes(), b"\n/\xff.nes\n"].concat();
+    assert_eq!(std::fs::read(&file).unwrap(), expected);
+}
+
+#[test]
+fn a_relative_path_goes_in_a_collection_when_the_retropie_directory_is_a_link() {
+    let sandbox = sandbox_listing(NES, has_cheevos(SMALL_FILE));
+    let elsewhere = tempfile::tempdir().unwrap();
+    std::fs::create_dir(sandbox.home()).unwrap();
+    std::os::unix::fs::symlink(elsewhere.path(), sandbox.home().join("RetroPie")).unwrap();
+    let nes = system_dir(&sandbox, "nes");
+    let rom = small_rom(&nes, "game.nes");
+
+    let output = sandbox
+        .command(&["check", "--collection", "--console", "nes", "game.nes"])
+        .current_dir(&nes)
+        .output()
+        .unwrap();
+
+    assert_eq!(exit_code(&output), 0, "stderr: {}", stderr(&output));
+    assert_eq!(
+        collection_lines(&sandbox, "custom-achievements nes.cfg"),
+        [text(&rom)]
+    );
+}
