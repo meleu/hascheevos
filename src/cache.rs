@@ -6,8 +6,9 @@ use bkt::{Bkt, CacheStatus, CommandDesc, Invocation};
 use serde_json::{Map, Value};
 use std::collections::HashSet;
 use std::fmt::Display;
+use std::fs;
 use std::io::{self, Write};
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::time::{Duration, SystemTime};
 
 /// The only TTL ever given to `bkt`. It deletes an entry when a lookup finds it
@@ -16,6 +17,10 @@ const TTL: Duration = Duration::from_secs(100 * 365 * 24 * 60 * 60);
 
 /// How old a list must be before a "no achievements" result downloads it again.
 const UPDATE_AFTER: Duration = Duration::from_secs(24 * 60 * 60);
+
+/// A file no key points to may be another run's list, written just before it
+/// links it to its key. Writing and linking are far quicker than this.
+const PRUNE_AFTER: Duration = Duration::from_secs(60);
 
 /// A console's list, and when it was downloaded.
 pub struct ConsoleList {
@@ -73,6 +78,10 @@ impl Lists {
             .map_err(cache_failure)?;
         list.games = read_list(&invocation, list.system_id)?;
         list.downloaded = SystemTime::now();
+        // Only housekeeping, so a failure shouldn't fail the update.
+        if let Ok(root) = cache_dir() {
+            let _ = prune_replaced_lists(&root);
+        }
         Ok(())
     }
 
@@ -129,6 +138,29 @@ fn read_list(invocation: &Invocation, system_id: u32) -> Result<Map<String, Valu
     serde_json::from_slice(invocation.stdout()).map_err(|error| {
         FetchError::Failed(format!("console {system_id}: invalid cached list: {error}"))
     })
+}
+
+/// Deletes the lists that updates have replaced. `bkt` only points a key at the
+/// new list, and with our TTL its own cleanup would keep the old one for 100
+/// years. It lays out each cache as `keys/<symlink>` and `data/<ttl>/<file>`.
+fn prune_replaced_lists(root: &Path) -> io::Result<()> {
+    for cache in fs::read_dir(root)? {
+        let cache = cache?.path();
+        let mut linked = HashSet::new();
+        for key in fs::read_dir(cache.join("keys"))? {
+            linked.insert(fs::canonicalize(key?.path())?);
+        }
+        for ttl_dir in fs::read_dir(cache.join("data"))? {
+            for file in fs::read_dir(ttl_dir?.path())? {
+                let file = fs::canonicalize(file?.path())?;
+                let age = fs::metadata(&file)?.modified()?.elapsed();
+                if !linked.contains(&file) && age.is_ok_and(|age| age >= PRUNE_AFTER) {
+                    fs::remove_file(file)?;
+                }
+            }
+        }
+    }
+    Ok(())
 }
 
 /// Shows a download's progress on stderr as it happens. `bkt` also replays a

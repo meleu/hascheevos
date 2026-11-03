@@ -970,3 +970,48 @@ fn a_failed_refresh_with_nothing_cached_is_tried_once_and_is_an_error() {
     );
     assert_eq!(sandbox.server.requests().len(), 1);
 }
+
+#[test]
+fn an_update_replaces_the_old_list_on_disk() {
+    let sandbox = sandbox_changing_to(|| Reply::ok(newly_published_games()));
+    cache_list_aged(&sandbox, DAY);
+    let files = files_under(&sandbox.xdg_cache()).len();
+
+    let output = sandbox.run(&["md5", "--console", "nes", NOT_LISTED]);
+
+    assert_eq!(exit_code(&output), 0, "stderr: {}", stderr(&output));
+    assert_eq!(files_under(&sandbox.xdg_cache()).len(), files);
+
+    // The new list is the one kept.
+    let output = sandbox.run(&["md5", "--console", "nes", NOT_LISTED]);
+    assert_eq!(exit_code(&output), 0, "stderr: {}", stderr(&output));
+    assert_eq!(sandbox.server.requests().len(), 2);
+}
+
+#[test]
+fn an_update_leaves_other_consoles_lists_alone() {
+    let sandbox = two_game_sandbox();
+    sandbox.run(&["md5", "--console", "snes", WITH_ACHIEVEMENTS]);
+    cache_list_aged(&sandbox, DAY);
+    assert_eq!(sandbox.server.requests().len(), 2);
+
+    sandbox.run(&["md5", "--console", "nes", NOT_LISTED]);
+    assert_eq!(sandbox.server.requests().len(), 3);
+
+    let output = sandbox.run(&["md5", "--console", "snes", WITH_ACHIEVEMENTS]);
+    assert_eq!(exit_code(&output), 0, "stderr: {}", stderr(&output));
+    assert_eq!(sandbox.server.requests().len(), 3);
+}
+
+/// Another run may have written such a file and not yet linked it to its key,
+/// which is indistinguishable from a replaced list.
+#[test]
+fn an_update_leaves_a_list_written_moments_ago() {
+    let sandbox = two_game_sandbox();
+    cache_list_aged(&sandbox, Duration::ZERO);
+    let files = files_under(&sandbox.xdg_cache()).len();
+
+    sandbox.run(&["md5", "--console", "nes", "--refresh", WITH_ACHIEVEMENTS]);
+
+    assert_eq!(files_under(&sandbox.xdg_cache()).len(), files + 1);
+}
