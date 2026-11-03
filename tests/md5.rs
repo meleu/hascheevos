@@ -15,6 +15,7 @@ const ON_PAGE_2: &str = "dddddddddddddddddddddddddddddddd";
 const ON_PAGE_3: &str = "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee";
 const FETCH_SYSTEM: [&str; 4] = ["__fetch-system", "--format", "1", "7"];
 const EXIT_REJECTED: i32 = 3;
+const DAY: Duration = Duration::from_secs(24 * 60 * 60);
 
 struct Game {
     id: u32,
@@ -62,24 +63,70 @@ fn page_of(games: &[Game], current_page: u32, last_page: u32) -> String {
     .to_string()
 }
 
+fn two_games() -> String {
+    games_page(&[
+        Game {
+            id: 1,
+            title: "Has Cheevos",
+            achievements: 42,
+            hash: WITH_ACHIEVEMENTS,
+        },
+        Game {
+            id: 2,
+            title: "No Cheevos",
+            achievements: 0,
+            hash: NONE_PUBLISHED,
+        },
+    ])
+}
+
+/// [`two_games`] after achievements were published for the second game, and a
+/// third game was added with some of its own.
+fn newly_published_games() -> String {
+    games_page(&[
+        Game {
+            id: 1,
+            title: "Has Cheevos",
+            achievements: 42,
+            hash: WITH_ACHIEVEMENTS,
+        },
+        Game {
+            id: 2,
+            title: "No Cheevos",
+            achievements: 7,
+            hash: NONE_PUBLISHED,
+        },
+        Game {
+            id: 3,
+            title: "Brand New",
+            achievements: 9,
+            hash: NOT_LISTED,
+        },
+    ])
+}
+
 /// A server that lists the same two games for every console.
 fn two_game_sandbox() -> Sandbox {
-    Sandbox::new(FakeServer::start(|_| {
-        Reply::ok(games_page(&[
-            Game {
-                id: 1,
-                title: "Has Cheevos",
-                achievements: 42,
-                hash: WITH_ACHIEVEMENTS,
-            },
-            Game {
-                id: 2,
-                title: "No Cheevos",
-                achievements: 0,
-                hash: NONE_PUBLISHED,
-            },
-        ]))
+    Sandbox::new(FakeServer::start(|_| Reply::ok(two_games())))
+}
+
+/// A server that lists [`two_games`] once and then answers with `later`.
+fn sandbox_changing_to(later: impl Fn() -> Reply + Send + 'static) -> Sandbox {
+    let first = AtomicBool::new(true);
+    Sandbox::new(FakeServer::start(move |_| {
+        if first.swap(false, Ordering::Relaxed) {
+            return Reply::ok(two_games());
+        }
+        later()
     }))
+}
+
+/// A run that caches [`two_games`] for console 7, which is then made to look
+/// `age` old.
+fn cache_list_aged(sandbox: &Sandbox, age: Duration) {
+    let output = sandbox.run(&["md5", "--console", "nes", WITH_ACHIEVEMENTS]);
+    assert_eq!(exit_code(&output), 0, "stderr: {}", stderr(&output));
+    age_files(&sandbox.xdg_cache(), age);
 }
 
 /// A server capping pages at one game, with three games in the list.
@@ -683,4 +730,243 @@ fn a_reader_closing_the_pipe_doesnt_change_the_exit_code() {
         .expect("run hascheevos");
 
     assert_eq!(exit_code(&output), 0, "stderr: {}", stderr(&output));
+}
+
+#[test]
+fn no_achievements_in_a_day_old_list_downloads_it_and_finds_what_was_newly_published() {
+    for hash in [NOT_LISTED, NONE_PUBLISHED] {
+        let sandbox = sandbox_changing_to(|| Reply::ok(newly_published_games()));
+        cache_list_aged(&sandbox, DAY);
+
+        let output = sandbox.run(&["md5", "--console", "nes", hash]);
+
+        assert_eq!(exit_code(&output), 0, "stderr: {}", stderr(&output));
+        assert_eq!(stdout(&output).trim(), hash);
+        assert_eq!(sandbox.server.requests().len(), 2, "{hash}");
+    }
+}
+
+#[test]
+fn a_game_with_achievements_never_downloads_however_old_the_list_is() {
+    let sandbox = two_game_sandbox();
+    cache_list_aged(&sandbox, 10 * 365 * DAY);
+
+    let output = sandbox.run(&["md5", "--console", "nes", WITH_ACHIEVEMENTS]);
+
+    assert_eq!(exit_code(&output), 0, "stderr: {}", stderr(&output));
+    assert_eq!(sandbox.server.requests().len(), 1);
+}
+
+#[test]
+fn no_achievements_in_a_list_under_a_day_old_makes_no_request() {
+    for hash in [NOT_LISTED, NONE_PUBLISHED] {
+        let sandbox = two_game_sandbox();
+        cache_list_aged(&sandbox, DAY - Duration::from_secs(60 * 60));
+
+        let output = sandbox.run(&["md5", "--console", "nes", hash]);
+
+        assert_eq!(exit_code(&output), 1, "stderr: {}", stderr(&output));
+        assert_eq!(sandbox.server.requests().len(), 1, "{hash}");
+    }
+}
+
+#[test]
+fn reading_a_list_over_a_day_old_leaves_it_on_disk() {
+    let sandbox = two_game_sandbox();
+    cache_list_aged(&sandbox, 2 * DAY);
+    let files = files_under(&sandbox.xdg_cache());
+
+    sandbox.run(&["md5", "--console", "nes", WITH_ACHIEVEMENTS]);
+
+    assert_eq!(files_under(&sandbox.xdg_cache()), files);
+    assert_eq!(sandbox.server.requests().len(), 1);
+}
+
+#[test]
+fn a_download_resets_the_age_even_when_the_list_is_unchanged() {
+    let sandbox = two_game_sandbox();
+    cache_list_aged(&sandbox, 2 * DAY);
+
+    for _ in 0..2 {
+        let output = sandbox.run(&["md5", "--console", "nes", NOT_LISTED]);
+        assert_eq!(exit_code(&output), 1, "stderr: {}", stderr(&output));
+    }
+
+    assert_eq!(sandbox.server.requests().len(), 2);
+}
+
+#[test]
+fn an_update_shows_progress_and_a_list_still_lacking_the_hash_exits_1() {
+    let sandbox = two_game_sandbox();
+    cache_list_aged(&sandbox, DAY);
+
+    let output = sandbox.run(&["md5", "--console", "nes", NOT_LISTED]);
+
+    assert_eq!(exit_code(&output), 1, "stderr: {}", stderr(&output));
+    let stderr = stderr(&output);
+    assert_eq!(stderr.matches("console 7: page 1/1").count(), 1, "{stderr}");
+    assert!(!stderr.contains("warning"), "{stderr}");
+}
+
+#[test]
+fn a_failed_update_warns_keeps_the_cached_answer_and_exits_2() {
+    let sandbox = sandbox_changing_to(|| Reply::failure(500));
+    cache_list_aged(&sandbox, DAY);
+
+    let output = sandbox.run(&["md5", "--console", "nes", NONE_PUBLISHED]);
+
+    assert_eq!(exit_code(&output), 2, "stderr: {}", stderr(&output));
+    assert_eq!(stdout(&output), "");
+    let stderr = stderr(&output);
+    assert!(stderr.starts_with("warning: console 7: "), "{stderr}");
+    assert_eq!(stderr.matches("500").count(), 1, "{stderr}");
+    assert!(stderr.contains("No Cheevos: 0 achievements"), "{stderr}");
+    // Not retried in the same run.
+    assert_eq!(sandbox.server.requests().len(), 2);
+}
+
+#[test]
+fn a_failed_update_keeps_the_old_list_and_its_age() {
+    let sandbox = sandbox_changing_to(|| Reply::failure(500));
+    cache_list_aged(&sandbox, DAY);
+
+    sandbox.run(&["md5", "--console", "nes", NOT_LISTED]);
+
+    let kept = sandbox.run(&["md5", "--console", "nes", WITH_ACHIEVEMENTS]);
+    assert_eq!(exit_code(&kept), 0, "stderr: {}", stderr(&kept));
+    assert_eq!(sandbox.server.requests().len(), 2);
+
+    // Still due, so the next "no achievements" result tries again.
+    sandbox.run(&["md5", "--console", "nes", NOT_LISTED]);
+    assert_eq!(sandbox.server.requests().len(), 3);
+}
+
+#[test]
+fn a_rejected_update_is_a_failed_update() {
+    let sandbox = sandbox_changing_to(|| Reply::failure(401));
+    cache_list_aged(&sandbox, DAY);
+
+    let output = sandbox.run(&["md5", "--console", "nes", NOT_LISTED]);
+
+    assert_eq!(exit_code(&output), 2, "stderr: {}", stderr(&output));
+    let stderr = stderr(&output);
+    assert!(stderr.starts_with("warning: "), "{stderr}");
+    assert!(stderr.contains("RA_API_KEY"), "{stderr}");
+    assert!(stderr.contains("hash not found"), "{stderr}");
+    assert_eq!(sandbox.server.requests().len(), 2);
+}
+
+#[test]
+fn an_update_due_without_a_key_says_where_to_get_one_and_exits_2() {
+    let sandbox = two_game_sandbox();
+    cache_list_aged(&sandbox, DAY);
+
+    let output = sandbox
+        .command(&["md5", "--console", "nes", NOT_LISTED])
+        .env_remove("RA_API_KEY")
+        .output()
+        .expect("run hascheevos");
+
+    assert_eq!(exit_code(&output), 2, "stderr: {}", stderr(&output));
+    let stderr = stderr(&output);
+    assert!(
+        stderr.contains("https://retroachievements.org/settings"),
+        "{stderr}"
+    );
+    assert!(stderr.contains("hash not found"), "{stderr}");
+    assert_eq!(sandbox.server.requests().len(), 1);
+}
+
+#[test]
+fn refresh_downloads_a_new_list_whatever_the_result() {
+    for hash in [WITH_ACHIEVEMENTS, NONE_PUBLISHED, NOT_LISTED] {
+        let sandbox = sandbox_changing_to(|| Reply::ok(newly_published_games()));
+        cache_list_aged(&sandbox, Duration::ZERO);
+
+        let output = sandbox.run(&["md5", "--console", "nes", "--refresh", hash]);
+
+        assert_eq!(exit_code(&output), 0, "stderr: {}", stderr(&output));
+        assert_eq!(sandbox.server.requests().len(), 2, "{hash}");
+    }
+}
+
+#[test]
+fn refresh_finds_out_that_a_game_lost_its_achievements() {
+    let sandbox = sandbox_changing_to(|| Reply::ok(games_page(&[])));
+    cache_list_aged(&sandbox, Duration::ZERO);
+
+    let output = sandbox.run(&["md5", "--console", "nes", "--refresh", WITH_ACHIEVEMENTS]);
+
+    assert_eq!(exit_code(&output), 1, "stderr: {}", stderr(&output));
+    assert_eq!(stdout(&output), "");
+}
+
+#[test]
+fn refresh_of_a_day_old_list_downloads_it_only_once() {
+    let sandbox = two_game_sandbox();
+    cache_list_aged(&sandbox, DAY);
+
+    let output = sandbox.run(&["md5", "--console", "nes", "--refresh", NOT_LISTED]);
+
+    assert_eq!(exit_code(&output), 1, "stderr: {}", stderr(&output));
+    assert_eq!(sandbox.server.requests().len(), 2);
+}
+
+#[test]
+fn refresh_with_nothing_cached_downloads_only_once() {
+    let sandbox = two_game_sandbox();
+
+    let output = sandbox.run(&["md5", "--console", "nes", "--refresh", WITH_ACHIEVEMENTS]);
+
+    assert_eq!(exit_code(&output), 0, "stderr: {}", stderr(&output));
+    assert_eq!(sandbox.server.requests().len(), 1);
+}
+
+#[test]
+fn a_failed_refresh_keeps_the_cached_answer_and_exits_2() {
+    let sandbox = sandbox_changing_to(|| Reply::failure(500));
+    cache_list_aged(&sandbox, DAY);
+
+    let output = sandbox.run(&["md5", "--console", "nes", "--refresh", WITH_ACHIEVEMENTS]);
+
+    assert_eq!(exit_code(&output), 2, "stderr: {}", stderr(&output));
+    assert_eq!(stdout(&output).trim(), WITH_ACHIEVEMENTS);
+    assert!(
+        stderr(&output).starts_with("warning: "),
+        "{}",
+        stderr(&output)
+    );
+    assert_eq!(sandbox.server.requests().len(), 2);
+}
+
+#[test]
+fn a_failed_refresh_is_not_retried_by_the_refresh_rule() {
+    let sandbox = sandbox_changing_to(|| Reply::failure(500));
+    cache_list_aged(&sandbox, DAY);
+
+    let output = sandbox.run(&["md5", "--console", "nes", "--refresh", NOT_LISTED]);
+
+    assert_eq!(exit_code(&output), 2, "stderr: {}", stderr(&output));
+    assert_eq!(
+        stderr(&output).matches("warning").count(),
+        1,
+        "{}",
+        stderr(&output)
+    );
+    assert_eq!(sandbox.server.requests().len(), 2);
+}
+
+#[test]
+fn a_failed_refresh_with_nothing_cached_is_tried_once_and_is_an_error() {
+    let sandbox = Sandbox::new(FakeServer::start(|_| Reply::failure(500)));
+
+    let output = sandbox.run(&["md5", "--console", "nes", "--refresh", WITH_ACHIEVEMENTS]);
+
+    assert_eq!(exit_code(&output), 2, "stderr: {}", stderr(&output));
+    assert!(
+        stderr(&output).starts_with("error: "),
+        "{}",
+        stderr(&output)
+    );
+    assert_eq!(sandbox.server.requests().len(), 1);
 }

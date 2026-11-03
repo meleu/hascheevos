@@ -2,35 +2,117 @@
 //! `__fetch-system` subcommand of this same binary.
 
 use crate::api::{EXIT_REJECTED, FetchError, PAYLOAD_FORMAT};
-use bkt::{Bkt, CommandDesc};
+use bkt::{Bkt, CacheStatus, CommandDesc, Invocation};
 use serde_json::{Map, Value};
+use std::collections::HashSet;
+use std::fmt::Display;
 use std::io::{self, Write};
 use std::path::PathBuf;
-use std::time::Duration;
+use std::time::{Duration, SystemTime};
 
 /// The only TTL ever given to `bkt`. It deletes an entry when a lookup finds it
 /// older than the requested TTL, so a shorter one would lose lists we keep.
 const TTL: Duration = Duration::from_secs(100 * 365 * 24 * 60 * 60);
 
-/// Returns a console's list, downloading it only if it isn't cached.
-pub fn system_list(system_id: u32) -> Result<Map<String, Value>, FetchError> {
+/// How old a list must be before a "no achievements" result downloads it again.
+const UPDATE_AFTER: Duration = Duration::from_secs(24 * 60 * 60);
+
+/// A console's list, and when it was downloaded.
+pub struct ConsoleList {
+    system_id: u32,
+    pub games: Map<String, Value>,
+    downloaded: SystemTime,
+}
+
+/// Loads and updates lists for one run, which updates each console only once.
+#[derive(Default)]
+pub struct Lists {
+    /// Consoles this run tried to download, whether or not that worked.
+    tried: HashSet<u32>,
+}
+
+impl Lists {
+    /// Returns a console's list, downloading it only if it isn't cached. With
+    /// nothing cached, each call after a failed download tries again.
+    pub fn load(&mut self, system_id: u32) -> Result<ConsoleList, FetchError> {
+        let (invocation, status) = bkt()?
+            .retrieve_streaming(
+                &command(system_id)?,
+                TTL,
+                io::sink(),
+                LiveProgress::default(),
+            )
+            .map_err(cache_failure)?;
+        let downloaded = match status {
+            CacheStatus::Hit(time) => time,
+            CacheStatus::Miss(_) => {
+                self.tried.insert(system_id);
+                SystemTime::now()
+            }
+        };
+        Ok(ConsoleList {
+            system_id,
+            games: read_list(&invocation, system_id)?,
+            downloaded,
+        })
+    }
+
+    /// Downloads a list again, unless this run already tried. On failure, both
+    /// the list and its age stay as they were.
+    pub fn update(&mut self, list: &mut ConsoleList) -> Result<(), FetchError> {
+        if !self.tried.insert(list.system_id) {
+            return Ok(());
+        }
+        let (invocation, _) = bkt()?
+            .refresh_streaming(
+                &command(list.system_id)?,
+                TTL,
+                io::sink(),
+                LiveProgress::default(),
+            )
+            .map_err(cache_failure)?;
+        list.games = read_list(&invocation, list.system_id)?;
+        list.downloaded = SystemTime::now();
+        Ok(())
+    }
+
+    /// For a "no achievements" result: as [`Lists::update`], if the list is old
+    /// enough for that result to be out of date.
+    pub fn update_if_due(&mut self, list: &mut ConsoleList) -> Result<(), FetchError> {
+        if list
+            .downloaded
+            .elapsed()
+            .is_ok_and(|age| age >= UPDATE_AFTER)
+        {
+            return self.update(list);
+        }
+        Ok(())
+    }
+}
+
+fn cache_failure(error: impl Display) -> FetchError {
+    FetchError::Failed(format!("{error:#}"))
+}
+
+fn bkt() -> Result<Bkt, FetchError> {
+    Bkt::create(cache_dir().map_err(FetchError::Failed)?).map_err(cache_failure)
+}
+
+fn command(system_id: u32) -> Result<CommandDesc, FetchError> {
     let exe = std::env::current_exe().map_err(|error| FetchError::Failed(error.to_string()))?;
     // RA_API_KEY reaches the subcommand by inheritance. `with_env` would make
     // it part of the cache key, and write it to disk.
-    let command = CommandDesc::new([
+    Ok(CommandDesc::new([
         exe.into_os_string(),
         "__fetch-system".into(),
         "--format".into(),
         PAYLOAD_FORMAT.to_string().into(),
         system_id.to_string().into(),
     ])
-    .with_discard_failures(true);
+    .with_discard_failures(true))
+}
 
-    let bkt = Bkt::create(cache_dir().map_err(FetchError::Failed)?)
-        .map_err(|error| FetchError::Failed(format!("{error:#}")))?;
-    let (invocation, _) = bkt
-        .retrieve_streaming(&command, TTL, io::sink(), LiveProgress::default())
-        .map_err(|error| FetchError::Failed(format!("{error:#}")))?;
+fn read_list(invocation: &Invocation, system_id: u32) -> Result<Map<String, Value>, FetchError> {
     let code = invocation.exit_code();
     if code != 0 {
         // On stdout, because stderr has already been shown as progress.

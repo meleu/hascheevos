@@ -5,7 +5,9 @@ mod input;
 mod rc_hash;
 
 use api::FetchError;
+use cache::ConsoleList;
 use clap::{Parser, Subcommand};
+use serde_json::Value;
 use std::io::{self, Write};
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
@@ -41,6 +43,10 @@ enum Commands {
         #[arg(long, value_name = "NAME|ID", value_parser = parse_console)]
         console: u32,
 
+        /// Download the console's list even if the cached one would do
+        #[arg(long)]
+        refresh: bool,
+
         md5: String,
     },
 
@@ -71,7 +77,11 @@ fn main() -> ExitCode {
             verbose,
             file,
         } => hash(console, verbose, &file),
-        Commands::Md5 { console, md5 } => check_md5(console, &md5),
+        Commands::Md5 {
+            console,
+            refresh,
+            md5,
+        } => check_md5(console, refresh, &md5),
         Commands::FetchSystem {
             format: _,
             system_id,
@@ -79,22 +89,53 @@ fn main() -> ExitCode {
     }
 }
 
-fn check_md5(console: u32, md5: &str) -> ExitCode {
-    let list = match cache::system_list(console) {
+fn check_md5(console: u32, refresh: bool, md5: &str) -> ExitCode {
+    let mut lists = cache::Lists::default();
+    let mut list = match lists.load(console) {
         Ok(list) => list,
         Err(error) => {
             eprintln!("error: {error}");
             return ExitCode::from(EXIT_ERROR);
         }
     };
-
     let md5 = md5.to_ascii_lowercase();
-    let Some(game) = list.get(&md5) else {
+
+    let mut update_result = if refresh {
+        lists.update(&mut list)
+    } else {
+        Ok(())
+    };
+    if update_result.is_ok() && !has_achievements(&list, &md5) {
+        update_result = lists.update_if_due(&mut list);
+    }
+    if let Err(error) = &update_result {
+        eprintln!("warning: {error}; this answer may be out of date");
+    }
+
+    let answer = report_md5(&list, &md5);
+    if update_result.is_err() {
+        return ExitCode::from(EXIT_ERROR);
+    }
+    answer
+}
+
+fn has_achievements(list: &ConsoleList, md5: &str) -> bool {
+    list.games
+        .get(md5)
+        .is_some_and(|game| achievements(game) > 0)
+}
+
+fn achievements(game: &Value) -> u64 {
+    game["achievements"].as_u64().unwrap_or(0)
+}
+
+fn report_md5(list: &ConsoleList, md5: &str) -> ExitCode {
+    let Some(game) = list.games.get(md5) else {
         eprintln!("{md5}: hash not found");
         return ExitCode::FAILURE;
     };
     let title = game["title"].as_str().unwrap_or_default();
-    let achievements = game["achievements"].as_u64().unwrap_or(0);
+    let achievements = achievements(game);
     eprintln!("{md5}: {title}: {achievements} achievements");
     if achievements == 0 {
         return ExitCode::FAILURE;
