@@ -263,6 +263,14 @@ fn zips_with_no_files_fail() {
 }
 
 #[test]
+fn zip_entries_that_escape_the_extraction_directory_fail() {
+    assert_fails(
+        &["testdata/zip/unsafe-entry-name.zip"],
+        "unsafe zip entry name: ../evil.rom",
+    );
+}
+
+#[test]
 fn help_lists_console_names_with_aliases() {
     let output = hash(&["--help"]);
     let help = stdout(&output);
