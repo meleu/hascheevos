@@ -7,6 +7,7 @@ mod rc_hash;
 use api::FetchError;
 use cache::{Entries, Entry, Source};
 use clap::{Parser, Subcommand};
+use rc_hash::{ConsoleHash, Hashes};
 use serde_json::Value;
 use std::io::{self, Write};
 use std::path::{Path, PathBuf};
@@ -60,6 +61,22 @@ enum Commands {
         ids: Vec<u32>,
     },
 
+    /// Say which ROMs have achievements
+    #[command(after_help = format!("Consoles:\n{}", console::help_list()))]
+    Check {
+        /// Console name or ID; tries each console the file extension could
+        /// belong to if omitted
+        #[arg(long, value_name = "NAME|ID", value_parser = parse_console)]
+        console: Option<u32>,
+
+        /// Download each console's list even if the cached one would do
+        #[arg(long)]
+        refresh: bool,
+
+        #[arg(required = true, value_name = "FILE")]
+        files: Vec<PathBuf>,
+    },
+
     /// Print a console's list as compact JSON, for the cache to store
     #[command(name = "__fetch-system", hide = true)]
     FetchSystem {
@@ -86,6 +103,10 @@ enum Commands {
 /// Exit status for "something failed", as distinct from "no achievements".
 const EXIT_ERROR: u8 = 2;
 
+/// Extensions rcheevos maps to one console on behalf of several others, so a
+/// ROM with no achievements may just belong to one of the others.
+const SHARED_EXTENSIONS: [&str; 4] = ["bin", "rom", "tap", "nds"];
+
 fn parse_console(value: &str) -> Result<u32, String> {
     console::parse(value)
         .ok_or_else(|| "unknown console; see `--help` for the list of names".to_owned())
@@ -104,6 +125,11 @@ fn main() -> ExitCode {
             md5,
         } => check_md5(console, refresh, &md5),
         Commands::Game { refresh, ids } => check_games(&ids, refresh),
+        Commands::Check {
+            console,
+            refresh,
+            files,
+        } => check_roms(&files, console, refresh),
         Commands::FetchSystem {
             format: _,
             system_id,
@@ -130,9 +156,13 @@ fn load_current(
         update_result = entries.update_if_due(&mut entry);
     }
     if let Err(error) = &update_result {
-        eprintln!("warning: {error}; this answer may be out of date");
+        warn_update_failed(error);
     }
     Ok((entry, update_result))
+}
+
+fn warn_update_failed(error: &FetchError) {
+    eprintln!("warning: {error}; this answer may be out of date");
 }
 
 fn check_md5(console: u32, refresh: bool, md5: &str) -> ExitCode {
@@ -177,7 +207,7 @@ fn report_md5(list: &Entry, md5: &str) -> ExitCode {
     if achievements == 0 {
         return ExitCode::FAILURE;
     }
-    match print_result(md5) {
+    match print_result(md5.as_bytes()) {
         Ok(()) => ExitCode::SUCCESS,
         Err(error) => {
             eprintln!("error: {error}");
@@ -202,7 +232,7 @@ fn check_games(ids: &[u32], refresh: bool) -> ExitCode {
                 eprintln!("{source}: {title}: {achievements} achievements");
                 if achievements > 0 {
                     any_achievements = true;
-                    if let Err(error) = print_result(&id.to_string()) {
+                    if let Err(error) = print_result(id.to_string().as_bytes()) {
                         eprintln!("error: {error}");
                         any_failed = true;
                     }
@@ -221,6 +251,177 @@ fn check_games(ids: &[u32], refresh: bool) -> ExitCode {
             None => {}
         }
     }
+    final_exit_code(any_achievements, any_failed)
+}
+
+/// What came of checking one ROM.
+#[derive(Default)]
+struct RomResult {
+    has_achievements: bool,
+    failed: bool,
+    /// Every other download would fail the same way.
+    stop_run: bool,
+}
+
+impl RomResult {
+    fn record_failed_update(&mut self, error: &FetchError) {
+        warn_update_failed(error);
+        match error {
+            FetchError::Rejected(_) => self.stop_run = true,
+            FetchError::Failed(_) => self.failed = true,
+        }
+    }
+}
+
+/// A list consulted for a ROM, and the ROM's hash for that list's console.
+struct Consulted {
+    list: Entry,
+    hash: String,
+}
+
+impl Consulted {
+    fn game(&self) -> Option<&Value> {
+        self.list.data.get(&self.hash)
+    }
+
+    fn has_achievements(&self) -> bool {
+        self.game().is_some_and(|game| achievements(game) > 0)
+    }
+}
+
+fn check_roms(files: &[PathBuf], console: Option<u32>, refresh: bool) -> ExitCode {
+    let mut entries = Entries::default();
+    let mut any_achievements = false;
+    let mut any_failed = false;
+    for file in files {
+        let result = check_rom(file, console, refresh, &mut entries);
+        any_achievements |= result.has_achievements;
+        any_failed |= result.failed;
+        if result.stop_run {
+            return ExitCode::from(EXIT_ERROR);
+        }
+    }
+    final_exit_code(any_achievements, any_failed)
+}
+
+fn check_rom(
+    file: &Path,
+    named_console: Option<u32>,
+    refresh: bool,
+    entries: &mut Entries,
+) -> RomResult {
+    let name = file.display();
+    let mut result = RomResult::default();
+    let input = match input::prepare(file, named_console) {
+        Ok(input) => input,
+        Err(error) => {
+            eprintln!("error: {name}: {error}");
+            result.failed = true;
+            return result;
+        }
+    };
+
+    // Search first: a miss on one candidate shouldn't download its list when
+    // another candidate has the game.
+    let mut hashes = Hashes::new(&input.path, named_console, false);
+    let mut any_hash = false;
+    let mut consulted = Vec::new();
+    while let Some(ConsoleHash { console, hash }) = hashes.next() {
+        any_hash = true;
+        // After a fallback, the console is only the one rcheevos borrowed.
+        if hashes.used_fallback() {
+            eprintln!("note: {name}: unrecognised file extension; skipped");
+            return result;
+        }
+        let mut list = match entries.load(Source::Console(console)) {
+            Ok(list) => list,
+            Err(FetchError::Rejected(message)) => {
+                eprintln!("error: {message}");
+                result.stop_run = true;
+                return result;
+            }
+            Err(error) => {
+                eprintln!("error: {name}: {error}");
+                result.failed = true;
+                continue;
+            }
+        };
+        if refresh && let Err(error) = entries.update(&mut list) {
+            result.record_failed_update(&error);
+        }
+        let item = Consulted { list, hash };
+        let found = item.has_achievements();
+        consulted.push(item);
+        if found || result.stop_run {
+            break;
+        }
+    }
+    if !any_hash {
+        for error in hashes.errors() {
+            eprintln!("error: {error}");
+        }
+        eprintln!("error: {name}: no hash produced");
+        result.failed = true;
+        return result;
+    }
+    if consulted.is_empty() {
+        return result;
+    }
+
+    // The refresh rule, for a search that found no achievements. `--refresh` has
+    // already updated every list consulted.
+    if !refresh && !result.stop_run && !consulted.iter().any(Consulted::has_achievements) {
+        for item in &mut consulted {
+            if let Err(error) = entries.update_if_due(&mut item.list) {
+                result.record_failed_update(&error);
+                if result.stop_run {
+                    break;
+                }
+            }
+            if item.has_achievements() {
+                break;
+            }
+        }
+    }
+
+    report_rom(file, &consulted, &mut result);
+    if !result.has_achievements
+        && named_console.is_none()
+        && SHARED_EXTENSIONS
+            .iter()
+            .any(|extension| input::has_extension(&input.path, extension))
+    {
+        eprintln!(
+            "note: {name}: this extension can belong to several consoles and only the \
+             first was checked; name another with --console"
+        );
+    }
+    result
+}
+
+fn report_rom(file: &Path, consulted: &[Consulted], result: &mut RomResult) {
+    let name = file.display();
+    let matched = consulted
+        .iter()
+        .find(|item| item.has_achievements())
+        .or_else(|| consulted.iter().find(|item| item.game().is_some()));
+    let Some(game) = matched.and_then(Consulted::game) else {
+        eprintln!("{name}: hash not found");
+        return;
+    };
+    let title = game["title"].as_str().unwrap_or_default();
+    let achievements = achievements(game);
+    eprintln!("{name}: {title}: {achievements} achievements");
+    if achievements > 0 {
+        result.has_achievements = true;
+        if let Err(error) = print_result(file.as_os_str().as_encoded_bytes()) {
+            eprintln!("error: {error}");
+            result.failed = true;
+        }
+    }
+}
+
+fn final_exit_code(any_achievements: bool, any_failed: bool) -> ExitCode {
     if any_failed {
         ExitCode::from(EXIT_ERROR)
     } else if any_achievements {
@@ -230,8 +431,12 @@ fn check_games(ids: &[u32], refresh: bool) -> ExitCode {
     }
 }
 
-fn print_result(answer: &str) -> io::Result<()> {
-    match writeln!(io::stdout(), "{answer}") {
+fn print_result(answer: &[u8]) -> io::Result<()> {
+    let mut stdout = io::stdout();
+    match stdout
+        .write_all(answer)
+        .and_then(|()| stdout.write_all(b"\n"))
+    {
         // Whoever was reading closed the pipe, which doesn't change the answer.
         Err(error) if error.kind() == io::ErrorKind::BrokenPipe => Ok(()),
         written => written,

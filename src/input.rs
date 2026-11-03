@@ -55,7 +55,7 @@ pub fn prepare(file: &Path, console: Option<u32>) -> Result<Input, String> {
 }
 
 // Matches how rcheevos finds an extension: a file named `.zip` has one.
-fn has_extension(path: &Path, extension: &str) -> bool {
+pub fn has_extension(path: &Path, extension: &str) -> bool {
     let name = path.file_name().unwrap_or_default().to_string_lossy();
     name.rsplit_once('.')
         .is_some_and(|(_, ext)| ext.eq_ignore_ascii_case(extension))

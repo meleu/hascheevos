@@ -16,8 +16,6 @@ const NO_CONSOLE_MAPPING: &str = "No console mapping specified";
 
 /// A hash and a console whose list it can be looked up in.
 pub struct ConsoleHash {
-    // Nothing reads this until `check` looks hashes up per console.
-    #[allow(dead_code)]
     pub console: u32,
     pub hash: String,
 }
@@ -47,10 +45,14 @@ impl Report {
 
     /// Whether rcheevos fell back to a whole-file hash.
     pub fn used_fallback(&self) -> bool {
-        self.errors
-            .iter()
-            .any(|error| error.contains(NO_CONSOLE_MAPPING))
+        mentions_fallback(&self.errors)
     }
+}
+
+fn mentions_fallback(errors: &[String]) -> bool {
+    errors
+        .iter()
+        .any(|error| error.contains(NO_CONSOLE_MAPPING))
 }
 
 struct Messages {
@@ -73,7 +75,7 @@ unsafe extern "C" fn on_verbose(message: *const c_char, _: *const rc_hash_iterat
 
 unsafe extern "C" fn on_error(message: *const c_char, iterator: *const rc_hash_iterator) {
     let text = unsafe { message_text(message) };
-    // SAFETY: `hash_file` points userdata at a `Messages` that outlives the iterator.
+    // SAFETY: `Hashes::next` points userdata at a `Messages` that outlives this call.
     let messages = unsafe { &mut *((*iterator).userdata as *mut Messages) };
     if messages.verbose {
         let _ = writeln!(std::io::stderr(), "{text}");
@@ -81,62 +83,133 @@ unsafe extern "C" fn on_error(message: *const c_char, iterator: *const rc_hash_i
     messages.errors.push(text);
 }
 
-/// Hashes `path` as `console`, or as every candidate console for its extension.
-pub fn hash_file(path: &Path, console: Option<u32>, verbose: bool) -> Report {
-    let c_path = CString::new(path.as_os_str().as_encoded_bytes()).expect("paths have no NUL");
-    let mut messages = Messages {
-        verbose,
-        errors: Vec::new(),
-    };
-    let mut hashes = Vec::new();
-    let mut hash = [0 as c_char; 33];
+/// Which hash comes next.
+enum Candidates {
+    Named(u32),
+    FromExtension,
+    Finished,
+}
 
-    // SAFETY: rc_hash_initialize_iterator clears the iterator before anything
-    // reads it, and `messages` and `c_path` outlive every use of the iterator.
-    unsafe {
-        let mut uninit = MaybeUninit::<rc_hash_iterator>::uninit();
-        rc_hash_initialize_iterator(uninit.as_mut_ptr(), c_path.as_ptr(), std::ptr::null(), 0);
-        let iterator = uninit.assume_init_mut();
+/// The hashes of `path`, calculated one at a time as they're asked for.
+pub struct Hashes {
+    iterator: rc_hash_iterator,
+    messages: Messages,
+    candidates: Candidates,
+    /// A Sega CD hash still to be returned for Saturn. rcheevos only lists Sega
+    /// CD as a candidate, and uses it for Saturn discs too.
+    saturn_hash: Option<String>,
+}
 
-        iterator.userdata = (&raw mut messages).cast::<c_void>();
-        iterator.callbacks.error_message = Some(on_error);
-        if verbose {
-            iterator.callbacks.verbose_message = Some(on_verbose);
-        }
-        rc_hash_get_default_cdreader(&mut iterator.callbacks.cdreader);
+impl Hashes {
+    /// Prepares to hash `path` as `console`, or as every candidate console for
+    /// its extension.
+    pub fn new(path: &Path, console: Option<u32>, verbose: bool) -> Self {
+        let c_path = CString::new(path.as_os_str().as_encoded_bytes()).expect("paths have no NUL");
 
-        let mut record = |console: u32, hash: &[c_char; 33]| {
-            let hash = CStr::from_ptr(hash.as_ptr()).to_string_lossy().into_owned();
-            hashes.push(ConsoleHash { console, hash });
+        // SAFETY: rc_hash_initialize_iterator clears the iterator before
+        // anything reads it, and keeps its own copy of the path.
+        let iterator = unsafe {
+            let mut uninit = MaybeUninit::<rc_hash_iterator>::uninit();
+            rc_hash_initialize_iterator(uninit.as_mut_ptr(), c_path.as_ptr(), std::ptr::null(), 0);
+            let iterator = uninit.assume_init_mut();
+
+            iterator.callbacks.error_message = Some(on_error);
+            if verbose {
+                iterator.callbacks.verbose_message = Some(on_verbose);
+            }
+            rc_hash_get_default_cdreader(&mut iterator.callbacks.cdreader);
+            uninit.assume_init()
         };
-        match console {
-            Some(id) => {
-                if rc_hash_generate(hash.as_mut_ptr(), id, iterator) != 0 {
-                    record(id, &hash);
-                }
-            }
-            None => {
-                while rc_hash_iterate(hash.as_mut_ptr(), iterator) != 0 {
-                    // rcheevos moves `index` past a console before hashing
-                    // for it, and past any that fail, so a hash always
-                    // belongs to the entry just before `index`.
-                    let console = u32::from(iterator.consoles[iterator.index as usize - 1]);
-                    record(console, &hash);
-                    // rcheevos only lists Sega CD as a candidate, and uses it
-                    // for Saturn discs too.
-                    if console == RC_CONSOLE_SEGA_CD {
-                        record(RC_CONSOLE_SATURN, &hash);
-                    }
-                }
-            }
-        }
 
-        rc_hash_destroy_iterator(iterator);
+        Self {
+            iterator,
+            messages: Messages {
+                verbose,
+                errors: Vec::new(),
+            },
+            candidates: console.map_or(Candidates::FromExtension, Candidates::Named),
+            saturn_hash: None,
+        }
     }
 
+    /// Errors reported by rcheevos so far, including those of candidate
+    /// consoles that didn't lead to a hash.
+    pub fn errors(&self) -> &[String] {
+        &self.messages.errors
+    }
+
+    /// Whether rcheevos fell back to a whole-file hash, which it decides before
+    /// producing the first hash.
+    pub fn used_fallback(&self) -> bool {
+        mentions_fallback(&self.messages.errors)
+    }
+}
+
+impl Iterator for Hashes {
+    type Item = ConsoleHash;
+
+    fn next(&mut self) -> Option<ConsoleHash> {
+        if let Some(hash) = self.saturn_hash.take() {
+            return Some(ConsoleHash {
+                console: RC_CONSOLE_SATURN,
+                hash,
+            });
+        }
+
+        let mut hash = [0 as c_char; 33];
+        // Set here because `self` may have moved since the last call.
+        self.iterator.userdata = (&raw mut self.messages).cast::<c_void>();
+        let iterator = &raw mut self.iterator;
+
+        // SAFETY: `iterator` was initialized in `new`, and `userdata` points at
+        // a `Messages` that outlives these calls, which are the only ones that
+        // can reach the callbacks. rcheevos NUL-terminates `hash`.
+        let console = unsafe {
+            match self.candidates {
+                Candidates::Named(id) => {
+                    self.candidates = Candidates::Finished;
+                    if rc_hash_generate(hash.as_mut_ptr(), id, iterator) == 0 {
+                        return None;
+                    }
+                    id
+                }
+                Candidates::FromExtension => {
+                    if rc_hash_iterate(hash.as_mut_ptr(), iterator) == 0 {
+                        return None;
+                    }
+                    // rcheevos moves `index` past a console before hashing for
+                    // it, and past any that fail, so a hash always belongs to
+                    // the entry just before `index`.
+                    u32::from(self.iterator.consoles[self.iterator.index as usize - 1])
+                }
+                Candidates::Finished => return None,
+            }
+        };
+        // SAFETY: as above.
+        let hash = unsafe { CStr::from_ptr(hash.as_ptr()) }
+            .to_string_lossy()
+            .into_owned();
+
+        if console == RC_CONSOLE_SEGA_CD && matches!(self.candidates, Candidates::FromExtension) {
+            self.saturn_hash = Some(hash.clone());
+        }
+        Some(ConsoleHash { console, hash })
+    }
+}
+
+impl Drop for Hashes {
+    fn drop(&mut self) {
+        // SAFETY: `iterator` was initialized in `new` and is never used again.
+        unsafe { rc_hash_destroy_iterator(&mut self.iterator) };
+    }
+}
+
+/// Hashes `path` as `console`, or as every candidate console for its extension.
+pub fn hash_file(path: &Path, console: Option<u32>, verbose: bool) -> Report {
+    let mut hashes = Hashes::new(path, console, verbose);
     Report {
-        hashes,
-        errors: messages.errors,
+        hashes: hashes.by_ref().collect(),
+        errors: std::mem::take(&mut hashes.messages.errors),
     }
 }
 
@@ -168,6 +241,26 @@ mod tests {
         let path = dir.path().join(name);
         std::fs::write(&path, "hascheevos").unwrap();
         hash_file(&path, None, false)
+    }
+
+    #[test]
+    fn candidates_are_only_hashed_when_asked_for() {
+        let mut hashes = Hashes::new(Path::new("testdata/disc/both.cue"), None, false);
+
+        let first = hashes.next().unwrap();
+        assert_eq!(
+            (first.console, first.hash.as_str()),
+            (RC_CONSOLE_PLAYSTATION, PSX)
+        );
+        // The candidates between PlayStation and Sega CD fail, once they're tried.
+        assert!(hashes.errors().is_empty());
+
+        let second = hashes.next().unwrap();
+        assert_eq!(
+            (second.console, second.hash.as_str()),
+            (RC_CONSOLE_SEGA_CD, SEGA_CD)
+        );
+        assert!(!hashes.errors().is_empty());
     }
 
     #[test]

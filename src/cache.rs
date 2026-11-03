@@ -4,7 +4,7 @@
 use crate::api::{EXIT_REJECTED, FetchError, PAYLOAD_FORMAT};
 use bkt::{Bkt, CacheStatus, CommandDesc, Invocation};
 use serde_json::Value;
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 use std::fmt::{self, Display};
 use std::fs;
 use std::io::{self, Write};
@@ -53,12 +53,29 @@ pub struct Entry {
 pub struct Entries {
     /// Sources this run tried to download, whether or not that worked.
     tried: HashSet<Source>,
+    /// Why a download failed with nothing cached, as `bkt` can only look an
+    /// entry up by running the command again on a miss.
+    failed_loads: HashMap<Source, String>,
+    /// Why an update failed, for later entries of that source to report too.
+    failed_updates: HashMap<Source, String>,
 }
 
 impl Entries {
-    /// Returns a source's entry, downloading it only if it isn't cached. With
-    /// nothing cached, each call after a failed download tries again.
+    /// Returns a source's entry, downloading it only if it isn't cached. After
+    /// a download fails, other than by rejection, each later call fails the
+    /// same way without trying again.
     pub fn load(&mut self, source: Source) -> Result<Entry, FetchError> {
+        if let Some(message) = self.failed_loads.get(&source) {
+            return Err(FetchError::Failed(message.clone()));
+        }
+        let loaded = self.retrieve(source);
+        if let Err(FetchError::Failed(message)) = &loaded {
+            self.failed_loads.insert(source, message.clone());
+        }
+        loaded
+    }
+
+    fn retrieve(&mut self, source: Source) -> Result<Entry, FetchError> {
         let (invocation, status) = bkt()?
             .retrieve_streaming(&command(source)?, TTL, io::sink(), LiveProgress::default())
             .map_err(cache_failure)?;
@@ -76,12 +93,24 @@ impl Entries {
         })
     }
 
-    /// Downloads an entry again, unless this run already tried. On failure,
-    /// both the entry and its age stay as they were.
+    /// Downloads an entry again, unless this run already tried, in which case
+    /// it returns how that try failed, if it did. On failure, both the entry
+    /// and its age stay as they were.
     pub fn update(&mut self, entry: &mut Entry) -> Result<(), FetchError> {
         if !self.tried.insert(entry.source) {
-            return Ok(());
+            return match self.failed_updates.get(&entry.source) {
+                Some(message) => Err(FetchError::Failed(message.clone())),
+                None => Ok(()),
+            };
         }
+        let updated = Self::download_again(entry);
+        if let Err(FetchError::Failed(message)) = &updated {
+            self.failed_updates.insert(entry.source, message.clone());
+        }
+        updated
+    }
+
+    fn download_again(entry: &mut Entry) -> Result<(), FetchError> {
         let (invocation, _) = bkt()?
             .refresh_streaming(
                 &command(entry.source)?,
