@@ -214,15 +214,27 @@ fn arcade_hashes_the_archive_name_without_extracting() {
 }
 
 #[test]
-fn seven_zip_is_only_accepted_for_arcade() {
+fn hashes_the_rom_inside_a_seven_zip() {
+    let archive = "testdata/snes/FakeHeaderedROM.7z";
+    assert_hashes(&["--console", "snes", archive], &[SNES_SFC]);
+    assert_hashes(&[archive], &[SNES_SFC]);
+}
+
+#[test]
+fn seven_zip_skips_directories_and_stops_at_its_first_file() {
+    assert_hashes(&["testdata/7z/first-entry-in-a-directory.7z"], &[SNES_SFC]);
+}
+
+#[test]
+fn arcade_hashes_the_seven_zip_name_without_extracting() {
     let dir = tempfile::tempdir().unwrap();
     let path = dir.path().join("Christmas-Craze.7z");
     fs::write(&path, b"not read").unwrap();
-    let path = path.to_str().unwrap();
 
-    assert_fails(&[path], "not supported yet");
-    assert_fails(&["--console", "snes", path], "not supported yet");
-    assert_hashes(&["--console", "arcade", path], &[CHRISTMAS_CRAZE_ARCADE]);
+    assert_hashes(
+        &["--console", "arcade", path.to_str().unwrap()],
+        &[CHRISTMAS_CRAZE_ARCADE],
+    );
 }
 
 #[test]
@@ -249,6 +261,59 @@ fn nested_archives_never_fall_through_to_a_filename_hash() {
     archive.finish().unwrap();
 
     assert_fails(&[path.to_str().unwrap()], "not supported yet");
+}
+
+#[test]
+fn archives_nested_in_a_seven_zip_never_fall_through_to_a_filename_hash() {
+    assert_fails(&["testdata/7z/nested-zip.7z"], "not supported yet");
+    assert_fails(&["testdata/7z/playlist-of-zip.7z"], "not supported yet");
+}
+
+#[test]
+fn seven_zips_with_no_files_fail() {
+    assert_fails(&["testdata/7z/no-files.7z"], "no files");
+}
+
+#[test]
+fn unreadable_seven_zips_fail() {
+    let dir = tempfile::tempdir().unwrap();
+    let rom = fs::read("testdata/snes/FakeHeaderedROM.7z").unwrap();
+
+    for (name, contents) in [
+        ("garbage.7z", &b"not a 7z"[..]),
+        ("empty.7z", &[]),
+        ("truncated.7z", &rom[..100]),
+    ] {
+        let path = dir.path().join(name);
+        fs::write(&path, contents).unwrap();
+        assert_fails(&[path.to_str().unwrap()], "can't read 7z file: ");
+    }
+}
+
+#[test]
+fn corrupt_seven_zip_contents_fail() {
+    let dir = tempfile::tempdir().unwrap();
+    // The contents start right after the 32-byte signature header. The stored
+    // file isn't compressed, so only its checksum can notice the change.
+    for (fixture, offset) in [
+        ("testdata/snes/FakeHeaderedROM.7z", 40),
+        ("testdata/7z/stored.7z", 32),
+    ] {
+        let mut archive = fs::read(fixture).unwrap();
+        archive[offset] ^= 0xff;
+        let path = dir.path().join("corrupt.7z");
+        fs::write(&path, archive).unwrap();
+
+        assert_fails(&[path.to_str().unwrap()], "error: ");
+    }
+}
+
+#[test]
+fn seven_zip_entries_that_escape_the_extraction_directory_fail() {
+    assert_fails(
+        &["testdata/7z/unsafe-entry-name.7z"],
+        "unsafe 7z entry name: ../evil.rom",
+    );
 }
 
 #[test]
@@ -291,6 +356,7 @@ fn playlists_of_unsupported_files_are_rejected() {
     for (name, first_disc) in [
         ("chd.m3u", "game.chd"),
         ("zip.m3u", "# comment\n\ngame.zip"),
+        ("7z.m3u", "game.7z"),
     ] {
         let path = dir.path().join(name);
         fs::write(&path, first_disc).unwrap();
@@ -334,16 +400,16 @@ fn playlists_inside_a_zip_are_checked_too() {
 #[test]
 fn names_that_are_only_an_extension_count_as_that_extension() {
     let dir = tempfile::tempdir().unwrap();
-    for name in [".7z", ".chd"] {
+    let path = dir.path().join(".chd");
+    fs::write(&path, b"not read").unwrap();
+    assert_fails(&[path.to_str().unwrap()], "not supported yet");
+    for name in [".zip", ".7z"] {
         let path = dir.path().join(name);
-        fs::write(&path, b"not read").unwrap();
-        assert_fails(&[path.to_str().unwrap()], "not supported yet");
+        fs::write(&path, b"not an archive").unwrap();
+        let output = hash(&[path.to_str().unwrap()]);
+        assert_eq!(stdout(&output), "");
+        assert!(!output.status.success());
     }
-    let path = dir.path().join(".zip");
-    fs::write(&path, b"not a zip").unwrap();
-    let output = hash(&[path.to_str().unwrap()]);
-    assert_eq!(stdout(&output), "");
-    assert!(!output.status.success());
 }
 
 #[test]

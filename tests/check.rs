@@ -18,6 +18,7 @@ const SMALL_FILE: &str = "351f58718c9ef422df35ec121ac53c3f";
 
 const SFC_ROM: &str = "testdata/snes/FakeHeaderedROM.sfc";
 const SNES_ZIP: &str = "testdata/snes/Christmas-Craze.zip";
+const SNES_7Z: &str = "testdata/snes/FakeHeaderedROM.7z";
 const BOTH_CUE: &str = "testdata/disc/both.cue";
 
 const DAY: Duration = Duration::from_secs(24 * 60 * 60);
@@ -220,6 +221,16 @@ fn one_rom_with_achievements_among_others_exits_0() {
 
     assert_eq!(exit_code(&output), 0, "stderr: {}", stderr(&output));
     assert_eq!(stdout(&output), format!("{SNES_ZIP}\n"));
+}
+
+#[test]
+fn a_seven_zip_rom_is_checked_by_the_rom_inside() {
+    let sandbox = sandbox_listing(SNES, has_cheevos(SNES_SFC));
+
+    let output = sandbox.run(&["check", SNES_7Z]);
+
+    assert_eq!(exit_code(&output), 0, "stderr: {}", stderr(&output));
+    assert_eq!(stdout(&output), format!("{SNES_7Z}\n"));
 }
 
 #[test]
@@ -639,10 +650,17 @@ fn a_chd_is_reported_as_unsupported_and_counts_as_a_failure() {
 fn a_missing_file_or_unreadable_archive_fails_and_the_run_continues() {
     let dir = tempfile::tempdir().unwrap();
     let bad_zip = small_rom(dir.path(), "bad.zip");
+    let bad_7z = small_rom(dir.path(), "bad.7z");
     let missing = dir.path().join("missing.sfc");
     let sandbox = sandbox_listing(SNES, has_cheevos(SNES_SFC));
 
-    let output = sandbox.run(&["check", text(&missing), text(&bad_zip), SFC_ROM]);
+    let output = sandbox.run(&[
+        "check",
+        text(&missing),
+        text(&bad_zip),
+        text(&bad_7z),
+        SFC_ROM,
+    ]);
 
     assert_eq!(exit_code(&output), 2, "stderr: {}", stderr(&output));
     assert_eq!(stdout(&output), format!("{SFC_ROM}\n"));
@@ -650,6 +668,10 @@ fn a_missing_file_or_unreadable_archive_fails_and_the_run_continues() {
     assert!(stderr.contains("missing.sfc: no such file"), "{stderr}");
     assert!(
         stderr.contains("error: ") && stderr.contains("bad.zip"),
+        "{stderr}"
+    );
+    assert!(
+        stderr.contains("error: ") && stderr.contains("bad.7z"),
         "{stderr}"
     );
 }

@@ -13,8 +13,8 @@ cargo build --release
 target/release/hascheevos hash [--console <name|id>] [-v] <file>
 ```
 
-`.chd` files and non-arcade `.7z` files aren't supported yet. Run
-`hascheevos hash --help` for the list of console names.
+`.chd` files aren't supported yet. Run `hascheevos hash --help` for the list of
+console names.
 
 ## installing
 

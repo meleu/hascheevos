@@ -5,9 +5,10 @@
 //! archive.
 
 use crate::rc_hash::{RC_CONSOLE_ARCADE, RC_CONSOLE_MS_DOS};
+use sevenz_rust2::{ArchiveReader, Password};
 use std::fs::{self, File};
-use std::io;
-use std::path::{Path, PathBuf};
+use std::io::{self, Read};
+use std::path::{Component, Path, PathBuf};
 use tempfile::TempDir;
 use zip::ZipArchive;
 
@@ -48,7 +49,10 @@ pub fn prepare(file: &Path, console: Option<u32>) -> Result<Input, String> {
         if console == Some(RC_CONSOLE_MS_DOS) {
             return Ok(Input::at(file));
         }
-        return extract_first_file(file);
+        return extract_first_zip_file(file);
+    }
+    if has_extension(file, "7z") {
+        return extract_first_7z_file(file);
     }
     reject_unsupported(file)?;
     Ok(Input::at(file))
@@ -71,7 +75,8 @@ fn reject_unsupported(file: &Path) -> Result<(), String> {
     let mut current = file.to_owned();
     for _ in 0..MAX_PLAYLIST_DEPTH {
         if !has_extension(&current, "m3u") {
-            for (extension, format) in [("chd", "CHD"), ("7z", "7z"), ("zip", "nested zip")] {
+            for (extension, format) in [("chd", "CHD"), ("7z", "nested 7z"), ("zip", "nested zip")]
+            {
                 if has_extension(&current, extension) {
                     return Err(not_supported(format));
                 }
@@ -97,7 +102,7 @@ fn first_playlist_item(playlist: &[u8]) -> String {
         .to_owned()
 }
 
-fn extract_first_file(file: &Path) -> Result<Input, String> {
+fn extract_first_zip_file(file: &Path) -> Result<Input, String> {
     let describe = |error: zip::result::ZipError| error.to_string();
     let source = File::open(file).map_err(|error| error.to_string())?;
     let mut archive = ZipArchive::new(source).map_err(describe)?;
@@ -107,7 +112,6 @@ fn extract_first_file(file: &Path) -> Result<Input, String> {
         if entry.is_dir() {
             continue;
         }
-        // Only the base name is used, so entries can't escape the directory.
         let name = entry
             .enclosed_name()
             .and_then(|path| path.file_name().map(PathBuf::from))
@@ -115,16 +119,55 @@ fn extract_first_file(file: &Path) -> Result<Input, String> {
                 let raw_name = String::from_utf8_lossy(entry.name_raw());
                 format!("unsafe zip entry name: {raw_name}")
             })?;
-
-        let directory = TempDir::new().map_err(|error| error.to_string())?;
-        let path = directory.path().join(name);
-        let mut output = File::create(&path).map_err(|error| error.to_string())?;
-        io::copy(&mut entry, &mut output).map_err(|error| error.to_string())?;
-        reject_unsupported(&path)?;
-        return Ok(Input {
-            path,
-            _extracted_to: Some(directory),
-        });
+        return prepare_extracted(&name, &mut entry);
     }
     Err("zip file has no files".to_owned())
+}
+
+fn extract_first_7z_file(file: &Path) -> Result<Input, String> {
+    let describe = |error: sevenz_rust2::Error| match error {
+        sevenz_rust2::Error::Io(error, _) => format!("can't read 7z file: {error}"),
+        error => format!("can't read 7z file: {error}"),
+    };
+    let mut archive = ArchiveReader::open(file, Password::empty()).map_err(describe)?;
+
+    let mut extracted = None;
+    archive
+        .for_each_entries(|entry, contents| {
+            // The returned value says whether to go on to the next entry.
+            if entry.is_directory() {
+                return Ok(true);
+            }
+            extracted = Some(match safe_7z_file_name(entry.name()) {
+                Some(name) => prepare_extracted(name, contents),
+                None => Err(format!("unsafe 7z entry name: {}", entry.name())),
+            });
+            Ok(false)
+        })
+        .map_err(describe)?;
+    extracted.unwrap_or_else(|| Err("7z file has no files".to_owned()))
+}
+
+fn safe_7z_file_name(name: &str) -> Option<&Path> {
+    let path = Path::new(name);
+    let is_enclosed = path
+        .components()
+        .all(|part| matches!(part, Component::Normal(_) | Component::CurDir));
+    if !is_enclosed {
+        return None;
+    }
+    path.file_name().map(Path::new)
+}
+
+/// `name` must be a base name, so entries can't escape the directory.
+fn prepare_extracted(name: &Path, contents: &mut dyn Read) -> Result<Input, String> {
+    let directory = TempDir::new().map_err(|error| error.to_string())?;
+    let path = directory.path().join(name);
+    let mut output = File::create(&path).map_err(|error| error.to_string())?;
+    io::copy(contents, &mut output).map_err(|error| error.to_string())?;
+    reject_unsupported(&path)?;
+    Ok(Input {
+        path,
+        _extracted_to: Some(directory),
+    })
 }
