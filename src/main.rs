@@ -310,6 +310,9 @@ struct RomResult {
     /// The hash was found on its console, but can't earn the achievements.
     excluded: bool,
     failed: bool,
+    /// A candidate's list couldn't be read, so a hash not found elsewhere may
+    /// still have been in it.
+    search_incomplete: bool,
     /// Every other download would fail the same way.
     stop_run: bool,
 }
@@ -395,6 +398,7 @@ fn check_rom(file: &Path, options: &CheckOptions, entries: &mut Entries) -> RomR
             Err(error) => {
                 eprintln!("error: {name}: {error}");
                 result.failed = true;
+                result.search_incomplete = true;
                 continue;
             }
         };
@@ -482,9 +486,10 @@ fn report_rom(
         eprintln!("{name}: hash not found");
     }
 
-    let printed = if options.tab_output {
+    let has_answer = game.is_some() || !result.search_incomplete;
+    let printed = if options.tab_output && has_answer {
         print_result(&tab_row(file, game, result.has_achievements))
-    } else if result.has_achievements {
+    } else if !options.tab_output && result.has_achievements {
         print_result(file.as_os_str().as_encoded_bytes())
     } else {
         Ok(())

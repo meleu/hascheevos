@@ -1123,3 +1123,45 @@ fn tab_output_and_copy_roms_to_work_together() {
     assert_eq!(stdout(&output), format!("{SFC_ROM}\t1\tx\n"));
     assert!(dir.path().join("snes/FakeHeaderedROM.sfc").exists());
 }
+
+#[test]
+fn tab_output_has_no_row_when_a_candidate_failed_and_the_others_lack_the_hash() {
+    let sandbox = Sandbox::new(FakeServer::start(|request| {
+        if requested_console(request) == PSX {
+            Reply::failure(500)
+        } else {
+            Reply::ok(games_page(&[]))
+        }
+    }));
+
+    let output = sandbox.run(&["check", "--tab-output", BOTH_CUE]);
+
+    assert_eq!(exit_code(&output), 2, "stderr: {}", stderr(&output));
+    assert_eq!(stdout(&output), "");
+}
+
+#[test]
+fn tab_output_has_a_row_when_another_candidate_has_the_game_after_a_failure() {
+    let sandbox = Sandbox::new(FakeServer::start(|request| {
+        Reply::ok(match requested_console(request) {
+            SEGA_CD => games_page(&[has_cheevos(BOTH_SEGA_CD)]),
+            _ => return Reply::failure(500),
+        })
+    }));
+
+    let output = sandbox.run(&["check", "--tab-output", BOTH_CUE]);
+
+    assert_eq!(exit_code(&output), 2, "stderr: {}", stderr(&output));
+    assert_eq!(stdout(&output), format!("{BOTH_CUE}\t1\tx\n"));
+}
+
+#[test]
+fn tab_output_keeps_the_cached_answer_when_an_update_fails() {
+    let sandbox = sandbox_answering(vec![], || Reply::failure(500));
+    cache_lists_aged(&sandbox, &["check", "--console", "snes", SFC_ROM]);
+
+    let output = sandbox.run(&["check", "--tab-output", "--console", "snes", SFC_ROM]);
+
+    assert_eq!(exit_code(&output), 2, "stderr: {}", stderr(&output));
+    assert_eq!(stdout(&output), format!("{SFC_ROM}\t\t\n"));
+}
