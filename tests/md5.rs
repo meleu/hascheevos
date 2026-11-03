@@ -143,6 +143,7 @@ fn the_request_names_the_console_and_only_the_fields_lookups_need() {
             ("fields[games]", "title,achievementsPublished,hashes"),
             ("filter[systemId]", "7"),
             ("include", "hashes"),
+            ("page[size]", "100"),
         ]
     );
 }

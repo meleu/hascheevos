@@ -29,6 +29,7 @@ pub fn fetch_system(system_id: u32) -> Result<String, String> {
         // links a game to the hashes in `included`.
         .query("fields[games]", "title,achievementsPublished,hashes")
         .query("fields[game-hashes]", "raMd5,compatibility")
+        .query("page[size]", "100")
         .call()
         .and_then(|mut response| response.body_mut().read_to_string())
         .map_err(|error| format!("console {system_id}: {error}"))?;
