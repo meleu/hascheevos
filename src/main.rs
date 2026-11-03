@@ -5,7 +5,7 @@ mod input;
 mod rc_hash;
 
 use api::FetchError;
-use cache::ConsoleList;
+use cache::{Entries, Entry, Source};
 use clap::{Parser, Subcommand};
 use serde_json::Value;
 use std::io::{self, Write};
@@ -50,6 +50,16 @@ enum Commands {
         md5: String,
     },
 
+    /// Say whether games have achievements
+    Game {
+        /// Download the games even if the cached ones would do
+        #[arg(long)]
+        refresh: bool,
+
+        #[arg(required = true, value_name = "ID")]
+        ids: Vec<u32>,
+    },
+
     /// Print a console's list as compact JSON, for the cache to store
     #[command(name = "__fetch-system", hide = true)]
     FetchSystem {
@@ -59,6 +69,17 @@ enum Commands {
         format: u32,
 
         system_id: u32,
+    },
+
+    /// Print a game as compact JSON, for the cache to store
+    #[command(name = "__fetch-game", hide = true)]
+    FetchGame {
+        /// Version of the printed format, so that changing it changes the cache
+        /// key
+        #[arg(long)]
+        format: u32,
+
+        game_id: u32,
     },
 }
 
@@ -82,35 +103,57 @@ fn main() -> ExitCode {
             refresh,
             md5,
         } => check_md5(console, refresh, &md5),
+        Commands::Game { refresh, ids } => check_games(&ids, refresh),
         Commands::FetchSystem {
             format: _,
             system_id,
-        } => fetch_system(system_id),
+        } => print_fetched(api::fetch_system(system_id)),
+        Commands::FetchGame { format: _, game_id } => print_fetched(api::fetch_game(game_id)),
     }
 }
 
+/// Returns a source's entry, updated if `--refresh` or the refresh rule call
+/// for it. A failed update comes back beside the entry, whose answer stands.
+fn load_current(
+    entries: &mut Entries,
+    source: Source,
+    refresh: bool,
+    has_achievements: impl Fn(&Entry) -> bool,
+) -> Result<(Entry, Result<(), FetchError>), FetchError> {
+    let mut entry = entries.load(source)?;
+    let mut update_result = if refresh {
+        entries.update(&mut entry)
+    } else {
+        Ok(())
+    };
+    if update_result.is_ok() && !has_achievements(&entry) {
+        update_result = entries.update_if_due(&mut entry);
+    }
+    if let Err(error) = &update_result {
+        eprintln!("warning: {error}; this answer may be out of date");
+    }
+    Ok((entry, update_result))
+}
+
 fn check_md5(console: u32, refresh: bool, md5: &str) -> ExitCode {
-    let mut lists = cache::Lists::default();
-    let mut list = match lists.load(console) {
-        Ok(list) => list,
+    let md5 = md5.to_ascii_lowercase();
+    let loaded = load_current(
+        &mut Entries::default(),
+        Source::Console(console),
+        refresh,
+        |list| {
+            list.data
+                .get(&md5)
+                .is_some_and(|game| achievements(game) > 0)
+        },
+    );
+    let (list, update_result) = match loaded {
+        Ok(loaded) => loaded,
         Err(error) => {
             eprintln!("error: {error}");
             return ExitCode::from(EXIT_ERROR);
         }
     };
-    let md5 = md5.to_ascii_lowercase();
-
-    let mut update_result = if refresh {
-        lists.update(&mut list)
-    } else {
-        Ok(())
-    };
-    if update_result.is_ok() && !has_achievements(&list, &md5) {
-        update_result = lists.update_if_due(&mut list);
-    }
-    if let Err(error) = &update_result {
-        eprintln!("warning: {error}; this answer may be out of date");
-    }
 
     let answer = report_md5(&list, &md5);
     if update_result.is_err() {
@@ -119,18 +162,12 @@ fn check_md5(console: u32, refresh: bool, md5: &str) -> ExitCode {
     answer
 }
 
-fn has_achievements(list: &ConsoleList, md5: &str) -> bool {
-    list.games
-        .get(md5)
-        .is_some_and(|game| achievements(game) > 0)
-}
-
 fn achievements(game: &Value) -> u64 {
     game["achievements"].as_u64().unwrap_or(0)
 }
 
-fn report_md5(list: &ConsoleList, md5: &str) -> ExitCode {
-    let Some(game) = list.games.get(md5) else {
+fn report_md5(list: &Entry, md5: &str) -> ExitCode {
+    let Some(game) = list.data.get(md5) else {
         eprintln!("{md5}: hash not found");
         return ExitCode::FAILURE;
     };
@@ -140,20 +177,71 @@ fn report_md5(list: &ConsoleList, md5: &str) -> ExitCode {
     if achievements == 0 {
         return ExitCode::FAILURE;
     }
-    match writeln!(io::stdout(), "{md5}") {
-        // Whoever was reading closed the pipe, which doesn't change the answer.
-        Err(error) if error.kind() != io::ErrorKind::BrokenPipe => {
+    match print_result(md5) {
+        Ok(()) => ExitCode::SUCCESS,
+        Err(error) => {
             eprintln!("error: {error}");
             ExitCode::from(EXIT_ERROR)
         }
-        _ => ExitCode::SUCCESS,
     }
 }
 
-fn fetch_system(system_id: u32) -> ExitCode {
-    match api::fetch_system(system_id) {
-        Ok(list) => {
-            print!("{list}");
+fn check_games(ids: &[u32], refresh: bool) -> ExitCode {
+    let mut entries = Entries::default();
+    let mut any_achievements = false;
+    let mut any_failed = false;
+    for id in ids {
+        let source = Source::Game(*id);
+        let loaded = load_current(&mut entries, source, refresh, |game| {
+            achievements(&game.data) > 0
+        });
+        let failure = match loaded {
+            Ok((game, update_result)) => {
+                let title = game.data["title"].as_str().unwrap_or_default();
+                let achievements = achievements(&game.data);
+                eprintln!("{source}: {title}: {achievements} achievements");
+                if achievements > 0 {
+                    any_achievements = true;
+                    if let Err(error) = print_result(&id.to_string()) {
+                        eprintln!("error: {error}");
+                        any_failed = true;
+                    }
+                }
+                update_result.err()
+            }
+            Err(error) => {
+                eprintln!("error: {error}");
+                Some(error)
+            }
+        };
+        match failure {
+            // Every other game would be rejected the same way.
+            Some(FetchError::Rejected(_)) => return ExitCode::from(EXIT_ERROR),
+            Some(FetchError::Failed(_)) => any_failed = true,
+            None => {}
+        }
+    }
+    if any_failed {
+        ExitCode::from(EXIT_ERROR)
+    } else if any_achievements {
+        ExitCode::SUCCESS
+    } else {
+        ExitCode::FAILURE
+    }
+}
+
+fn print_result(answer: &str) -> io::Result<()> {
+    match writeln!(io::stdout(), "{answer}") {
+        // Whoever was reading closed the pipe, which doesn't change the answer.
+        Err(error) if error.kind() == io::ErrorKind::BrokenPipe => Ok(()),
+        written => written,
+    }
+}
+
+fn print_fetched(fetched: Result<String, FetchError>) -> ExitCode {
+    match fetched {
+        Ok(entry) => {
+            print!("{entry}");
             ExitCode::SUCCESS
         }
         // Stdout, because the parent streams stderr to the user as progress

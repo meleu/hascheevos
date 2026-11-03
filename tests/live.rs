@@ -35,6 +35,12 @@ const KNOWN_GAMES: [(&str, &str, &str); 4] = [
     ),
 ];
 
+/// From the script's data files, like [`KNOWN_GAMES`].
+const SUPER_MARIO_BROS: (&str, &str) = ("1446", "Super Mario Bros");
+
+/// Far beyond any game the server has.
+const NO_SUCH_GAME: &str = "999999999";
+
 const COMPATIBILITY_VALUES: [&str; 4] =
     ["compatible", "incompatible", "patch-required", "untested"];
 
@@ -74,6 +80,17 @@ fn the_real_api_behaves_as_the_fake_server_assumes() {
         assert_eq!(String::from_utf8_lossy(&output.stdout).trim(), hash);
         assert!(stderr.contains(title), "{console}: {stderr}");
     }
+
+    let (id, title) = SUPER_MARIO_BROS;
+    let output = run(hascheevos(cache.path(), &["game", id]));
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert_eq!(output.status.code(), Some(0), "{stderr}");
+    assert_eq!(String::from_utf8_lossy(&output.stdout).trim(), id);
+    assert!(stderr.contains(title), "{stderr}");
+
+    let output = run(hascheevos(cache.path(), &["game", NO_SUCH_GAME]));
+    assert_eq!(output.status.code(), Some(2));
+    assert_eq!(String::from_utf8_lossy(&output.stdout), "");
 
     // More games than one page holds shows that every page was downloaded, and
     // an unexpected value here is one that the compatibility warning should

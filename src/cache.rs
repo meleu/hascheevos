@@ -1,99 +1,113 @@
-//! Keeps each console's list on disk, using `bkt` to run the hidden
-//! `__fetch-system` subcommand of this same binary.
+//! Keeps each console's list and each game on disk, using `bkt` to run the
+//! hidden subcommands of this same binary.
 
 use crate::api::{EXIT_REJECTED, FetchError, PAYLOAD_FORMAT};
 use bkt::{Bkt, CacheStatus, CommandDesc, Invocation};
-use serde_json::{Map, Value};
+use serde_json::Value;
 use std::collections::HashSet;
-use std::fmt::Display;
+use std::fmt::{self, Display};
 use std::fs;
 use std::io::{self, Write};
 use std::path::{Path, PathBuf};
 use std::time::{Duration, SystemTime};
 
 /// The only TTL ever given to `bkt`. It deletes an entry when a lookup finds it
-/// older than the requested TTL, so a shorter one would lose lists we keep.
+/// older than the requested TTL, so a shorter one would lose entries we keep.
 const TTL: Duration = Duration::from_secs(100 * 365 * 24 * 60 * 60);
 
-/// How old a list must be before a "no achievements" result downloads it again.
+/// How old an entry must be before a "no achievements" result downloads it
+/// again.
 const UPDATE_AFTER: Duration = Duration::from_secs(24 * 60 * 60);
 
-/// A file no key points to may be another run's list, written just before it
+/// A file no key points to may be another run's entry, written just before it
 /// links it to its key. Writing and linking are far quicker than this.
 const PRUNE_AFTER: Duration = Duration::from_secs(60);
 
-/// A console's list, and when it was downloaded.
-pub struct ConsoleList {
-    system_id: u32,
-    pub games: Map<String, Value>,
+/// What a cache entry holds, and so where it's downloaded from.
+#[derive(Clone, Copy, PartialEq, Eq, Hash)]
+pub enum Source {
+    /// A list mapping each of a console's hashes to its game.
+    Console(u32),
+    /// One game's title and achievement count.
+    Game(u32),
+}
+
+impl Display for Source {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            Self::Console(id) => write!(f, "console {id}"),
+            Self::Game(id) => write!(f, "game {id}"),
+        }
+    }
+}
+
+/// What was downloaded from a source, and when.
+pub struct Entry {
+    source: Source,
+    pub data: Value,
     downloaded: SystemTime,
 }
 
-/// Loads and updates lists for one run, which updates each console only once.
+/// Loads and updates entries for one run, which updates each source only once.
 #[derive(Default)]
-pub struct Lists {
-    /// Consoles this run tried to download, whether or not that worked.
-    tried: HashSet<u32>,
+pub struct Entries {
+    /// Sources this run tried to download, whether or not that worked.
+    tried: HashSet<Source>,
 }
 
-impl Lists {
-    /// Returns a console's list, downloading it only if it isn't cached. With
+impl Entries {
+    /// Returns a source's entry, downloading it only if it isn't cached. With
     /// nothing cached, each call after a failed download tries again.
-    pub fn load(&mut self, system_id: u32) -> Result<ConsoleList, FetchError> {
+    pub fn load(&mut self, source: Source) -> Result<Entry, FetchError> {
         let (invocation, status) = bkt()?
-            .retrieve_streaming(
-                &command(system_id)?,
-                TTL,
-                io::sink(),
-                LiveProgress::default(),
-            )
+            .retrieve_streaming(&command(source)?, TTL, io::sink(), LiveProgress::default())
             .map_err(cache_failure)?;
         let downloaded = match status {
             CacheStatus::Hit(time) => time,
             CacheStatus::Miss(_) => {
-                self.tried.insert(system_id);
+                self.tried.insert(source);
                 SystemTime::now()
             }
         };
-        Ok(ConsoleList {
-            system_id,
-            games: read_list(&invocation, system_id)?,
+        Ok(Entry {
+            source,
+            data: read_data(&invocation, source)?,
             downloaded,
         })
     }
 
-    /// Downloads a list again, unless this run already tried. On failure, both
-    /// the list and its age stay as they were.
-    pub fn update(&mut self, list: &mut ConsoleList) -> Result<(), FetchError> {
-        if !self.tried.insert(list.system_id) {
+    /// Downloads an entry again, unless this run already tried. On failure,
+    /// both the entry and its age stay as they were.
+    pub fn update(&mut self, entry: &mut Entry) -> Result<(), FetchError> {
+        if !self.tried.insert(entry.source) {
             return Ok(());
         }
         let (invocation, _) = bkt()?
             .refresh_streaming(
-                &command(list.system_id)?,
+                &command(entry.source)?,
                 TTL,
                 io::sink(),
                 LiveProgress::default(),
             )
             .map_err(cache_failure)?;
-        list.games = read_list(&invocation, list.system_id)?;
-        list.downloaded = SystemTime::now();
+        entry.data = read_data(&invocation, entry.source)?;
+        entry.downloaded = SystemTime::now();
         // Only housekeeping, so a failure shouldn't fail the update.
         if let Ok(root) = cache_dir() {
-            let _ = prune_replaced_lists(&root);
+            let _ = prune_replaced_entries(&root);
         }
         Ok(())
     }
 
-    /// For a "no achievements" result: as [`Lists::update`], if the list is old
-    /// enough for that result to be out of date.
-    pub fn update_if_due(&mut self, list: &mut ConsoleList) -> Result<(), FetchError> {
-        if list
+    /// For a "no achievements" result: as [`Entries::update`], if the entry is
+    /// old enough for that result to be out of date.
+    pub fn update_if_due(&mut self, entry: &mut Entry) -> Result<(), FetchError> {
+        if entry
             .downloaded
             .elapsed()
             .is_ok_and(|age| age >= UPDATE_AFTER)
         {
-            return self.update(list);
+            return self.update(entry);
         }
         Ok(())
     }
@@ -107,26 +121,30 @@ fn bkt() -> Result<Bkt, FetchError> {
     Bkt::create(cache_dir().map_err(FetchError::Failed)?).map_err(cache_failure)
 }
 
-fn command(system_id: u32) -> Result<CommandDesc, FetchError> {
+fn command(source: Source) -> Result<CommandDesc, FetchError> {
     let exe = std::env::current_exe().map_err(|error| FetchError::Failed(error.to_string()))?;
+    let (subcommand, id) = match source {
+        Source::Console(id) => ("__fetch-system", id),
+        Source::Game(id) => ("__fetch-game", id),
+    };
     // RA_API_KEY reaches the subcommand by inheritance. `with_env` would make
     // it part of the cache key, and write it to disk.
     Ok(CommandDesc::new([
         exe.into_os_string(),
-        "__fetch-system".into(),
+        subcommand.into(),
         "--format".into(),
         PAYLOAD_FORMAT.to_string().into(),
-        system_id.to_string().into(),
+        id.to_string().into(),
     ])
     .with_discard_failures(true))
 }
 
-fn read_list(invocation: &Invocation, system_id: u32) -> Result<Map<String, Value>, FetchError> {
+fn read_data(invocation: &Invocation, source: Source) -> Result<Value, FetchError> {
     let code = invocation.exit_code();
     if code != 0 {
         // On stdout, because stderr has already been shown as progress.
         let message = match invocation.stdout_utf8().trim() {
-            "" => format!("console {system_id}: download exited with code {code}"),
+            "" => format!("{source}: download exited with code {code}"),
             message => message.to_owned(),
         };
         return Err(if code == i32::from(EXIT_REJECTED) {
@@ -135,15 +153,20 @@ fn read_list(invocation: &Invocation, system_id: u32) -> Result<Map<String, Valu
             FetchError::Failed(message)
         });
     }
-    serde_json::from_slice(invocation.stdout()).map_err(|error| {
-        FetchError::Failed(format!("console {system_id}: invalid cached list: {error}"))
-    })
+    let invalid = |error: &dyn Display| {
+        FetchError::Failed(format!("{source}: invalid cached entry: {error}"))
+    };
+    let data: Value = serde_json::from_slice(invocation.stdout()).map_err(|e| invalid(&e))?;
+    if !data.is_object() {
+        return Err(invalid(&"not an object"));
+    }
+    Ok(data)
 }
 
-/// Deletes the lists that updates have replaced. `bkt` only points a key at the
-/// new list, and with our TTL its own cleanup would keep the old one for 100
-/// years. It lays out each cache as `keys/<symlink>` and `data/<ttl>/<file>`.
-fn prune_replaced_lists(root: &Path) -> io::Result<()> {
+/// Deletes the entries that updates have replaced. `bkt` only points a key at
+/// the new entry, and with our TTL its own cleanup would keep the old one for
+/// 100 years. It lays out each cache as `keys/<symlink>` and `data/<ttl>/<file>`.
+fn prune_replaced_entries(root: &Path) -> io::Result<()> {
     for cache in fs::read_dir(root)? {
         let cache = cache?.path();
         let mut linked = HashSet::new();
