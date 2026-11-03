@@ -31,6 +31,20 @@ fn games_page(games: &[Game]) -> String {
 
 /// One page of a longer list, otherwise as [`games_page`].
 fn page_of(games: &[Game], current_page: u32, last_page: u32) -> String {
+    marked_page_of(games, "compatible", current_page, last_page)
+}
+
+/// A one-page response whose hashes are all marked `compatibility`.
+fn marked_games_page(games: &[Game], compatibility: &str) -> String {
+    marked_page_of(games, compatibility, 1, 1)
+}
+
+fn marked_page_of(
+    games: &[Game],
+    compatibility: &str,
+    current_page: u32,
+    last_page: u32,
+) -> String {
     let data: Vec<_> = games
         .iter()
         .map(|game| {
@@ -50,7 +64,7 @@ fn page_of(games: &[Game], current_page: u32, last_page: u32) -> String {
             json!({
                 "type": "game-hashes",
                 "id": format!("h{}", game.id),
-                "attributes": {"raMd5": game.hash, "compatibility": "compatible"}
+                "attributes": {"raMd5": game.hash, "compatibility": compatibility}
             })
         })
         .collect();
@@ -127,6 +141,27 @@ fn cache_list_aged(sandbox: &Sandbox, age: Duration) {
     let output = sandbox.run(&["md5", "--console", "nes", WITH_ACHIEVEMENTS]);
     assert_eq!(exit_code(&output), 0, "stderr: {}", stderr(&output));
     age_files(&sandbox.xdg_cache(), age);
+}
+
+/// A game with achievements whose hash is marked `compatibility`.
+fn has_cheevos_marked(compatibility: &str) -> String {
+    marked_games_page(
+        &[Game {
+            id: 1,
+            title: "Has Cheevos",
+            achievements: 42,
+            hash: WITH_ACHIEVEMENTS,
+        }],
+        compatibility,
+    )
+}
+
+/// A server listing a game with achievements whose hash is marked
+/// `compatibility`.
+fn sandbox_marking(compatibility: &'static str) -> Sandbox {
+    Sandbox::new(FakeServer::start(move |_| {
+        Reply::ok(has_cheevos_marked(compatibility))
+    }))
 }
 
 /// A server capping pages at one game, with three games in the list.
@@ -223,6 +258,68 @@ fn a_hash_not_in_the_list_exits_1() {
 
     assert_eq!(exit_code(&output), 1, "stderr: {}", stderr(&output));
     assert_eq!(stdout(&output), "");
+}
+
+#[test]
+fn an_excluded_hash_exits_1_with_a_warning() {
+    for (compatibility, reason) in [
+        ("incompatible", "incompatible"),
+        ("patch-required", "patch"),
+    ] {
+        let sandbox = sandbox_marking(compatibility);
+
+        let output = sandbox.run(&["md5", "--console", "nes", WITH_ACHIEVEMENTS]);
+
+        assert_eq!(exit_code(&output), 1, "stderr: {}", stderr(&output));
+        assert_eq!(stdout(&output), "");
+        let stderr = stderr(&output);
+        assert!(stderr.contains("warning: "), "{stderr}");
+        assert!(stderr.contains(WITH_ACHIEVEMENTS), "{stderr}");
+        assert!(stderr.contains(reason), "{stderr}");
+    }
+}
+
+#[test]
+fn compatible_and_untested_hashes_count_without_a_warning() {
+    for compatibility in ["compatible", "untested"] {
+        let sandbox = sandbox_marking(compatibility);
+
+        let output = sandbox.run(&["md5", "--console", "nes", WITH_ACHIEVEMENTS]);
+
+        assert_eq!(exit_code(&output), 0, "stderr: {}", stderr(&output));
+        assert_eq!(stdout(&output).trim(), WITH_ACHIEVEMENTS);
+        assert!(
+            !stderr(&output).contains("warning: "),
+            "{}",
+            stderr(&output)
+        );
+    }
+}
+
+#[test]
+fn an_excluded_hash_downloads_an_old_list_and_counts_once_it_is_compatible() {
+    let first = AtomicBool::new(true);
+    let sandbox = Sandbox::new(FakeServer::start(move |_| {
+        let compatibility = if first.swap(false, Ordering::Relaxed) {
+            "incompatible"
+        } else {
+            "compatible"
+        };
+        Reply::ok(has_cheevos_marked(compatibility))
+    }));
+    let args = ["md5", "--console", "nes", WITH_ACHIEVEMENTS];
+    assert_eq!(exit_code(&sandbox.run(&args)), 1);
+    age_files(&sandbox.xdg_cache(), DAY);
+
+    let output = sandbox.run(&args);
+
+    assert_eq!(exit_code(&output), 0, "stderr: {}", stderr(&output));
+    assert_eq!(stdout(&output).trim(), WITH_ACHIEVEMENTS);
+    assert!(
+        !stderr(&output).contains("warning: "),
+        "{}",
+        stderr(&output)
+    );
 }
 
 #[test]

@@ -9,6 +9,7 @@ use cache::{Entries, Entry, Source};
 use clap::{Parser, Subcommand};
 use rc_hash::{ConsoleHash, Hashes};
 use serde_json::Value;
+use std::fmt::Display;
 use std::io::{self, Write};
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
@@ -171,11 +172,7 @@ fn check_md5(console: u32, refresh: bool, md5: &str) -> ExitCode {
         &mut Entries::default(),
         Source::Console(console),
         refresh,
-        |list| {
-            list.data
-                .get(&md5)
-                .is_some_and(|game| achievements(game) > 0)
-        },
+        |list| list.data.get(&md5).is_some_and(earns_achievements),
     );
     let (list, update_result) = match loaded {
         Ok(loaded) => loaded,
@@ -196,6 +193,24 @@ fn achievements(game: &Value) -> u64 {
     game["achievements"].as_u64().unwrap_or(0)
 }
 
+/// Whether a hash from a console's list has achievements to earn.
+fn earns_achievements(game: &Value) -> bool {
+    achievements(game) > 0 && exclusion_reason(game).is_none()
+}
+
+/// Why a hash can't earn its game's achievements, if it's marked that way.
+fn exclusion_reason(game: &Value) -> Option<&'static str> {
+    match game["compatibility"].as_str()? {
+        "incompatible" => Some("marked as incompatible"),
+        "patch-required" => Some("the game needs a patch applied to the original ROM"),
+        _ => None,
+    }
+}
+
+fn warn_excluded(item: impl Display, reason: &str) {
+    eprintln!("warning: {item}: {reason}; not counted as having achievements");
+}
+
 fn report_md5(list: &Entry, md5: &str) -> ExitCode {
     let Some(game) = list.data.get(md5) else {
         eprintln!("{md5}: hash not found");
@@ -205,6 +220,10 @@ fn report_md5(list: &Entry, md5: &str) -> ExitCode {
     let achievements = achievements(game);
     eprintln!("{md5}: {title}: {achievements} achievements");
     if achievements == 0 {
+        return ExitCode::FAILURE;
+    }
+    if let Some(reason) = exclusion_reason(game) {
+        warn_excluded(md5, reason);
         return ExitCode::FAILURE;
     }
     match print_result(md5.as_bytes()) {
@@ -258,6 +277,8 @@ fn check_games(ids: &[u32], refresh: bool) -> ExitCode {
 #[derive(Default)]
 struct RomResult {
     has_achievements: bool,
+    /// The hash was found on its console, but can't earn the achievements.
+    excluded: bool,
     failed: bool,
     /// Every other download would fail the same way.
     stop_run: bool,
@@ -285,7 +306,7 @@ impl Consulted {
     }
 
     fn has_achievements(&self) -> bool {
-        self.game().is_some_and(|game| achievements(game) > 0)
+        self.game().is_some_and(earns_achievements)
     }
 }
 
@@ -386,6 +407,7 @@ fn check_rom(
 
     report_rom(file, &consulted, &mut result);
     if !result.has_achievements
+        && !result.excluded
         && named_console.is_none()
         && SHARED_EXTENSIONS
             .iter()
@@ -412,7 +434,13 @@ fn report_rom(file: &Path, consulted: &[Consulted], result: &mut RomResult) {
     let title = game["title"].as_str().unwrap_or_default();
     let achievements = achievements(game);
     eprintln!("{name}: {title}: {achievements} achievements");
-    if achievements > 0 {
+    if achievements == 0 {
+        return;
+    }
+    if let Some(reason) = exclusion_reason(game) {
+        warn_excluded(name, reason);
+        result.excluded = true;
+    } else {
         result.has_achievements = true;
         if let Err(error) = print_result(file.as_os_str().as_encoded_bytes()) {
             eprintln!("error: {error}");

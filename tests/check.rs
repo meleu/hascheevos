@@ -53,6 +53,11 @@ fn has_cheevos(hash: &'static str) -> Game {
 
 /// A one-page response in the shape the OpenAPI document gives for `/games`.
 fn games_page(games: &[Game]) -> String {
+    marked_games_page(games, "compatible")
+}
+
+/// As [`games_page`], with the hashes all marked `compatibility`.
+fn marked_games_page(games: &[Game], compatibility: &str) -> String {
     let data: Vec<_> = games
         .iter()
         .map(|game| {
@@ -72,7 +77,7 @@ fn games_page(games: &[Game]) -> String {
             json!({
                 "type": "game-hashes",
                 "id": format!("h{}", game.id),
-                "attributes": {"raMd5": game.hash, "compatibility": "compatible"}
+                "attributes": {"raMd5": game.hash, "compatibility": compatibility}
             })
         })
         .collect();
@@ -97,6 +102,20 @@ fn requested_console(request: &Request) -> u32 {
 /// A server listing one game for `console` and nothing for the others.
 fn sandbox_listing(console: u32, game: Game) -> Sandbox {
     sandbox_publishing(0, console, game)
+}
+
+/// A server listing one game for `console`, with its hash marked
+/// `compatibility`, and nothing for the others.
+fn sandbox_marking(console: u32, game: Game, compatibility: &'static str) -> Sandbox {
+    let list = marked_games_page(&[game], compatibility);
+    let empty = games_page(&[]);
+    Sandbox::new(FakeServer::start(move |request| {
+        if requested_console(request) == console {
+            Reply::ok(list.clone())
+        } else {
+            Reply::ok(empty.clone())
+        }
+    }))
 }
 
 fn requested_consoles(sandbox: &Sandbox) -> Vec<u32> {
@@ -538,6 +557,112 @@ fn refresh_stops_at_the_first_match() {
 
     assert_eq!(exit_code(&output), 0, "stderr: {}", stderr(&output));
     assert_eq!(requested_consoles(&sandbox), [MSX, AMSTRAD]);
+}
+
+#[test]
+fn an_excluded_hash_is_left_out_with_a_warning_naming_the_file() {
+    for (compatibility, reason) in [
+        ("incompatible", "incompatible"),
+        ("patch-required", "patch"),
+    ] {
+        let sandbox = sandbox_marking(SNES, has_cheevos(SNES_SFC), compatibility);
+
+        let output = sandbox.run(&["check", SFC_ROM]);
+
+        assert_eq!(exit_code(&output), 1, "stderr: {}", stderr(&output));
+        assert_eq!(stdout(&output), "");
+        let warning = stderr(&output)
+            .lines()
+            .find(|line| line.starts_with("warning: "))
+            .expect("a warning")
+            .to_owned();
+        assert!(warning.contains(SFC_ROM), "{warning}");
+        assert!(warning.contains(reason), "{warning}");
+    }
+}
+
+#[test]
+fn an_untested_hash_counts_without_a_warning() {
+    let sandbox = sandbox_marking(SNES, has_cheevos(SNES_SFC), "untested");
+
+    let output = sandbox.run(&["check", SFC_ROM]);
+
+    assert_eq!(exit_code(&output), 0, "stderr: {}", stderr(&output));
+    assert_eq!(stdout(&output).trim(), SFC_ROM);
+    assert!(
+        !stderr(&output).contains("warning: "),
+        "{}",
+        stderr(&output)
+    );
+}
+
+#[test]
+fn an_excluded_rom_does_not_stop_another_rom_counting() {
+    let dir = tempfile::tempdir().unwrap();
+    let rom = small_rom(dir.path(), "game.nes");
+    let sandbox = Sandbox::new(FakeServer::start(|request| {
+        Reply::ok(if requested_console(request) == SNES {
+            marked_games_page(&[has_cheevos(SNES_SFC)], "incompatible")
+        } else {
+            games_page(&[has_cheevos(SMALL_FILE)])
+        })
+    }));
+
+    let output = sandbox.run(&["check", SFC_ROM, text(&rom)]);
+
+    assert_eq!(exit_code(&output), 0, "stderr: {}", stderr(&output));
+    assert_eq!(stdout(&output).trim(), text(&rom));
+}
+
+#[test]
+fn an_excluded_hash_downloads_an_old_list_and_counts_once_it_is_compatible() {
+    let requests = AtomicU32::new(0);
+    let sandbox = Sandbox::new(FakeServer::start(move |_| {
+        let compatibility = if requests.fetch_add(1, Ordering::Relaxed) == 0 {
+            "patch-required"
+        } else {
+            "compatible"
+        };
+        Reply::ok(marked_games_page(&[has_cheevos(SNES_SFC)], compatibility))
+    }));
+    cache_lists_aged(&sandbox, &["check", SFC_ROM]);
+
+    let output = sandbox.run(&["check", SFC_ROM]);
+
+    assert_eq!(exit_code(&output), 0, "stderr: {}", stderr(&output));
+    assert_eq!(stdout(&output).trim(), SFC_ROM);
+    assert!(
+        !stderr(&output).contains("warning: "),
+        "{}",
+        stderr(&output)
+    );
+}
+
+#[test]
+fn the_console_note_does_not_appear_on_an_excluded_hash() {
+    let dir = tempfile::tempdir().unwrap();
+    let rom = small_rom(dir.path(), "game.bin");
+    for compatibility in ["incompatible", "patch-required"] {
+        let sandbox = sandbox_marking(MEGA_DRIVE, has_cheevos(SMALL_FILE), compatibility);
+
+        let output = sandbox.run(&["check", text(&rom)]);
+
+        assert_eq!(exit_code(&output), 1, "stderr: {}", stderr(&output));
+        assert!(!stderr(&output).contains("note: "), "{}", stderr(&output));
+    }
+}
+
+#[test]
+fn a_run_where_every_rom_is_excluded_exits_1() {
+    let dir = tempfile::tempdir().unwrap();
+    let first = small_rom(dir.path(), "first.nes");
+    let second = small_rom(dir.path(), "second.nes");
+    let sandbox = sandbox_marking(NES, has_cheevos(SMALL_FILE), "incompatible");
+
+    let output = sandbox.run(&["check", text(&first), text(&second)]);
+
+    assert_eq!(exit_code(&output), 1, "stderr: {}", stderr(&output));
+    assert_eq!(stdout(&output), "");
 }
 
 #[test]
