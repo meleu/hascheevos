@@ -1738,3 +1738,72 @@ fn a_relative_path_goes_in_a_collection_when_the_retropie_directory_is_a_link() 
         [text(&rom)]
     );
 }
+
+/// A `genesis` system that's a link to `megadrive`, as on RetroPie, holding a ROM
+/// whose path through `megadrive` is returned.
+fn linked_genesis(sandbox: &Sandbox) -> PathBuf {
+    let megadrive = system_dir(sandbox, "megadrive");
+    std::os::unix::fs::symlink(&megadrive, sandbox.home().join("RetroPie/roms/genesis")).unwrap();
+    small_rom(&megadrive, "game.md")
+}
+
+#[test]
+fn a_rom_reached_through_a_linked_system_goes_in_the_collection_of_the_links_target() {
+    for system in ["all", "genesis", "megadrive"] {
+        let sandbox = sandbox_listing(MEGA_DRIVE, has_cheevos(SMALL_FILE));
+        let rom = linked_genesis(&sandbox);
+
+        let output = sandbox.run(&["check", "--collection", "--system", system]);
+
+        assert_eq!(exit_code(&output), 0, "stderr: {}", stderr(&output));
+        assert_eq!(
+            collection_lines(&sandbox, "custom-achievements megadrive.cfg"),
+            [text(&rom)],
+            "--system {system}"
+        );
+        assert!(
+            collection_lines(&sandbox, "custom-achievements genesis.cfg").is_empty(),
+            "--system {system}"
+        );
+    }
+}
+
+#[test]
+fn a_rom_named_through_a_linked_system_and_its_target_has_one_entry() {
+    let sandbox = sandbox_listing(MEGA_DRIVE, has_cheevos(SMALL_FILE));
+    let rom = linked_genesis(&sandbox);
+    let linked = sandbox.home().join("RetroPie/roms/genesis/game.md");
+
+    let output = sandbox.run(&[
+        "check",
+        "--single-collection",
+        "--console",
+        "megadrive",
+        text(&linked),
+        text(&rom),
+    ]);
+
+    assert_eq!(exit_code(&output), 0, "stderr: {}", stderr(&output));
+    assert_eq!(
+        collection_lines(&sandbox, "custom-achievements.cfg"),
+        [text(&rom)]
+    );
+}
+
+#[test]
+fn a_system_linked_to_somewhere_outside_the_roms_directory_keeps_its_name() {
+    let sandbox = sandbox_listing(NES, has_cheevos(SMALL_FILE));
+    let elsewhere = tempfile::tempdir().unwrap();
+    small_rom(elsewhere.path(), "game.nes");
+    std::fs::create_dir_all(sandbox.home().join("RetroPie/roms")).unwrap();
+    let nes = sandbox.home().join("RetroPie/roms/nes");
+    std::os::unix::fs::symlink(elsewhere.path(), &nes).unwrap();
+
+    let output = sandbox.run(&["check", "--collection", "--system", "nes"]);
+
+    assert_eq!(exit_code(&output), 0, "stderr: {}", stderr(&output));
+    assert_eq!(
+        collection_lines(&sandbox, "custom-achievements nes.cfg"),
+        [text(&nes.join("game.nes"))]
+    );
+}

@@ -1,7 +1,7 @@
 //! Adds ROMs to EmulationStation's custom collections.
 
 use std::collections::BTreeSet;
-use std::ffi::OsString;
+use std::ffi::{OsStr, OsString};
 use std::fs;
 use std::io;
 use std::path::{Component, Path, PathBuf};
@@ -33,12 +33,16 @@ impl Layout {
         let in_roms_dir = in_roms_dir.ok_or_else(not_in_a_system)?;
         let mut components = in_roms_dir.components();
         let system = components.next().ok_or_else(not_in_a_system)?.as_os_str();
+        let in_system = components.as_path();
         // A file directly in the ROMs directory belongs to no system.
-        components.next().ok_or_else(not_in_a_system)?;
+        if in_system.as_os_str().is_empty() {
+            return Err(not_in_a_system());
+        }
+        let system = link_target_in(&roms_dir, system).unwrap_or_else(|| system.to_owned());
         let name = match self {
             Self::PerSystem => {
                 let mut name = OsString::from("custom-achievements ");
-                name.push(system);
+                name.push(&system);
                 name.push(".cfg");
                 name
             }
@@ -46,7 +50,7 @@ impl Layout {
         };
         Ok(Entry {
             collection_file: home.join(".emulationstation/collections").join(name),
-            rom: roms_dir.join(&in_roms_dir),
+            rom: roms_dir.join(system).join(in_system),
         })
     }
 }
@@ -85,24 +89,34 @@ impl Entry {
     }
 }
 
-/// A path's part inside `directory`, if it's in there. Going by the names keeps
-/// a linked directory like RetroPie's `genesis` as it is, but the working directory
-/// has no links in it, so a relative path needs them resolved to be recognised.
-fn in_directory(path: &Path, directory: &Path) -> io::Result<Option<PathBuf>> {
-    let inside =
-        |path: &Path, directory: &Path| path.strip_prefix(directory).ok().map(Path::to_path_buf);
-    if let Some(found) = inside(&normal_absolute(path)?, directory) {
-        return Ok(Some(found));
-    }
-    Ok(path
-        .canonicalize()
-        .and_then(|path| Ok((path, directory.canonicalize()?)))
-        .ok()
-        .and_then(|(path, directory)| inside(&path, &directory)))
+/// The system a linked system's directory leads to, like `megadrive` for
+/// RetroPie's `genesis`, so a ROM has one entry whichever way it's reached.
+fn link_target_in(roms_dir: &Path, system: &OsStr) -> Option<OsString> {
+    let target = resolved_inside(&roms_dir.join(system), roms_dir)?;
+    (target.components().count() == 1).then(|| target.into_os_string())
 }
 
-/// A path from the root with no `.` or `..`, worked out without following links
-/// so a linked directory like RetroPie's `genesis` keeps its name.
+/// A path's part inside `directory`, if it's in there. Going by the names keeps
+/// a link to somewhere else, like a ROM folder on a USB drive, inside the directory.
+/// The working directory has no links in it, though, so a relative path may need
+/// them resolved to be recognised.
+fn in_directory(path: &Path, directory: &Path) -> io::Result<Option<PathBuf>> {
+    let normal = normal_absolute(path)?;
+    Ok(normal
+        .strip_prefix(directory)
+        .ok()
+        .map(Path::to_path_buf)
+        .or_else(|| resolved_inside(path, directory)))
+}
+
+/// A path's part inside `directory` once links are resolved in both.
+fn resolved_inside(path: &Path, directory: &Path) -> Option<PathBuf> {
+    let path = path.canonicalize().ok()?;
+    let directory = directory.canonicalize().ok()?;
+    path.strip_prefix(directory).ok().map(Path::to_path_buf)
+}
+
+/// A path from the root with no `.` or `..`, worked out without following links.
 fn normal_absolute(path: &Path) -> io::Result<PathBuf> {
     let mut normal = PathBuf::new();
     for component in std::path::absolute(path)?.components() {
