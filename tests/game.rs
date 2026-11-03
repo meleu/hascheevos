@@ -410,6 +410,29 @@ fn a_missing_key_says_where_to_get_one_and_exits_2() {
 }
 
 #[test]
+fn a_missing_key_stops_the_run_at_the_first_download() {
+    let sandbox = known_games_sandbox();
+    sandbox.run(&["game", WITH_ACHIEVEMENTS]);
+
+    let output = sandbox
+        .command(&["game", WITH_ACHIEVEMENTS, NONE_PUBLISHED, UNKNOWN])
+        .env_remove("RA_API_KEY")
+        .output()
+        .expect("run hascheevos");
+
+    assert_eq!(exit_code(&output), 2, "stderr: {}", stderr(&output));
+    // The cached game before it is still answered.
+    assert_eq!(stdout(&output).trim(), WITH_ACHIEVEMENTS);
+    let stderr = stderr(&output);
+    assert_eq!(
+        stderr.matches("RA_API_KEY is not set").count(),
+        1,
+        "{stderr}"
+    );
+    assert_eq!(sandbox.server.requests().len(), 1);
+}
+
+#[test]
 fn the_hidden_subcommand_stays_out_of_the_help() {
     let output = known_games_sandbox().run(&["--help"]);
     assert!(!stdout(&output).contains("__fetch-game"));

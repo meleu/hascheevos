@@ -27,8 +27,8 @@ const MAX_RETRY_WAIT_SECS: u64 = 60;
 
 #[derive(Debug)]
 pub enum FetchError {
-    /// The server refused the key, so every other download would fail the same
-    /// way and the run should stop.
+    /// The key is missing or the server refused it, so every other download
+    /// would fail the same way and the run should stop.
     Rejected(String),
     Failed(String),
 }
@@ -108,7 +108,7 @@ impl Client {
             .ok()
             .filter(|key| !key.is_empty())
             .ok_or_else(|| {
-                FetchError::Failed(
+                FetchError::Rejected(
                     "RA_API_KEY is not set; copy your free Web API Key from \
                      https://retroachievements.org/settings and export it as RA_API_KEY"
                         .to_owned(),

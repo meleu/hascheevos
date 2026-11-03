@@ -215,7 +215,7 @@ fn check_games(ids: &[u32], refresh: bool) -> ExitCode {
             }
         };
         match failure {
-            // Every other game would be rejected the same way.
+            // Every other download would fail the same way.
             Some(FetchError::Rejected(_)) => return ExitCode::from(EXIT_ERROR),
             Some(FetchError::Failed(_)) => any_failed = true,
             None => {}
