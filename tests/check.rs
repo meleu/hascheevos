@@ -564,6 +564,7 @@ fn an_excluded_hash_is_left_out_with_a_warning_naming_the_file() {
     for (compatibility, reason) in [
         ("incompatible", "incompatible"),
         ("patch-required", "patch"),
+        ("some-new-value", "some-new-value"),
     ] {
         let sandbox = sandbox_marking(SNES, has_cheevos(SNES_SFC), compatibility);
 
@@ -650,6 +651,22 @@ fn the_console_note_does_not_appear_on_an_excluded_hash() {
         assert_eq!(exit_code(&output), 1, "stderr: {}", stderr(&output));
         assert!(!stderr(&output).contains("note: "), "{}", stderr(&output));
     }
+}
+
+#[test]
+fn an_excluded_hash_with_none_published_warns_and_skips_the_console_note() {
+    let dir = tempfile::tempdir().unwrap();
+    let rom = small_rom(dir.path(), "game.bin");
+    let sandbox = sandbox_marking(MEGA_DRIVE, no_cheevos(SMALL_FILE), "incompatible");
+
+    let output = sandbox.run(&["check", text(&rom)]);
+
+    assert_eq!(exit_code(&output), 1, "stderr: {}", stderr(&output));
+    assert_eq!(stdout(&output), "");
+    let stderr = stderr(&output);
+    assert!(stderr.contains("warning: "), "{stderr}");
+    assert!(stderr.contains("incompatible"), "{stderr}");
+    assert!(!stderr.contains("note: "), "{stderr}");
 }
 
 #[test]

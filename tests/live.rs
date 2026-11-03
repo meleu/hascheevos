@@ -93,8 +93,7 @@ fn the_real_api_behaves_as_the_fake_server_assumes() {
     assert_eq!(String::from_utf8_lossy(&output.stdout), "");
 
     // More games than one page holds shows that every page was downloaded, and
-    // an unexpected value here is one that the compatibility warning should
-    // take a view on.
+    // an unexpected value here would exclude its ROMs, so it needs a look.
     let output = run(hascheevos(
         cache.path(),
         &["__fetch-system", "--format", "0", PC_ENGINE],

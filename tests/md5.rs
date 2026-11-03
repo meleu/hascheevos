@@ -265,6 +265,7 @@ fn an_excluded_hash_exits_1_with_a_warning() {
     for (compatibility, reason) in [
         ("incompatible", "incompatible"),
         ("patch-required", "patch"),
+        ("some-new-value", "some-new-value"),
     ] {
         let sandbox = sandbox_marking(compatibility);
 
@@ -277,6 +278,29 @@ fn an_excluded_hash_exits_1_with_a_warning() {
         assert!(stderr.contains(WITH_ACHIEVEMENTS), "{stderr}");
         assert!(stderr.contains(reason), "{stderr}");
     }
+}
+
+#[test]
+fn an_excluded_hash_warns_even_with_none_published() {
+    let sandbox = Sandbox::new(FakeServer::start(|_| {
+        Reply::ok(marked_games_page(
+            &[Game {
+                id: 2,
+                title: "No Cheevos",
+                achievements: 0,
+                hash: NONE_PUBLISHED,
+            }],
+            "incompatible",
+        ))
+    }));
+
+    let output = sandbox.run(&["md5", "--console", "nes", NONE_PUBLISHED]);
+
+    assert_eq!(exit_code(&output), 1, "stderr: {}", stderr(&output));
+    assert_eq!(stdout(&output), "");
+    let stderr = stderr(&output);
+    assert!(stderr.contains("warning: "), "{stderr}");
+    assert!(stderr.contains("incompatible"), "{stderr}");
 }
 
 #[test]

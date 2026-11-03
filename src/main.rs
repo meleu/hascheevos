@@ -199,11 +199,11 @@ fn earns_achievements(game: &Value) -> bool {
 }
 
 /// Why a hash can't earn its game's achievements, if it's marked that way.
-fn exclusion_reason(game: &Value) -> Option<&'static str> {
-    match game["compatibility"].as_str()? {
-        "incompatible" => Some("marked as incompatible"),
-        "patch-required" => Some("the game needs a patch applied to the original ROM"),
-        _ => None,
+fn exclusion_reason(game: &Value) -> Option<String> {
+    match game["compatibility"].as_str().unwrap_or("unknown") {
+        "compatible" | "untested" => None,
+        "patch-required" => Some("the game needs a patch applied to the original ROM".to_owned()),
+        other => Some(format!("marked as {other}")),
     }
 }
 
@@ -219,11 +219,11 @@ fn report_md5(list: &Entry, md5: &str) -> ExitCode {
     let title = game["title"].as_str().unwrap_or_default();
     let achievements = achievements(game);
     eprintln!("{md5}: {title}: {achievements} achievements");
-    if achievements == 0 {
+    if let Some(reason) = exclusion_reason(game) {
+        warn_excluded(md5, &reason);
         return ExitCode::FAILURE;
     }
-    if let Some(reason) = exclusion_reason(game) {
-        warn_excluded(md5, reason);
+    if achievements == 0 {
         return ExitCode::FAILURE;
     }
     match print_result(md5.as_bytes()) {
@@ -434,13 +434,10 @@ fn report_rom(file: &Path, consulted: &[Consulted], result: &mut RomResult) {
     let title = game["title"].as_str().unwrap_or_default();
     let achievements = achievements(game);
     eprintln!("{name}: {title}: {achievements} achievements");
-    if achievements == 0 {
-        return;
-    }
     if let Some(reason) = exclusion_reason(game) {
-        warn_excluded(name, reason);
+        warn_excluded(name, &reason);
         result.excluded = true;
-    } else {
+    } else if achievements > 0 {
         result.has_achievements = true;
         if let Err(error) = print_result(file.as_os_str().as_encoded_bytes()) {
             eprintln!("error: {error}");
