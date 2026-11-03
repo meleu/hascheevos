@@ -109,7 +109,8 @@ fn extract_first_zip_file(file: &Path) -> Result<Input, String> {
 
     for index in 0..archive.len() {
         let mut entry = archive.by_index(index).map_err(describe)?;
-        if entry.is_dir() {
+        // An empty file can't be the ROM, but it would hash as if it were.
+        if entry.is_dir() || entry.size() == 0 {
             continue;
         }
         let name = entry
@@ -135,7 +136,8 @@ fn extract_first_7z_file(file: &Path) -> Result<Input, String> {
     archive
         .for_each_entries(|entry, contents| {
             // The returned value says whether to go on to the next entry.
-            if entry.is_directory() {
+            // An empty file can't be the ROM, but it would hash as if it were.
+            if entry.is_directory() || entry.size() == 0 {
                 return Ok(true);
             }
             extracted = Some(match safe_7z_file_name(entry.name()) {

@@ -226,6 +226,12 @@ fn seven_zip_skips_directories_and_stops_at_its_first_file() {
 }
 
 #[test]
+fn seven_zip_skips_empty_files() {
+    assert_hashes(&["testdata/7z/empty-file-first.7z"], &[SNES_SFC]);
+    assert_fails(&["testdata/7z/only-empty-files.7z"], "no files");
+}
+
+#[test]
 fn arcade_hashes_the_seven_zip_name_without_extracting() {
     let dir = tempfile::tempdir().unwrap();
     let path = dir.path().join("Christmas-Craze.7z");
@@ -314,6 +320,35 @@ fn seven_zip_entries_that_escape_the_extraction_directory_fail() {
         &["testdata/7z/unsafe-entry-name.7z"],
         "unsafe 7z entry name: ../evil.rom",
     );
+}
+
+#[test]
+fn zip_skips_empty_files() {
+    let dir = tempfile::tempdir().unwrap();
+    let path = dir.path().join("empty-first.zip");
+    let mut archive = zip::ZipWriter::new(fs::File::create(&path).unwrap());
+    let options = zip::write::SimpleFileOptions::default();
+    archive.start_file("empty.bin", options).unwrap();
+    archive.start_file("game.sfc", options).unwrap();
+    archive
+        .write_all(&fs::read("testdata/snes/FakeHeaderedROM.sfc").unwrap())
+        .unwrap();
+    archive.finish().unwrap();
+
+    assert_hashes(&[path.to_str().unwrap()], &[SNES_SFC]);
+}
+
+#[test]
+fn zips_with_only_empty_files_fail() {
+    let dir = tempfile::tempdir().unwrap();
+    let path = dir.path().join("only-empty.zip");
+    let mut archive = zip::ZipWriter::new(fs::File::create(&path).unwrap());
+    archive
+        .start_file("empty.sfc", zip::write::SimpleFileOptions::default())
+        .unwrap();
+    archive.finish().unwrap();
+
+    assert_fails(&[path.to_str().unwrap()], "no files");
 }
 
 #[test]
