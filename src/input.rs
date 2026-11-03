@@ -111,7 +111,10 @@ fn extract_first_file(file: &Path) -> Result<Input, String> {
         let name = entry
             .enclosed_name()
             .and_then(|path| path.file_name().map(PathBuf::from))
-            .ok_or_else(|| format!("unsafe zip entry name: {}", entry.name()))?;
+            .ok_or_else(|| {
+                let raw_name = String::from_utf8_lossy(entry.name_raw());
+                format!("unsafe zip entry name: {raw_name}")
+            })?;
 
         let directory = TempDir::new().map_err(|error| error.to_string())?;
         let path = directory.path().join(name);
