@@ -206,8 +206,8 @@ mod tests {
     }
 
     #[test]
-    fn script_system_names_keep_their_ids() {
-        // From SYSTEMS_INFO in bin/hascheevos.sh.
+    fn established_system_names_keep_their_ids() {
+        // Names and IDs that people have been using since before the v2 API.
         let systems = [
             ("megadrive", 1),
             ("n64", 2),

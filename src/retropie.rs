@@ -8,7 +8,7 @@ use std::io;
 use std::os::unix::fs::MetadataExt;
 use std::path::{Path, PathBuf};
 
-/// ROM extensions rcheevos has no console for, from the script's system table.
+/// ROM extensions rcheevos has no console for, but RetroPie systems hold.
 const EXTRA_ROM_EXTENSIONS: [&str; 11] = [
     "32x", "ccd", "exe", "fba", "gen", "j64", "mgd", "ngp", "smd", "toc", "ws",
 ];

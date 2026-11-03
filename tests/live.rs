@@ -11,10 +11,7 @@ use std::path::Path;
 use std::process::{Command, Output};
 
 /// A game only one console has, from each of a few consoles small enough to
-/// download together within the server's limit of 60 requests a minute. The
-/// game IDs and titles agree with the script's data files from 2018, which
-/// came from the legacy API, so finding each one here shows that v2 `systemId`s
-/// match rcheevos console IDs.
+/// download together within the server's limit of 60 requests a minute.
 const KNOWN_GAMES: [(&str, &str, &str); 4] = [
     (
         "nes",
@@ -35,7 +32,7 @@ const KNOWN_GAMES: [(&str, &str, &str); 4] = [
     ),
 ];
 
-/// From the script's data files, like [`KNOWN_GAMES`].
+/// From the same lists as [`KNOWN_GAMES`].
 const SUPER_MARIO_BROS: (&str, &str) = ("1446", "Super Mario Bros");
 
 /// Far beyond any game the server has.
