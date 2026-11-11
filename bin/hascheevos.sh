@@ -486,8 +486,8 @@ function game_has_cheevos() {
 function get_rom_hash() {
     local rom="$1"
     local hash
-    local uncompressed_rom
-    local ret=0
+    local hashes
+    local entry
 
     if [[ "$ARCADE_FLAG" == 1 ]]; then
         rom="$(basename "$rom")"
@@ -497,32 +497,33 @@ function get_rom_hash() {
         return 0
     fi
 
+    # hc unpacks zip and 7z in memory; list the first entry only to check
+    # its extension against the ones this script supports.
     case "$rom" in
         *.zip|*.ZIP)
-            uncompressed_rom="$TMP_DIR/$(unzip -Z1 "$rom" | head -1)"
-            unzip -o -d "$TMP_DIR" "$rom" >/dev/null
-            validate_rom_file "$uncompressed_rom" || ret=1
+            entry="$(unzip -Z1 "$rom" | head -1)"
             ;;
         *.7z|*.7Z)
-            uncompressed_rom="$TMP_DIR/$(7z l -slt "$rom" | sed -n 's/^Path = //p' | sed '2q;d')"
-            7z e -y -bd -o"$TMP_DIR" "$rom" >/dev/null
-            validate_rom_file "$uncompressed_rom" || ret=1
+            # the first "Path =" line is the archive itself; the second is
+            # its first entry
+            entry="$(7z l -slt "$rom" | sed -n 's/^Path = //p' | sed '2q;d')"
             ;;
     esac
-    if [[ $ret -ne 0 ]]; then
-        rm -f "$uncompressed_rom"
-        return $ret
-    fi
+    case "$rom" in
+        *.zip|*.ZIP|*.7z|*.7Z)
+            if [[ -z "$entry" ]]; then
+                echo "ERROR: \"$rom\": cannot list the archive's entries." >&2
+                return 1
+            fi
+            validate_rom_extension "$entry" || return 1
+            ;;
+    esac
 
-    if [[ -n "$uncompressed_rom" ]]; then
-        hash="$($SCRIPT_DIR/cheevoshash "$uncompressed_rom")"
-        rm -f "$uncompressed_rom"
-    else
-        hash="$($SCRIPT_DIR/cheevoshash "$rom")"
-    fi
-
-    [[ "$hash" =~ :\ [^\ ]{32} ]] || return 1
-    echo "$hash"
+    hashes="$("$SCRIPT_DIR/hc" hash "$rom")" || return 1
+    # column 1 is the hash; keep rcheevos' order, drop repeated hashes
+    hashes="$(cut -f1 <<< "$hashes" | awk '!seen[$0]++')"
+    grep -Eqvx "$HASH_REGEX" <<< "$hashes" && return 1
+    echo "$hashes"
 }
 
 
@@ -541,8 +542,16 @@ function validate_rom_file() {
         return 1
     fi
 
-    if [[ ! "${rom##*.}" =~ ^($EXTENSIONS)$ ]]; then
-        echo "ERROR: \"$rom\": invalid file extension." >&2
+    validate_rom_extension "$rom"
+}
+
+
+# check if the file name has a valid extension
+function validate_rom_extension() {
+    local file_name="$1"
+
+    if [[ ! "${file_name##*.}" =~ ^($EXTENSIONS)$ ]]; then
+        echo "ERROR: \"$file_name\": invalid file extension." >&2
         return 1
     fi
 
