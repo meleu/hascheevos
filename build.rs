@@ -44,8 +44,18 @@ fn main() {
         header.display()
     );
 
+    // Watch the C sources and headers themselves rather than the submodule's
+    // git HEAD: a submodule bump rewrites them anyway, and their paths exist
+    // in a checkout, a git worktree (where `.git` is a file, not a directory)
+    // or a tarball alike. A watched path that does not exist makes Cargo rerun
+    // this script, and rebuild rcheevos, on every build.
     println!("cargo:rerun-if-changed=build.rs");
-    println!("cargo:rerun-if-changed=.git/modules/vendor/rcheevos/HEAD");
+    for watched in ["src", "include"] {
+        println!(
+            "cargo:rerun-if-changed={}",
+            rcheevos.join(watched).display()
+        );
+    }
 
     let mut build = cc::Build::new();
     build.include(rcheevos.join("include")).warnings(false);
