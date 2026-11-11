@@ -400,17 +400,14 @@ fn sevenzipped(rom: &str, name: &str) -> String {
 }
 
 #[test]
-fn seven_zipped_rom_hashes_the_same_as_the_zipped_rom() {
-    for (console, rom, name) in [
-        (NES, "nes/Zooming-Secretary.zip", "Zooming-Secretary.7z"),
-        (NINTENDO_64, "n64/pyoro64-ntsc.zip", "pyoro64-ntsc.7z"),
-    ] {
-        assert_eq!(
-            hash_with_console(console, &sevenzipped(rom, name)),
-            hash_with_console(console, &fixture(rom)),
-            "{rom}"
-        );
-    }
+fn seven_zipped_rom_hashes_as_the_rom_inside() {
+    // A small ROM only: compressing a large one at test time, in a debug
+    // build, dominates the suite's run time.
+    let rom = sevenzipped("nes/Zooming-Secretary.zip", "Zooming-Secretary.7z");
+    hc().args(["hash", "--console", NES, &rom])
+        .assert()
+        .success()
+        .stdout(format!("{ZOOMING_SECRETARY}\n"));
 }
 
 #[test]
