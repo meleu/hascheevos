@@ -3,7 +3,9 @@
 //! [`console_hashes`] and [`ConsoleHash::console_name`].
 
 use std::ffi::{c_char, CStr, CString};
-use std::fs;
+use std::fs::{self, File};
+use std::io::Read;
+use std::marker::PhantomData;
 use std::mem::MaybeUninit;
 use std::path::Path;
 
@@ -38,6 +40,16 @@ impl ConsoleHash {
     }
 }
 
+/// Consoles whose official method reads a `.zip` itself rather than the ROM
+/// inside it, per the pinned rcheevos (v12.5.0): arcade hashes the zip's
+/// filename and MS-DOS hashes the files in the zip. A zip given with one of
+/// these consoles reaches rcheevos untouched. (RAHasher also lists Zeebo, but
+/// rcheevos has no hash method for Zeebo at all.)
+const CONSOLES_HASHING_THE_ZIP_ITSELF: &[u32] = &[
+    26, // RC_CONSOLE_MS_DOS
+    27, // RC_CONSOLE_ARCADE
+];
+
 /// Returns the console hashes of `rom`, in rcheevos' order.
 ///
 /// With a console, the list has exactly one element: the hash produced by
@@ -45,13 +57,22 @@ impl ConsoleHash {
 /// for which rcheevos produced a hash, in the order rcheevos tried them; the
 /// same hash under several consoles is kept once per console. Producing no
 /// hash at all is an error, never an empty list.
+///
+/// A `.zip` is unpacked in memory and its first entry hashed under that
+/// entry's name, unless the console's official method reads the zip itself.
 pub fn console_hashes(rom: &Path, console: Option<u32>) -> Result<Vec<ConsoleHash>> {
     let metadata = fs::metadata(rom).with_context(|| format!("cannot read '{}'", rom.display()))?;
     if !metadata.is_file() {
         bail!("'{}' is not a file", rom.display());
     }
 
-    let iterator = HashIterator::new(rom)?;
+    let content = if is_zip(rom) && !console.is_some_and(hashes_the_zip_itself) {
+        first_zip_entry(rom)?
+    } else {
+        Content::File(rom)
+    };
+
+    let iterator = HashIterator::new(&content)?;
     let Some(console) = console else {
         let console_hashes: Vec<ConsoleHash> = iterator.collect();
         if console_hashes.is_empty() {
@@ -66,28 +87,84 @@ pub fn console_hashes(rom: &Path, console: Option<u32>) -> Result<Vec<ConsoleHas
     }
 }
 
-/// An initialised `rc_hash_iterator_t`, destroyed on drop.
-struct HashIterator(rcheevos::rc_hash_iterator_t);
+/// Whether `console`'s official method reads a zip itself, so the zip must
+/// reach rcheevos untouched.
+fn hashes_the_zip_itself(console: u32) -> bool {
+    CONSOLES_HASHING_THE_ZIP_ITSELF.contains(&console)
+}
 
-impl HashIterator {
-    fn new(rom: &Path) -> Result<Self> {
-        let path = CString::new(rom.as_os_str().as_encoded_bytes())
-            .with_context(|| format!("path '{}' contains a NUL byte", rom.display()))?;
+/// Whether `rom` is a zip, judged by its extension in any letter case.
+fn is_zip(rom: &Path) -> bool {
+    rom.extension()
+        .is_some_and(|extension| extension.eq_ignore_ascii_case("zip"))
+}
+
+/// What rcheevos hashes. Its name's extension drives which consoles rcheevos
+/// considers plausible.
+enum Content<'rom> {
+    /// A file rcheevos reads itself.
+    File(&'rom Path),
+    /// Bytes already in memory, named by the file they came from.
+    InMemory { name: String, bytes: Vec<u8> },
+}
+
+impl Content<'_> {
+    /// The name rcheevos sees: a path, or an archive entry's name.
+    fn name(&self) -> String {
+        match self {
+            Content::File(path) => path.display().to_string(),
+            Content::InMemory { name, .. } => name.clone(),
+        }
+    }
+}
+
+/// The first entry of the zip at `zip`, unpacked in memory.
+fn first_zip_entry(zip: &Path) -> Result<Content<'static>> {
+    let unreadable = || format!("cannot read zip '{}'", zip.display());
+    let file = File::open(zip).with_context(unreadable)?;
+    let mut archive = zip::ZipArchive::new(file).with_context(unreadable)?;
+    if archive.is_empty() {
+        bail!("zip '{}' is empty", zip.display());
+    }
+    let mut entry = archive.by_index(0).with_context(unreadable)?;
+    let name = entry.name().with_context(unreadable)?.into_owned();
+    let mut bytes = Vec::new();
+    entry.read_to_end(&mut bytes).with_context(unreadable)?;
+    Ok(Content::InMemory { name, bytes })
+}
+
+/// An initialised `rc_hash_iterator_t`, destroyed on drop. It points into the
+/// bytes of the [`Content`] it was made from, so it must not outlive them.
+struct HashIterator<'content>(rcheevos::rc_hash_iterator_t, PhantomData<&'content [u8]>);
+
+impl<'content> HashIterator<'content> {
+    fn new(content: &'content Content) -> Result<Self> {
+        let name = match content {
+            Content::File(path) => CString::new(path.as_os_str().as_encoded_bytes()),
+            Content::InMemory { name, .. } => CString::new(name.as_str()),
+        }
+        .with_context(|| format!("name '{}' contains a NUL byte", content.name()))?;
+        let (buffer, buffer_size) = match content {
+            Content::File(_) => (std::ptr::null(), 0),
+            Content::InMemory { bytes, .. } => (bytes.as_ptr(), bytes.len()),
+        };
 
         let mut iterator = MaybeUninit::<rcheevos::rc_hash_iterator_t>::uninit();
         // SAFETY: `rc_hash_initialize_iterator` fully initialises the struct
-        // (it zeroes it first) and copies `path`, which outlives the call.
+        // (it zeroes it first) and copies `name`, which outlives the call. It
+        // keeps `buffer` without copying it; `buffer` points into `content`,
+        // which the `'content` lifetime keeps alive as long as the iterator.
         let mut iterator = unsafe {
             rcheevos::rc_hash_initialize_iterator(
                 iterator.as_mut_ptr(),
-                path.as_ptr(),
-                std::ptr::null(),
-                0,
+                name.as_ptr(),
+                buffer,
+                buffer_size,
             );
             iterator.assume_init()
         };
         iterator.callbacks.error_message = Some(report_error);
-        Ok(Self(iterator))
+        Ok(Self(iterator, PhantomData))
     }
 
     /// The hash of the ROM by one console's official method, if it has one.
@@ -103,7 +180,7 @@ impl HashIterator {
 
 /// Walks the plausible consoles rcheevos chose for the ROM, yielding a console
 /// hash for each console that produced one.
-impl Iterator for HashIterator {
+impl Iterator for HashIterator<'_> {
     type Item = ConsoleHash;
 
     fn next(&mut self) -> Option<ConsoleHash> {
@@ -134,7 +211,7 @@ fn hash_string(hash: &[c_char; 33]) -> String {
     hash.to_string_lossy().into_owned()
 }
 
-impl Drop for HashIterator {
+impl Drop for HashIterator<'_> {
     fn drop(&mut self) {
         // SAFETY: the iterator was initialised in `new` and is not used again.
         unsafe { rcheevos::rc_hash_destroy_iterator(&mut self.0) }

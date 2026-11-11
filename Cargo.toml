@@ -11,6 +11,7 @@ path = "src/main.rs"
 [dependencies]
 anyhow = "1"
 clap = { version = "4", features = ["derive"] }
+zip = { version = "9.5.1", default-features = false, features = ["deflate"] }
 
 [build-dependencies]
 bindgen = "0.73"

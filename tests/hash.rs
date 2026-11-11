@@ -6,6 +6,13 @@ use predicates::prelude::*;
 const SNES: &str = "3";
 const MEGA_DRIVE: &str = "1";
 const NINTENDO_DS: &str = "18";
+const NINTENDO_64: &str = "2";
+const NES: &str = "7";
+const ATARI_2600: &str = "25";
+const ARCADE: &str = "27";
+
+/// The NES fixture's hash, as computed by the `go` branch.
+const ZOOMING_SECRETARY: &str = "bed0f7b12673dd762eed665c5c61927b";
 
 fn hc() -> Command {
     Command::cargo_bin("hc").expect("the hc binary is built")
@@ -13,6 +20,11 @@ fn hc() -> Command {
 
 fn fixture(relative: &str) -> String {
     format!("{}/tests/fixtures/{relative}", env!("CARGO_MANIFEST_DIR"))
+}
+
+/// A path named `name` in a scratch directory for files made at test time.
+fn scratch(name: &str) -> String {
+    format!("{}/{name}", env!("CARGO_TARGET_TMPDIR"))
 }
 
 #[test]
@@ -159,7 +171,7 @@ fn unknown_console_lists_console_hashes_including_the_expected_console() {
 /// Copies the generic-file fixture to `name` in a scratch directory, so its
 /// extension steers rcheevos' choice of plausible consoles.
 fn generic_file_named(name: &str) -> String {
-    let copy = format!("{}/{name}", env!("CARGO_TARGET_TMPDIR"));
+    let copy = scratch(name);
     std::fs::copy(fixture("generic-file.rom"), &copy).expect("copy the generic-file fixture");
     copy
 }
@@ -226,4 +238,129 @@ fn piped_stdout_gets_no_column_header() {
         .assert()
         .success()
         .stderr(predicate::str::contains("CONSOLE ID").not());
+}
+
+#[test]
+fn zipped_rom_hashes_as_the_rom_inside() {
+    // MD5 over the bytes each console's official method covers, computed
+    // outside rcheevos: the whole ROM, except NES without its 16-byte iNES
+    // header and N64 in big-endian (.z64) byte order.
+    for (console, rom, hash) in [
+        (
+            ATARI_2600,
+            "atari2600/Wall-Jump-Ninja.zip",
+            "3c56c0c5f6f97850ed0aa7bcc2a4e30e",
+        ),
+        (
+            MEGA_DRIVE,
+            "megadrive/Abbaye-des-Morts.zip",
+            "bc2e5590cc0e7b6e863b4275343839d4",
+        ),
+        (
+            NINTENDO_64,
+            "n64/pyoro64-ntsc.zip",
+            "2ac0f88bea02d67896ffeae9e8ec72e7",
+        ),
+        (NES, "nes/Zooming-Secretary.zip", ZOOMING_SECRETARY),
+        (
+            SNES,
+            "snes/Christmas-Craze.zip",
+            "0829ebfde80e7a9673fe9966a8d47b0f",
+        ),
+    ] {
+        hc().args(["hash", "--console", console, &fixture(rom)])
+            .assert()
+            .success()
+            .stdout(format!("{hash}\n"));
+    }
+}
+
+/// Extracts the first entry of a fixture zip into a scratch directory,
+/// returning the path of the extracted ROM.
+fn unzipped(rom: &str) -> String {
+    let file = std::fs::File::open(fixture(rom)).expect("open the fixture zip");
+    let mut archive = zip::ZipArchive::new(file).expect("read the fixture zip");
+    let mut entry = archive.by_index(0).expect("the fixture zip has an entry");
+    let name = entry.name().expect("the entry has a name").into_owned();
+    let path = scratch(&name);
+    let mut out = std::fs::File::create(&path).expect("create the extracted ROM");
+    std::io::copy(&mut entry, &mut out).expect("extract the ROM");
+    path
+}
+
+fn hash_with_console(console: &str, rom: &str) -> Vec<u8> {
+    hc().args(["hash", "--console", console, rom])
+        .assert()
+        .success()
+        .get_output()
+        .stdout
+        .clone()
+}
+
+#[test]
+fn zipped_rom_hashes_the_same_as_the_rom_uncompressed() {
+    for (console, rom) in [
+        (NES, "nes/Zooming-Secretary.zip"),
+        (NINTENDO_64, "n64/pyoro64-ntsc.zip"),
+    ] {
+        assert_eq!(
+            hash_with_console(console, &fixture(rom)),
+            hash_with_console(console, &unzipped(rom)),
+            "{rom}"
+        );
+    }
+}
+
+#[test]
+fn arcade_zip_hashes_as_its_name_without_extension() {
+    // Arcade's official method reads the zip's name, never its content, so an
+    // empty file proves the zip reaches rcheevos without being unpacked.
+    let rom = scratch("mslug.zip");
+    std::fs::write(&rom, b"").expect("create an empty arcade zip");
+    hc().args(["hash", "--console", ARCADE, &rom])
+        .assert()
+        .success()
+        // MD5 of "mslug".
+        .stdout("b43c8b4ec999588c04dad79bb8bcc745\n");
+}
+
+#[test]
+fn zip_extension_matches_in_any_letter_case() {
+    let rom = scratch("Zooming-Secretary.ZIP");
+    std::fs::copy(fixture("nes/Zooming-Secretary.zip"), &rom).expect("copy the NES fixture");
+    hc().args(["hash", "--console", NES, &rom])
+        .assert()
+        .success()
+        .stdout(format!("{ZOOMING_SECRETARY}\n"));
+}
+
+#[test]
+fn empty_or_unreadable_zip_fails_with_empty_stdout() {
+    // The smallest valid zip: an end-of-central-directory record, no entries.
+    let mut empty_zip = b"PK\x05\x06".to_vec();
+    empty_zip.resize(22, 0);
+    for (name, content, message) in [
+        ("empty.zip", empty_zip, "is empty"),
+        ("not-a-zip.zip", b"not a zip".to_vec(), "cannot read zip '"),
+    ] {
+        let rom = scratch(name);
+        std::fs::write(&rom, content).expect("write the zip");
+        hc().args(["hash", "--console", NES, &rom])
+            .assert()
+            .failure()
+            .stdout("")
+            .stderr(predicate::str::contains(message).and(predicate::str::contains(name)));
+    }
+}
+
+#[test]
+fn zip_without_a_console_is_unpacked_and_its_entry_names_the_console() {
+    // Unpacked, the `.nes` entry makes NES the only plausible console; left
+    // packed, the `.zip` would make it arcade.
+    hc().args(["hash", &fixture("nes/Zooming-Secretary.zip")])
+        .assert()
+        .success()
+        .stdout(format!(
+            "{ZOOMING_SECRETARY}\t{NES}\tNintendo Entertainment System\n"
+        ));
 }
