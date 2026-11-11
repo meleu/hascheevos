@@ -2,6 +2,7 @@
 
 mod hash;
 
+use std::io::{self, IsTerminal};
 use std::path::PathBuf;
 use std::process::ExitCode;
 
@@ -18,7 +19,14 @@ struct Cli {
 #[derive(Subcommand)]
 enum Command {
     /// Print the hash RetroAchievements uses to identify a ROM
-    #[command(arg_required_else_help = true)]
+    ///
+    /// With --console, prints the bare hash. Without, prints one line per
+    /// console that produced a hash, in the order rcheevos tried them:
+    ///
+    ///     <hash><TAB><console id><TAB><console name>
+    ///
+    /// The console ID on each line is usable as the --console value.
+    #[command(arg_required_else_help = true, verbatim_doc_comment)]
     Hash(HashArgs),
 }
 
@@ -48,6 +56,11 @@ fn main() -> ExitCode {
 
 fn print_hashes(args: &HashArgs) -> Result<()> {
     let console_hashes = hash::console_hashes(&args.rom, args.console)?;
+    // The header is for a person reading the table, so scripts that capture
+    // stdout never see it; it goes to stderr to keep stdout pure data.
+    if args.console.is_none() && io::stdout().is_terminal() {
+        eprintln!("HASH\tCONSOLE ID\tCONSOLE NAME");
+    }
     for console_hash in console_hashes {
         if args.console.is_some() {
             println!("{}", console_hash.hash);

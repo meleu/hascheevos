@@ -227,3 +227,22 @@ fn rom_no_console_can_hash_fails_with_empty_stdout() {
         .stdout("")
         .stderr(predicate::str::contains("no console produced a hash for '"));
 }
+
+#[test]
+fn help_describes_the_columns_printed_without_a_console() {
+    hc().args(["hash", "--help"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains(
+            "<hash><TAB><console id><TAB><console name>",
+        ));
+}
+
+#[test]
+fn piped_stdout_gets_no_column_header() {
+    // The tests capture stdout, so it is never a terminal here.
+    hc().args(["hash", &fixture("snes/FakeHeaderedROM.sfc")])
+        .assert()
+        .success()
+        .stderr(predicate::str::contains("CONSOLE ID").not());
+}
