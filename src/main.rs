@@ -56,22 +56,26 @@ fn main() -> ExitCode {
 
 fn print_hashes(args: &HashArgs) -> Result<()> {
     let console_hashes = hash::console_hashes(&args.rom, args.console)?;
+    if args.console.is_some() {
+        // A bare hash, so scripts can capture it with `$(...)`.
+        for console_hash in &console_hashes {
+            println!("{}", console_hash.hash);
+        }
+        return Ok(());
+    }
+
     // The header is for a person reading the table, so scripts that capture
     // stdout never see it; it goes to stderr to keep stdout pure data.
-    if args.console.is_none() && io::stdout().is_terminal() {
+    if io::stdout().is_terminal() {
         eprintln!("HASH\tCONSOLE ID\tCONSOLE NAME");
     }
-    for console_hash in console_hashes {
-        if args.console.is_some() {
-            println!("{}", console_hash.hash);
-        } else {
-            println!(
-                "{}\t{}\t{}",
-                console_hash.hash,
-                console_hash.console,
-                console_hash.console_name()
-            );
-        }
+    for console_hash in &console_hashes {
+        println!(
+            "{}\t{}\t{}",
+            console_hash.hash,
+            console_hash.console,
+            console_hash.console_name()
+        );
     }
     Ok(())
 }

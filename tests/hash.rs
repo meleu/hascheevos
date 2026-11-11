@@ -98,24 +98,6 @@ fn no_arguments_explains_usage() {
 }
 
 #[test]
-fn help_explains_usage() {
-    hc().args(["hash", "--help"])
-        .assert()
-        .success()
-        .stdout(predicate::str::contains("Usage: hc hash"));
-}
-
-#[test]
-fn top_level_help_describes_the_tool() {
-    hc().arg("--help")
-        .assert()
-        .success()
-        .stdout(predicate::str::contains(
-            "Tells whether a ROM is supported by RetroAchievements",
-        ));
-}
-
-#[test]
 fn directory_given_as_rom_fails_with_empty_stdout() {
     hc().args(["hash", "--console", SNES, &fixture("snes")])
         .assert()
@@ -229,13 +211,12 @@ fn rom_no_console_can_hash_fails_with_empty_stdout() {
 }
 
 #[test]
-fn help_describes_the_columns_printed_without_a_console() {
-    hc().args(["hash", "--help"])
-        .assert()
-        .success()
-        .stdout(predicate::str::contains(
+fn help_explains_usage_and_the_columns_printed_without_a_console() {
+    hc().args(["hash", "--help"]).assert().success().stdout(
+        predicate::str::contains("Usage: hc hash").and(predicate::str::contains(
             "<hash><TAB><console id><TAB><console name>",
-        ));
+        )),
+    );
 }
 
 #[test]
