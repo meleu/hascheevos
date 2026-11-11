@@ -70,7 +70,10 @@ const CONSOLES_HASHING_THE_7Z_ITSELF: &[u32] = &[
 /// A `.zip` or `.7z` is unpacked in memory and its first entry hashed under
 /// that entry's name, unless the console's official method reads the archive
 /// itself.
-pub fn console_hashes(rom: &Path, console: Option<u32>) -> Result<Vec<ConsoleHash>> {
+///
+/// rcheevos' error messages always go to stderr. With `verbose`, so does its
+/// trace of which consoles it tried and what it read.
+pub fn console_hashes(rom: &Path, console: Option<u32>, verbose: bool) -> Result<Vec<ConsoleHash>> {
     let metadata = fs::metadata(rom).with_context(|| format!("cannot read '{}'", rom.display()))?;
     if !metadata.is_file() {
         bail!("'{}' is not a file", rom.display());
@@ -83,7 +86,7 @@ pub fn console_hashes(rom: &Path, console: Option<u32>) -> Result<Vec<ConsoleHas
         _ => Content::File(rom),
     };
 
-    let iterator = HashIterator::new(&content)?;
+    let iterator = HashIterator::new(&content, verbose)?;
     let Some(console) = console else {
         let console_hashes: Vec<ConsoleHash> = iterator.collect();
         if console_hashes.is_empty() {
@@ -196,7 +199,7 @@ impl Content<'_> {
 struct HashIterator<'content>(rcheevos::rc_hash_iterator_t, PhantomData<&'content [u8]>);
 
 impl<'content> HashIterator<'content> {
-    fn new(content: &'content Content) -> Result<Self> {
+    fn new(content: &'content Content, verbose: bool) -> Result<Self> {
         let name = match content {
             Content::File(path) => CString::new(path.as_os_str().as_encoded_bytes()),
             Content::InMemory { name, .. } => CString::new(name.as_str()),
@@ -221,7 +224,12 @@ impl<'content> HashIterator<'content> {
             );
             iterator.assume_init()
         };
-        iterator.callbacks.error_message = Some(report_error);
+        // rcheevos sends no message while initialising, so setting the
+        // callbacks afterwards misses none.
+        iterator.callbacks.error_message = Some(report_message);
+        if verbose {
+            iterator.callbacks.verbose_message = Some(report_message);
+        }
         Ok(Self(iterator, PhantomData))
     }
 
@@ -276,8 +284,8 @@ impl Drop for HashIterator<'_> {
     }
 }
 
-/// Sends an rcheevos error message to stderr.
-unsafe extern "C" fn report_error(
+/// Sends an rcheevos error or verbose message to stderr.
+unsafe extern "C" fn report_message(
     message: *const c_char,
     _iterator: *const rcheevos::rc_hash_iterator_t,
 ) {

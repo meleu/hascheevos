@@ -36,6 +36,10 @@ struct HashArgs {
     #[arg(long, value_name = "ID")]
     console: Option<u32>,
 
+    /// Show rcheevos' trace on stderr: which consoles it tried, what it read
+    #[arg(short, long)]
+    verbose: bool,
+
     /// The ROM to hash
     rom: PathBuf,
 }
@@ -55,7 +59,7 @@ fn main() -> ExitCode {
 }
 
 fn print_hashes(args: &HashArgs) -> Result<()> {
-    let console_hashes = hash::console_hashes(&args.rom, args.console)?;
+    let console_hashes = hash::console_hashes(&args.rom, args.console, args.verbose)?;
     if args.console.is_some() {
         // A bare hash, so scripts can capture it with `$(...)`.
         for console_hash in &console_hashes {

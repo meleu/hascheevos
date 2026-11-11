@@ -79,7 +79,11 @@ fn rom_the_console_cannot_hash_fails_with_empty_stdout() {
     .assert()
     .failure()
     .stdout("")
-    .stderr(predicate::str::contains("produced no hash for '"));
+    .stderr(
+        // rcheevos' own error reaches stderr even without --verbose.
+        predicate::str::contains("rcheevos: ")
+            .and(predicate::str::contains("produced no hash for '")),
+    );
 }
 
 #[test]
@@ -463,4 +467,23 @@ fn arcade_7z_hashes_as_its_name_without_extension() {
         .success()
         // MD5 of "mslug".
         .stdout("b43c8b4ec999588c04dad79bb8bcc745\n");
+}
+
+#[test]
+fn verbose_adds_a_trace_on_stderr_and_leaves_stdout_unchanged() {
+    let rom = fixture("nes/Zooming-Secretary.zip");
+    let with_console: &[&str] = &["--console", NES, &rom];
+    let without_console: &[&str] = &[&rom];
+    for args in [with_console, without_console] {
+        let quiet = hc().arg("hash").args(args).assert().success().stderr("");
+        let quiet_stdout = quiet.get_output().stdout.clone();
+        for flag in ["-v", "--verbose"] {
+            hc().args(["hash", flag])
+                .args(args)
+                .assert()
+                .success()
+                .stdout(quiet_stdout.clone())
+                .stderr(predicate::str::contains("rcheevos: "));
+        }
+    }
 }
