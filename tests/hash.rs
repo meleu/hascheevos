@@ -123,3 +123,107 @@ fn directory_given_as_rom_fails_with_empty_stdout() {
         .stdout("")
         .stderr(predicate::str::contains("snes' is not a file"));
 }
+
+/// Splits `hc hash` output without `--console` into its lines, checking each
+/// is a 32-hex-character hash, a numeric console ID and a console name.
+fn console_hash_lines(stdout: &[u8]) -> Vec<(String, String, String)> {
+    let stdout = std::str::from_utf8(stdout).expect("stdout is UTF-8");
+    assert!(
+        stdout.ends_with('\n'),
+        "stdout ends with a newline: {stdout:?}"
+    );
+    stdout
+        .lines()
+        .map(|line| {
+            let columns: Vec<&str> = line.split('\t').collect();
+            let [hash, console, name] = columns[..] else {
+                panic!("line has three tab-separated columns: {line:?}");
+            };
+            assert!(
+                hash.len() == 32 && hash.bytes().all(|b| b.is_ascii_hexdigit()),
+                "first column is a 32-hex-character hash: {line:?}"
+            );
+            assert!(
+                console.parse::<u32>().is_ok(),
+                "second column is a numeric console ID: {line:?}"
+            );
+            assert!(!name.is_empty(), "third column is a console name: {line:?}");
+            (hash.to_owned(), console.to_owned(), name.to_owned())
+        })
+        .collect()
+}
+
+#[test]
+fn unknown_console_lists_console_hashes_including_the_expected_console() {
+    let output = hc()
+        .args(["hash", &fixture("snes/FakeHeaderedROM.sfc")])
+        .assert()
+        .success()
+        .get_output()
+        .stdout
+        .clone();
+
+    let lines = console_hash_lines(&output);
+    assert!(
+        lines.contains(&(
+            "6556112372898c69e1de0bf689d8db26".to_owned(),
+            SNES.to_owned(),
+            "Super Nintendo Entertainment System".to_owned()
+        )),
+        "the SNES console hash is listed: {lines:?}"
+    );
+}
+
+/// Copies the generic-file fixture to `name` in a scratch directory, so its
+/// extension steers rcheevos' choice of plausible consoles.
+fn generic_file_named(name: &str) -> String {
+    let copy = format!("{}/{name}", env!("CARGO_TARGET_TMPDIR"));
+    std::fs::copy(fixture("generic-file.rom"), &copy).expect("copy the generic-file fixture");
+    copy
+}
+
+#[test]
+fn unknown_console_lists_the_same_hash_once_per_console() {
+    // rcheevos tries Apple II, then Commodore 64, for a `.nib` file; both
+    // hash the whole file.
+    hc().args(["hash", &generic_file_named("same-hash.nib")])
+        .assert()
+        .success()
+        .stdout(
+            "6ed56530d641cd3cc1c9921fe3327b4a\t38\tApple II\n\
+             6ed56530d641cd3cc1c9921fe3327b4a\t30\tCommodore 64\n",
+        );
+}
+
+#[test]
+fn printed_console_id_gives_the_hash_from_its_line() {
+    for rom in [
+        fixture("snes/FakeHeaderedROM.sfc"),
+        generic_file_named("round-trip.nib"),
+    ] {
+        let output = hc()
+            .args(["hash", &rom])
+            .assert()
+            .success()
+            .get_output()
+            .stdout
+            .clone();
+
+        for (hash, console, _) in console_hash_lines(&output) {
+            hc().args(["hash", "--console", &console, &rom])
+                .assert()
+                .success()
+                .stdout(format!("{hash}\n"));
+        }
+    }
+}
+
+#[test]
+fn rom_no_console_can_hash_fails_with_empty_stdout() {
+    // Only disc consoles are tried for a `.iso` file, and 96 bytes is no disc.
+    hc().args(["hash", &generic_file_named("no-console.iso")])
+        .assert()
+        .failure()
+        .stdout("")
+        .stderr(predicate::str::contains("no console produced a hash for '"));
+}

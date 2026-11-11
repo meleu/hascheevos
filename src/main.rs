@@ -47,8 +47,18 @@ fn main() -> ExitCode {
 }
 
 fn print_hashes(args: &HashArgs) -> Result<()> {
-    for console_hash in hash::console_hashes(&args.rom, args.console)? {
-        println!("{}", console_hash.hash);
+    let console_hashes = hash::console_hashes(&args.rom, args.console)?;
+    for console_hash in console_hashes {
+        if args.console.is_some() {
+            println!("{}", console_hash.hash);
+        } else {
+            println!(
+                "{}\t{}\t{}",
+                console_hash.hash,
+                console_hash.console,
+                console_hash.console_name()
+            );
+        }
     }
     Ok(())
 }

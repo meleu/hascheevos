@@ -11,9 +11,11 @@ use std::path::{Path, PathBuf};
 /// CHD reader of its own, and we do not supply one.
 const DEFINES: &[&str] = &["RC_HASH_NO_ENCRYPTED"];
 
-/// The hashing sources, including the default disc-image reader (`cdreader.c`).
+/// The hashing sources, including the default disc-image reader (`cdreader.c`),
+/// and the console names (`consoleinfo.c`).
 const SOURCES: &[&str] = &[
     "src/rc_compat.c",
+    "src/rcheevos/consoleinfo.c",
     "src/rhash/cdreader.c",
     "src/rhash/hash.c",
     "src/rhash/hash_disc.c",
@@ -22,12 +24,15 @@ const SOURCES: &[&str] = &[
     "src/rhash/md5.c",
 ];
 
-/// Only the non-deprecated iterator API is declared, so the deprecated
-/// global-callback functions cannot be called by accident.
+/// Only the non-deprecated iterator API and the console-name function are
+/// declared, so the deprecated global-callback functions cannot be called by
+/// accident.
 const FUNCTIONS: &[&str] = &[
     "rc_hash_initialize_iterator",
     "rc_hash_generate",
+    "rc_hash_iterate",
     "rc_hash_destroy_iterator",
+    "rc_console_name",
 ];
 
 fn main() {

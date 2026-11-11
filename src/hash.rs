@@ -1,6 +1,6 @@
 //! Console hashes of a ROM, computed in-process by the vendored rcheevos
 //! library (ADR-0001). Everything about rcheevos is hidden behind
-//! [`console_hashes`].
+//! [`console_hashes`] and [`ConsoleHash::console_name`].
 
 use std::ffi::{c_char, CStr, CString};
 use std::fs;
@@ -28,22 +28,38 @@ pub struct ConsoleHash {
     pub hash: String,
 }
 
+impl ConsoleHash {
+    /// The console's name, as rcheevos spells it.
+    pub fn console_name(&self) -> String {
+        // SAFETY: `rc_console_name` accepts any ID and returns a pointer to a
+        // static NUL-terminated string.
+        let name = unsafe { CStr::from_ptr(rcheevos::rc_console_name(self.console)) };
+        name.to_string_lossy().into_owned()
+    }
+}
+
 /// Returns the console hashes of `rom`, in rcheevos' order.
 ///
 /// With a console, the list has exactly one element: the hash produced by
-/// that console's official method. Producing no hash at all is an error,
-/// never an empty list.
+/// that console's official method. Without, it has one element per console
+/// for which rcheevos produced a hash, in the order rcheevos tried them; the
+/// same hash under several consoles is kept once per console. Producing no
+/// hash at all is an error, never an empty list.
 pub fn console_hashes(rom: &Path, console: Option<u32>) -> Result<Vec<ConsoleHash>> {
-    let Some(console) = console else {
-        bail!("hashing a ROM whose console is unknown is not supported yet: pass a console ID");
-    };
-
     let metadata = fs::metadata(rom).with_context(|| format!("cannot read '{}'", rom.display()))?;
     if !metadata.is_file() {
         bail!("'{}' is not a file", rom.display());
     }
 
     let iterator = HashIterator::new(rom)?;
+    let Some(console) = console else {
+        let console_hashes: Vec<ConsoleHash> = iterator.collect();
+        if console_hashes.is_empty() {
+            bail!("no console produced a hash for '{}'", rom.display());
+        }
+        return Ok(console_hashes);
+    };
+
     match iterator.generate(console) {
         Some(hash) => Ok(vec![ConsoleHash { console, hash }]),
         None => bail!("console {console} produced no hash for '{}'", rom.display()),
@@ -81,13 +97,41 @@ impl HashIterator {
         // and the iterator is initialised and alive.
         let generated =
             unsafe { rcheevos::rc_hash_generate(hash.as_mut_ptr(), console, &self.0) } != 0;
+        generated.then(|| hash_string(&hash))
+    }
+}
+
+/// Walks the plausible consoles rcheevos chose for the ROM, yielding a console
+/// hash for each console that produced one.
+impl Iterator for HashIterator {
+    type Item = ConsoleHash;
+
+    fn next(&mut self) -> Option<ConsoleHash> {
+        let mut hash: [c_char; 33] = [0; 33];
+        // SAFETY: `hash` has room for 32 characters and the terminating NUL,
+        // and the iterator is initialised and alive.
+        let generated = unsafe { rcheevos::rc_hash_iterate(hash.as_mut_ptr(), &mut self.0) } != 0;
         if !generated {
             return None;
         }
-        // SAFETY: on success rcheevos wrote a NUL-terminated string to `hash`.
-        let hash = unsafe { CStr::from_ptr(hash.as_ptr()) };
-        Some(hash.to_string_lossy().into_owned())
+        // On success rcheevos has just advanced `index` past the console that
+        // produced the hash.
+        let index = usize::try_from(self.0.index - 1)
+            .expect("rcheevos advances the index before every hash it produces");
+        let console = self.0.consoles[index];
+        Some(ConsoleHash {
+            console: console.into(),
+            hash: hash_string(&hash),
+        })
     }
+}
+
+/// The hash rcheevos wrote to `hash`.
+fn hash_string(hash: &[c_char; 33]) -> String {
+    // SAFETY: `hash` starts zeroed and rcheevos writes it with
+    // `snprintf(hash, 33, ...)`, so it always holds a NUL within its 33 bytes.
+    let hash = unsafe { CStr::from_ptr(hash.as_ptr()) };
+    hash.to_string_lossy().into_owned()
 }
 
 impl Drop for HashIterator {
