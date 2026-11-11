@@ -49,7 +49,10 @@ fn missing_rom_fails_with_empty_stdout() {
         .assert()
         .failure()
         .stdout("")
-        .stderr(predicate::str::contains("no-such.sfc"));
+        .stderr(
+            predicate::str::contains("cannot read '")
+                .and(predicate::str::contains("no-such.sfc':")),
+        );
 }
 
 #[test]
@@ -64,7 +67,7 @@ fn rom_the_console_cannot_hash_fails_with_empty_stdout() {
     .assert()
     .failure()
     .stdout("")
-    .stderr(predicate::str::contains("produced no hash"));
+    .stderr(predicate::str::contains("produced no hash for '"));
 }
 
 #[test]
@@ -103,10 +106,20 @@ fn help_explains_usage() {
 }
 
 #[test]
+fn top_level_help_describes_the_tool() {
+    hc().arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains(
+            "Tells whether a ROM is supported by RetroAchievements",
+        ));
+}
+
+#[test]
 fn directory_given_as_rom_fails_with_empty_stdout() {
     hc().args(["hash", "--console", SNES, &fixture("snes")])
         .assert()
         .failure()
         .stdout("")
-        .stderr(predicate::str::contains("not a file"));
+        .stderr(predicate::str::contains("snes' is not a file"));
 }

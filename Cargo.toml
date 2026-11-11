@@ -2,7 +2,7 @@
 name = "hascheevos"
 version = "0.1.0"
 edition = "2021"
-description = "Tells whether a ROM has RetroAchievements achievements"
+description = "Tells whether a ROM is supported by RetroAchievements"
 
 [[bin]]
 name = "hc"

@@ -38,19 +38,15 @@ pub fn console_hashes(rom: &Path, console: Option<u32>) -> Result<Vec<ConsoleHas
         bail!("hashing a ROM whose console is unknown is not supported yet: pass a console ID");
     };
 
-    let metadata =
-        fs::metadata(rom).with_context(|| format!("cannot read ROM {}", rom.display()))?;
+    let metadata = fs::metadata(rom).with_context(|| format!("cannot read '{}'", rom.display()))?;
     if !metadata.is_file() {
-        bail!("ROM {} is not a file", rom.display());
+        bail!("'{}' is not a file", rom.display());
     }
 
     let iterator = HashIterator::new(rom)?;
     match iterator.generate(console) {
         Some(hash) => Ok(vec![ConsoleHash { console, hash }]),
-        None => bail!(
-            "console {console} produced no hash for ROM {}",
-            rom.display()
-        ),
+        None => bail!("console {console} produced no hash for '{}'", rom.display()),
     }
 }
 
@@ -60,7 +56,7 @@ struct HashIterator(rcheevos::rc_hash_iterator_t);
 impl HashIterator {
     fn new(rom: &Path) -> Result<Self> {
         let path = CString::new(rom.as_os_str().as_encoded_bytes())
-            .with_context(|| format!("ROM path {} contains a NUL byte", rom.display()))?;
+            .with_context(|| format!("path '{}' contains a NUL byte", rom.display()))?;
 
         let mut iterator = MaybeUninit::<rcheevos::rc_hash_iterator_t>::uninit();
         // SAFETY: `rc_hash_initialize_iterator` fully initialises the struct
