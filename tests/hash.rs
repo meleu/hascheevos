@@ -364,3 +364,18 @@ fn zip_without_a_console_is_unpacked_and_its_entry_names_the_console() {
             "{ZOOMING_SECRETARY}\t{NES}\tNintendo Entertainment System\n"
         ));
 }
+
+#[test]
+fn arcade_zip_in_an_fbneo_subsystem_folder_hashes_the_folder_with_its_name() {
+    // rcheevos prefixes the name with folders FBNeo loads subsystems from,
+    // such as `nes/`. MD5 of "nes_Zooming-Secretary".
+    hc().args([
+        "hash",
+        "--console",
+        ARCADE,
+        &fixture("nes/Zooming-Secretary.zip"),
+    ])
+    .assert()
+    .success()
+    .stdout("1fa4080a3f7206d0dad34bc5e7bb1e5c\n");
+}

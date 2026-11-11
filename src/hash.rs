@@ -42,7 +42,9 @@ impl ConsoleHash {
 
 /// Consoles whose official method reads a `.zip` itself rather than the ROM
 /// inside it, per the pinned rcheevos (v12.5.0): arcade hashes the zip's
-/// filename and MS-DOS hashes the files in the zip. A zip given with one of
+/// filename without its extension, prefixed by its folder when that folder
+/// names an FBNeo subsystem (see `rc_hash_arcade` in `hash_rom.c`), and
+/// MS-DOS hashes the files in the zip. A zip given with one of
 /// these consoles reaches rcheevos untouched. (RAHasher also lists Zeebo, but
 /// rcheevos has no hash method for Zeebo at all.)
 const CONSOLES_HASHING_THE_ZIP_ITSELF: &[u32] = &[
