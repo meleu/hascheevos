@@ -11,6 +11,7 @@ path = "src/main.rs"
 [dependencies]
 anyhow = "1"
 clap = { version = "4", features = ["derive"] }
+sevenz-rust2 = { version = "0.25.0", default-features = false, features = ["bzip2", "deflate", "ppmd"] }
 zip = { version = "9.5.1", default-features = false, features = ["deflate"] }
 
 [build-dependencies]
@@ -20,3 +21,4 @@ cc = "1"
 [dev-dependencies]
 assert_cmd = "2"
 predicates = "3"
+sevenz-rust2 = { version = "0.25.0", default-features = false, features = ["compress"] }

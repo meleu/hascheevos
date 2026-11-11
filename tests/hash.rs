@@ -379,3 +379,91 @@ fn arcade_zip_in_an_fbneo_subsystem_folder_hashes_the_folder_with_its_name() {
     .success()
     .stdout("1fa4080a3f7206d0dad34bc5e7bb1e5c\n");
 }
+
+/// Packs the first entry of a fixture zip into a `.7z` named `name` in a
+/// scratch directory, returning the path of the 7z.
+fn sevenzipped(rom: &str, name: &str) -> String {
+    let file = std::fs::File::open(fixture(rom)).expect("open the fixture zip");
+    let mut zip = zip::ZipArchive::new(file).expect("read the fixture zip");
+    let entry = zip.by_index(0).expect("the fixture zip has an entry");
+    let entry_name = entry.name().expect("the entry has a name").into_owned();
+    let path = scratch(name);
+    let mut archive = sevenz_rust2::ArchiveWriter::create(&path).expect("create the 7z");
+    archive
+        .push_archive_entry(
+            sevenz_rust2::ArchiveEntry::new_file(&entry_name),
+            Some(entry),
+        )
+        .expect("pack the ROM into the 7z");
+    archive.finish().expect("finish the 7z");
+    path
+}
+
+#[test]
+fn seven_zipped_rom_hashes_the_same_as_the_zipped_rom() {
+    for (console, rom, name) in [
+        (NES, "nes/Zooming-Secretary.zip", "Zooming-Secretary.7z"),
+        (NINTENDO_64, "n64/pyoro64-ntsc.zip", "pyoro64-ntsc.7z"),
+    ] {
+        assert_eq!(
+            hash_with_console(console, &sevenzipped(rom, name)),
+            hash_with_console(console, &fixture(rom)),
+            "{rom}"
+        );
+    }
+}
+
+#[test]
+fn seven_zip_extension_matches_in_any_letter_case() {
+    let rom = sevenzipped("nes/Zooming-Secretary.zip", "Zooming-Secretary.7Z");
+    hc().args(["hash", "--console", NES, &rom])
+        .assert()
+        .success()
+        .stdout(format!("{ZOOMING_SECRETARY}\n"));
+}
+
+#[test]
+fn empty_or_unreadable_7z_fails_with_empty_stdout() {
+    for (name, message) in [
+        ("empty.7z", "is empty"),
+        ("not-a-7z.7z", "cannot read 7z '"),
+    ] {
+        let rom = scratch(name);
+        if name == "empty.7z" {
+            sevenz_rust2::ArchiveWriter::create(&rom)
+                .expect("create the 7z")
+                .finish()
+                .expect("finish the empty 7z");
+        } else {
+            std::fs::write(&rom, b"not a 7z").expect("write the 7z");
+        }
+        hc().args(["hash", "--console", NES, &rom])
+            .assert()
+            .failure()
+            .stdout("")
+            .stderr(predicate::str::contains(message).and(predicate::str::contains(name)));
+    }
+}
+
+#[test]
+fn seven_zip_without_a_console_is_unpacked_and_its_entry_names_the_console() {
+    // Unpacked, the `.nes` entry makes NES the only plausible console; left
+    // packed, the `.7z` would make it arcade.
+    let rom = sevenzipped("nes/Zooming-Secretary.zip", "no-console.7z");
+    hc().args(["hash", &rom]).assert().success().stdout(format!(
+        "{ZOOMING_SECRETARY}\t{NES}\tNintendo Entertainment System\n"
+    ));
+}
+
+#[test]
+fn arcade_7z_hashes_as_its_name_without_extension() {
+    // Arcade's official method reads the 7z's name, never its content, so an
+    // empty file proves the 7z reaches rcheevos without being unpacked.
+    let rom = scratch("mslug.7z");
+    std::fs::write(&rom, b"").expect("create an empty arcade 7z");
+    hc().args(["hash", "--console", ARCADE, &rom])
+        .assert()
+        .success()
+        // MD5 of "mslug".
+        .stdout("b43c8b4ec999588c04dad79bb8bcc745\n");
+}

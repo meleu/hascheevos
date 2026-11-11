@@ -44,11 +44,18 @@ impl ConsoleHash {
 /// inside it, per the pinned rcheevos (v12.5.0): arcade hashes the zip's
 /// filename without its extension, prefixed by its folder when that folder
 /// names an FBNeo subsystem (see `rc_hash_arcade` in `hash_rom.c`), and
-/// MS-DOS hashes the files in the zip. A zip given with one of
-/// these consoles reaches rcheevos untouched. (RAHasher also lists Zeebo, but
-/// rcheevos has no hash method for Zeebo at all.)
+/// MS-DOS hashes the files in the zip. A zip given with one of these consoles
+/// reaches rcheevos untouched. (RAHasher also lists Zeebo, but rcheevos has no
+/// hash method for Zeebo at all.)
 const CONSOLES_HASHING_THE_ZIP_ITSELF: &[u32] = &[
     26, // RC_CONSOLE_MS_DOS
+    27, // RC_CONSOLE_ARCADE
+];
+
+/// Consoles whose official method reads a `.7z` itself rather than the ROM
+/// inside it, per the pinned rcheevos (v12.5.0): only arcade, which hashes
+/// the 7z's filename as it does a zip's. MS-DOS parses zips only.
+const CONSOLES_HASHING_THE_7Z_ITSELF: &[u32] = &[
     27, // RC_CONSOLE_ARCADE
 ];
 
@@ -60,18 +67,20 @@ const CONSOLES_HASHING_THE_ZIP_ITSELF: &[u32] = &[
 /// same hash under several consoles is kept once per console. Producing no
 /// hash at all is an error, never an empty list.
 ///
-/// A `.zip` is unpacked in memory and its first entry hashed under that
-/// entry's name, unless the console's official method reads the zip itself.
+/// A `.zip` or `.7z` is unpacked in memory and its first entry hashed under
+/// that entry's name, unless the console's official method reads the archive
+/// itself.
 pub fn console_hashes(rom: &Path, console: Option<u32>) -> Result<Vec<ConsoleHash>> {
     let metadata = fs::metadata(rom).with_context(|| format!("cannot read '{}'", rom.display()))?;
     if !metadata.is_file() {
         bail!("'{}' is not a file", rom.display());
     }
 
-    let content = if is_zip(rom) && !console.is_some_and(hashes_the_zip_itself) {
-        first_zip_entry(rom)?
-    } else {
-        Content::File(rom)
+    let content = match Archive::of(rom) {
+        Some(archive) if !console.is_some_and(|console| archive.is_hashed_whole_by(console)) => {
+            archive.first_entry(rom)?
+        }
+        _ => Content::File(rom),
     };
 
     let iterator = HashIterator::new(&content)?;
@@ -89,16 +98,78 @@ pub fn console_hashes(rom: &Path, console: Option<u32>) -> Result<Vec<ConsoleHas
     }
 }
 
-/// Whether `console`'s official method reads a zip itself, so the zip must
-/// reach rcheevos untouched.
-fn hashes_the_zip_itself(console: u32) -> bool {
-    CONSOLES_HASHING_THE_ZIP_ITSELF.contains(&console)
+/// An archive format `hc` unpacks, judged by the ROM's extension in any
+/// letter case.
+#[derive(Debug, Clone, Copy)]
+enum Archive {
+    /// A `.zip`.
+    Zip,
+    /// A `.7z`.
+    SevenZip,
 }
 
-/// Whether `rom` is a zip, judged by its extension in any letter case.
-fn is_zip(rom: &Path) -> bool {
-    rom.extension()
-        .is_some_and(|extension| extension.eq_ignore_ascii_case("zip"))
+impl Archive {
+    /// The archive format of `rom`, if it is an archive.
+    fn of(rom: &Path) -> Option<Self> {
+        let extension = rom.extension()?;
+        [Archive::Zip, Archive::SevenZip]
+            .into_iter()
+            .find(|archive| extension.eq_ignore_ascii_case(archive.extension()))
+    }
+
+    /// The format's extension, which also names it in messages.
+    fn extension(self) -> &'static str {
+        match self {
+            Archive::Zip => "zip",
+            Archive::SevenZip => "7z",
+        }
+    }
+
+    /// Whether `console`'s official method reads an archive of this format
+    /// itself, so it must reach rcheevos untouched.
+    fn is_hashed_whole_by(self, console: u32) -> bool {
+        match self {
+            Archive::Zip => CONSOLES_HASHING_THE_ZIP_ITSELF,
+            Archive::SevenZip => CONSOLES_HASHING_THE_7Z_ITSELF,
+        }
+        .contains(&console)
+    }
+
+    /// The first entry of the archive at `path`, unpacked in memory.
+    fn first_entry(self, path: &Path) -> Result<Content<'static>> {
+        let format = self.extension();
+        let entry = match self {
+            Archive::Zip => first_zip_entry(path),
+            Archive::SevenZip => first_7z_entry(path),
+        }
+        .with_context(|| format!("cannot read {format} '{}'", path.display()))?;
+        entry.with_context(|| format!("{format} '{}' is empty", path.display()))
+    }
+}
+
+/// The first entry of the zip at `zip`, or `None` if it has no entries.
+fn first_zip_entry(zip: &Path) -> Result<Option<Content<'static>>> {
+    let mut archive = zip::ZipArchive::new(File::open(zip)?)?;
+    if archive.is_empty() {
+        return Ok(None);
+    }
+    let mut entry = archive.by_index(0)?;
+    let name = entry.name()?.into_owned();
+    let mut bytes = Vec::new();
+    entry.read_to_end(&mut bytes)?;
+    Ok(Some(Content::InMemory { name, bytes }))
+}
+
+/// The first entry of the 7z at `seven_zip`, or `None` if it has no entries.
+fn first_7z_entry(seven_zip: &Path) -> Result<Option<Content<'static>>> {
+    let mut archive =
+        sevenz_rust2::ArchiveReader::open(seven_zip, sevenz_rust2::Password::empty())?;
+    let Some(entry) = archive.archive().files.first() else {
+        return Ok(None);
+    };
+    let name = entry.name().to_owned();
+    let bytes = archive.read_file(&name)?;
+    Ok(Some(Content::InMemory { name, bytes }))
 }
 
 /// What rcheevos hashes. Its name's extension drives which consoles rcheevos
@@ -118,21 +189,6 @@ impl Content<'_> {
             Content::InMemory { name, .. } => name.clone(),
         }
     }
-}
-
-/// The first entry of the zip at `zip`, unpacked in memory.
-fn first_zip_entry(zip: &Path) -> Result<Content<'static>> {
-    let unreadable = || format!("cannot read zip '{}'", zip.display());
-    let file = File::open(zip).with_context(unreadable)?;
-    let mut archive = zip::ZipArchive::new(file).with_context(unreadable)?;
-    if archive.is_empty() {
-        bail!("zip '{}' is empty", zip.display());
-    }
-    let mut entry = archive.by_index(0).with_context(unreadable)?;
-    let name = entry.name().with_context(unreadable)?.into_owned();
-    let mut bytes = Vec::new();
-    entry.read_to_end(&mut bytes).with_context(unreadable)?;
-    Ok(Content::InMemory { name, bytes })
 }
 
 /// An initialised `rc_hash_iterator_t`, destroyed on drop. It points into the
