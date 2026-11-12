@@ -12,7 +12,7 @@ $(basename "$0") [OPTIONS] romfile1 [romfile2 ...]"
 
 readonly GIT_REPO="https://github.com/meleu/hascheevos.git"
 readonly SCRIPT_URL="https://raw.githubusercontent.com/meleu/hascheevos/master/bin/hascheevos.sh"
-readonly SCRIPT_DIR="$(cd "$(dirname $0)" && pwd)"
+readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 readonly DATA_DIR="$SCRIPT_DIR/../data"
 readonly GAMEID_REGEX='^[1-9][0-9]{0,9}$'
 readonly HASH_REGEX='[A-Fa-f0-9]{32}'
@@ -38,10 +38,10 @@ GAME_CONSOLE_NAME="$(mktemp -p "$TMP_DIR")"
 # these will be increased later, based on extensions supported by the systems
 EXTENSIONS='zip|7z'
 SUPPORTED_SYSTEMS=()
-declare -A CONSOLE_IDS
+declare -gA CONSOLE_IDS
 
 # format: [shortname]='consoleId:extension1|extensionN:Long Name:alias'
-declare -A SYSTEMS_INFO=(
+declare -gA SYSTEMS_INFO=(
     [megadrive]='1:bin|gen|md|sg|smd:Sega Mega Drive:genesis'
     [n64]='2:z64|n64|v64:Nintendo 64'
     [snes]='3:fig|mgd|sfc|smc|swc:Super Nintendo Entertainment System'
