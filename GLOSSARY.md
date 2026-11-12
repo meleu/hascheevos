@@ -12,6 +12,10 @@ _Avoid_: System, platform
 The file a user wants identified. It may be a cartridge dump, a disc image, or an archive containing one.
 _Avoid_: Game file, image
 
+**Archive**:
+A ROM that is a compressed file. Unless its console's official method reads the archive itself, it is identified by the first file inside it; when it holds several files, that choice is a guess.
+_Avoid_: Package
+
 **Hash**:
 The 32-hex-character identifier RetroAchievements assigns to a ROM for a given console, computed by that console's official method.
 _Avoid_: Checksum, MD5
