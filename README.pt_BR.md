@@ -4,9 +4,9 @@ Uma maneira de checar se sua ROM está boa para RetroAchievements.
 
 ## instalação
 
-0. **Dependências**: `jq`, `curl` e `gzip`. Compilar o calculador de hash também requer as ferramentas do Rust (`cargo`, veja <https://rustup.rs>), um compilador C e a libclang. Em uma distribuição Linux típica você provavelmente já terá a maioria destes pacotes instalados e a única novidade será o `jq` (uma ferramenta para analisar dados JSON). Em um sistema baseado em Debian o comando abaixo deve instalar tudo que você precisa:
+0. **Dependências**: `jq` e `curl`. Compilar o calculador de hash também requer as ferramentas do Rust (`cargo`, veja <https://rustup.rs>), um compilador C e a libclang. Em uma distribuição Linux típica você provavelmente já terá a maioria destes pacotes instalados e a única novidade será o `jq` (uma ferramenta para analisar dados JSON). Em um sistema baseado em Debian o comando abaixo deve instalar tudo que você precisa:
 ```
-sudo apt-get install jq gzip curl build-essential libclang-dev
+sudo apt-get install jq curl build-essential libclang-dev
 ```
 
 Se você está usando outra distribuição (ou até mesmo Cygwin no Windows), o script ainda pode ser útil pra você. Apenas certifique-se de instalar os pacotes equivalentes.
