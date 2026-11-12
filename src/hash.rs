@@ -157,54 +157,76 @@ impl Archive {
     fn first_entry(self, path: &Path) -> Result<Content<'static>> {
         let format = self.extension();
         let entry = match self {
-            Archive::Zip => first_zip_entry(path),
-            Archive::SevenZip => first_7z_entry(path),
+            Archive::Zip => FirstEntry::of_zip(path),
+            Archive::SevenZip => FirstEntry::of_7z(path),
         }
-        .with_context(|| format!("cannot read {format} '{}'", path.display()))?;
-        let (entry, files) =
-            entry.with_context(|| format!("{format} '{}' is empty", path.display()))?;
-        if files > 1 {
+        .with_context(|| format!("cannot read {format} '{}'", path.display()))?
+        .with_context(|| format!("{format} '{}' is empty", path.display()))?;
+        if entry.files_in_archive > 1 {
             eprintln!(
-                "hc: warning: {format} '{}' holds {files} files; guessing the first, '{}', is the ROM",
+                "hc: warning: {format} '{}' holds {} files; guessing the first, '{}', is the ROM",
                 path.display(),
-                entry.name()
+                entry.files_in_archive,
+                entry.name
             );
         }
-        Ok(entry)
+        Ok(Content::InMemory {
+            name: entry.name,
+            bytes: entry.bytes,
+        })
     }
 }
 
-/// The first entry of the zip at `zip` and how many files the zip holds, or
-/// `None` if it has no entries.
-fn first_zip_entry(zip: &Path) -> Result<Option<(Content<'static>, usize)>> {
-    let mut archive = zip::ZipArchive::new(File::open(zip)?)?;
-    if archive.is_empty() {
-        return Ok(None);
-    }
-    let files = archive
-        .file_names_raw()
-        .filter(|name| !name.ends_with(b"/"))
-        .count();
-    let mut entry = archive.by_index(0)?;
-    let name = entry.name()?.into_owned();
-    let mut bytes = Vec::new();
-    entry.read_to_end(&mut bytes)?;
-    Ok(Some((Content::InMemory { name, bytes }, files)))
+/// An archive's first entry, unpacked in memory.
+struct FirstEntry {
+    /// The entry's name inside the archive.
+    name: String,
+    /// The entry's content.
+    bytes: Vec<u8>,
+    /// How many files the archive holds, directories excluded.
+    files_in_archive: usize,
 }
 
-/// The first entry of the 7z at `seven_zip` and how many files the 7z holds,
-/// or `None` if it has no entries.
-fn first_7z_entry(seven_zip: &Path) -> Result<Option<(Content<'static>, usize)>> {
-    let mut archive =
-        sevenz_rust2::ArchiveReader::open(seven_zip, sevenz_rust2::Password::empty())?;
-    let entries = &archive.archive().files;
-    let Some(entry) = entries.first() else {
-        return Ok(None);
-    };
-    let name = entry.name().to_owned();
-    let files = entries.iter().filter(|entry| !entry.is_directory()).count();
-    let bytes = archive.read_file(&name)?;
-    Ok(Some((Content::InMemory { name, bytes }, files)))
+impl FirstEntry {
+    /// The first entry of the zip at `zip`, or `None` if it has no entries.
+    fn of_zip(zip: &Path) -> Result<Option<Self>> {
+        let mut archive = zip::ZipArchive::new(File::open(zip)?)?;
+        if archive.is_empty() {
+            return Ok(None);
+        }
+        let files_in_archive = archive
+            .file_names_raw()
+            .filter(|name| !name.ends_with(b"/"))
+            .count();
+        let mut entry = archive.by_index(0)?;
+        let name = entry.name()?.into_owned();
+        let mut bytes = Vec::new();
+        entry.read_to_end(&mut bytes)?;
+        Ok(Some(Self {
+            name,
+            bytes,
+            files_in_archive,
+        }))
+    }
+
+    /// The first entry of the 7z at `seven_zip`, or `None` if it has no
+    /// entries.
+    fn of_7z(seven_zip: &Path) -> Result<Option<Self>> {
+        let mut archive =
+            sevenz_rust2::ArchiveReader::open(seven_zip, sevenz_rust2::Password::empty())?;
+        let entries = &archive.archive().files;
+        let Some(entry) = entries.first() else {
+            return Ok(None);
+        };
+        let name = entry.name().to_owned();
+        let files_in_archive = entries.iter().filter(|entry| !entry.is_directory()).count();
+        let bytes = archive.read_file(&name)?;
+        Ok(Some(Self {
+            name,
+            bytes,
+            files_in_archive,
+        }))
+    }
 }
 
 /// What rcheevos hashes. Its name's extension drives which consoles rcheevos
@@ -241,11 +263,14 @@ impl Content<'_> {
 /// Its `userdata` points to the boxed flag, which rcheevos' error callback
 /// raises when rcheevos maps no console to the ROM's extension. The box keeps
 /// the flag's address fixed while the iterator moves.
-struct HashIterator<'content>(
-    rcheevos::rc_hash_iterator_t,
-    Box<Cell<bool>>,
-    PhantomData<&'content [u8]>,
-);
+struct HashIterator<'content> {
+    /// The rcheevos iterator itself.
+    iterator: rcheevos::rc_hash_iterator_t,
+    /// Raised when rcheevos maps no console to the ROM's extension.
+    no_console_mapping: Box<Cell<bool>>,
+    /// Ties the iterator to the bytes it points into.
+    content: PhantomData<&'content [u8]>,
+}
 
 impl<'content> HashIterator<'content> {
     fn new(content: &'content Content, verbose: bool) -> Result<Self> {
@@ -281,13 +306,17 @@ impl<'content> HashIterator<'content> {
         if verbose {
             iterator.callbacks.verbose_message = Some(report_message);
         }
-        Ok(Self(iterator, no_console_mapping, PhantomData))
+        Ok(Self {
+            iterator,
+            no_console_mapping,
+            content: PhantomData,
+        })
     }
 
     /// Whether rcheevos, while iterating, found no console mapped to the ROM's
     /// extension and fell back to a full-file hash.
     fn found_no_console_mapping(&self) -> bool {
-        self.1.get()
+        self.no_console_mapping.get()
     }
 
     /// The hash of the ROM by one console's official method, if it has one.
@@ -296,7 +325,7 @@ impl<'content> HashIterator<'content> {
         // SAFETY: `hash` has room for 32 characters and the terminating NUL,
         // and the iterator is initialised and alive.
         let generated =
-            unsafe { rcheevos::rc_hash_generate(hash.as_mut_ptr(), console, &self.0) } != 0;
+            unsafe { rcheevos::rc_hash_generate(hash.as_mut_ptr(), console, &self.iterator) } != 0;
         generated.then(|| hash_string(&hash))
     }
 }
@@ -310,15 +339,16 @@ impl Iterator for HashIterator<'_> {
         let mut hash: [c_char; 33] = [0; 33];
         // SAFETY: `hash` has room for 32 characters and the terminating NUL,
         // and the iterator is initialised and alive.
-        let generated = unsafe { rcheevos::rc_hash_iterate(hash.as_mut_ptr(), &mut self.0) } != 0;
+        let generated =
+            unsafe { rcheevos::rc_hash_iterate(hash.as_mut_ptr(), &mut self.iterator) } != 0;
         if !generated {
             return None;
         }
         // On success rcheevos has just advanced `index` past the console that
         // produced the hash.
-        let index = usize::try_from(self.0.index - 1)
+        let index = usize::try_from(self.iterator.index - 1)
             .expect("rcheevos advances the index before every hash it produces");
-        let console = self.0.consoles[index];
+        let console = self.iterator.consoles[index];
         Some(ConsoleHash {
             console: console.into(),
             hash: hash_string(&hash),
@@ -337,7 +367,7 @@ fn hash_string(hash: &[c_char; 33]) -> String {
 impl Drop for HashIterator<'_> {
     fn drop(&mut self) {
         // SAFETY: the iterator was initialised in `new` and is not used again.
-        unsafe { rcheevos::rc_hash_destroy_iterator(&mut self.0) }
+        unsafe { rcheevos::rc_hash_destroy_iterator(&mut self.iterator) }
     }
 }
 
