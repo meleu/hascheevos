@@ -219,6 +219,14 @@ function update() {
         if ! git pull --rebase 2>/dev/null; then
             git fetch && git reset --hard origin/master || err_flag=1
         fi
+        # the new sources may change hc or pin another rcheevos, so
+        # rebuild bin/hc to match them
+        if [[ "$err_flag" == 0 ]] \
+            && ! { git submodule update --init && make; }; then
+            echo "ERROR: failed to rebuild hc." >&2
+            echo "Run 'git submodule update --init && make' in \"$dir\" and check the build dependencies in the README." >&2
+            err_flag=1
+        fi
         popd > /dev/null
     else
         echo "ERROR: \"$dir/.git\": directory not found!" >&2
