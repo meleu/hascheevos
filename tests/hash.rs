@@ -487,3 +487,72 @@ fn verbose_adds_a_trace_on_stderr_and_leaves_stdout_unchanged() {
         }
     }
 }
+
+#[test]
+fn unmapped_extension_without_a_console_is_refused() {
+    // rcheevos maps no console to `.txt`: it would fall back to a full-file
+    // hash labelled Game Boy.
+    hc().args(["hash", &generic_file_named("readme.txt")])
+        .assert()
+        .failure()
+        .stdout("")
+        .stderr(predicate::str::contains("hc: ").and(predicate::str::contains("readme.txt")));
+}
+
+#[test]
+fn unmapped_extension_with_a_console_hashes_by_its_official_method() {
+    // MD5 of the whole fixture: Mega Drive's official method.
+    hc().args([
+        "hash",
+        "--console",
+        MEGA_DRIVE,
+        &generic_file_named("with-console.txt"),
+    ])
+    .assert()
+    .success()
+    .stdout("6ed56530d641cd3cc1c9921fe3327b4a\n");
+}
+
+#[test]
+fn rom_without_an_extension_and_without_a_console_is_refused() {
+    hc().args(["hash", &generic_file_named("README")])
+        .assert()
+        .failure()
+        .stdout("")
+        .stderr(predicate::str::contains("hc: ").and(predicate::str::contains("README")));
+}
+
+#[test]
+fn archive_whose_first_entry_has_an_unmapped_extension_is_refused() {
+    let readme = std::fs::read(fixture("generic-file.rom")).expect("read the generic-file fixture");
+
+    let zip = scratch("readme-first.zip");
+    let mut writer = zip::ZipWriter::new(std::fs::File::create(&zip).expect("create the zip"));
+    writer
+        .start_file(
+            "notes.txt",
+            zip::write::SimpleFileOptions::default()
+                .compression_method(zip::CompressionMethod::Stored),
+        )
+        .expect("start the zip entry");
+    std::io::Write::write_all(&mut writer, &readme).expect("write the zip entry");
+    writer.finish().expect("finish the zip");
+
+    let seven_zip = scratch("readme-first.7z");
+    let mut archive = sevenz_rust2::ArchiveWriter::create(&seven_zip).expect("create the 7z");
+    archive
+        .push_archive_entry(
+            sevenz_rust2::ArchiveEntry::new_file("notes.txt"),
+            Some(readme.as_slice()),
+        )
+        .expect("pack the entry into the 7z");
+    archive.finish().expect("finish the 7z");
+
+    for rom in [zip, seven_zip] {
+        hc().args(["hash", &rom])
+            .assert()
+            .failure()
+            .stdout("")
+            .stderr(predicate::str::contains("hc: ").and(predicate::str::contains("notes.txt")));
+    }
+}

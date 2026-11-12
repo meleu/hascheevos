@@ -2,7 +2,8 @@
 //! library (ADR-0001). Everything about rcheevos is hidden behind
 //! [`console_hashes`] and [`ConsoleHash::console_name`].
 
-use std::ffi::{c_char, CStr, CString};
+use std::cell::Cell;
+use std::ffi::{c_char, c_void, CStr, CString};
 use std::fs::{self, File};
 use std::io::Read;
 use std::marker::PhantomData;
@@ -71,6 +72,10 @@ const CONSOLES_HASHING_THE_7Z_ITSELF: &[u32] = &[
 /// that entry's name, unless the console's official method reads the archive
 /// itself.
 ///
+/// Without a console, a ROM whose extension rcheevos maps to no console is
+/// refused, rather than hashed by rcheevos' full-file fallback; for an
+/// archive, the extension is that of the entry hashed.
+///
 /// rcheevos' error messages always go to stderr. With `verbose`, so does its
 /// trace of which consoles it tried and what it read.
 pub fn console_hashes(rom: &Path, console: Option<u32>, verbose: bool) -> Result<Vec<ConsoleHash>> {
@@ -86,9 +91,16 @@ pub fn console_hashes(rom: &Path, console: Option<u32>, verbose: bool) -> Result
         _ => Content::File(rom),
     };
 
-    let iterator = HashIterator::new(&content, verbose)?;
+    let mut iterator = HashIterator::new(&content, verbose)?;
     let Some(console) = console else {
-        let console_hashes: Vec<ConsoleHash> = iterator.collect();
+        let console_hashes: Vec<ConsoleHash> = iterator.by_ref().collect();
+        if iterator.found_no_console_mapping() {
+            bail!(
+                "rcheevos maps no console to the extension of {}; \
+                 give --console to hash it anyway",
+                content.describe(rom)
+            );
+        }
         if console_hashes.is_empty() {
             bail!("no console produced a hash for '{}'", rom.display());
         }
@@ -192,11 +204,28 @@ impl Content<'_> {
             Content::InMemory { name, .. } => name.clone(),
         }
     }
+
+    /// The content as named in messages: quoted, and for an archive entry,
+    /// followed by the archive it came from, `rom`.
+    fn describe(&self, rom: &Path) -> String {
+        match self {
+            Content::File(path) => format!("'{}'", path.display()),
+            Content::InMemory { name, .. } => format!("'{name}' in '{}'", rom.display()),
+        }
+    }
 }
 
 /// An initialised `rc_hash_iterator_t`, destroyed on drop. It points into the
 /// bytes of the [`Content`] it was made from, so it must not outlive them.
-struct HashIterator<'content>(rcheevos::rc_hash_iterator_t, PhantomData<&'content [u8]>);
+///
+/// Its `userdata` points to the boxed flag, which rcheevos' error callback
+/// raises when rcheevos maps no console to the ROM's extension. The box keeps
+/// the flag's address fixed while the iterator moves.
+struct HashIterator<'content>(
+    rcheevos::rc_hash_iterator_t,
+    Box<Cell<bool>>,
+    PhantomData<&'content [u8]>,
+);
 
 impl<'content> HashIterator<'content> {
     fn new(content: &'content Content, verbose: bool) -> Result<Self> {
@@ -226,11 +255,19 @@ impl<'content> HashIterator<'content> {
         };
         // rcheevos sends no message while initialising, so setting the
         // callbacks afterwards misses none.
-        iterator.callbacks.error_message = Some(report_message);
+        let no_console_mapping = Box::new(Cell::new(false));
+        iterator.userdata = no_console_mapping.as_ref() as *const Cell<bool> as *mut c_void;
+        iterator.callbacks.error_message = Some(report_error);
         if verbose {
             iterator.callbacks.verbose_message = Some(report_message);
         }
-        Ok(Self(iterator, PhantomData))
+        Ok(Self(iterator, no_console_mapping, PhantomData))
+    }
+
+    /// Whether rcheevos, while iterating, found no console mapped to the ROM's
+    /// extension and fell back to a full-file hash.
+    fn found_no_console_mapping(&self) -> bool {
+        self.1.get()
     }
 
     /// The hash of the ROM by one console's official method, if it has one.
@@ -281,6 +318,39 @@ impl Drop for HashIterator<'_> {
     fn drop(&mut self) {
         // SAFETY: the iterator was initialised in `new` and is not used again.
         unsafe { rcheevos::rc_hash_destroy_iterator(&mut self.0) }
+    }
+}
+
+/// How rcheevos' error message begins when it maps no console to a ROM's
+/// extension, just before falling back to a full-file hash (see
+/// `rc_hash_initialize_iterator_from_path` in `hash.c`). It is rcheevos' only
+/// signal of that case.
+const NO_CONSOLE_MAPPING: &[u8] = b"No console mapping specified for ";
+
+/// Sends an rcheevos error message to stderr, except the one saying it maps no
+/// console to the ROM's extension: that one raises the iterator's flag
+/// instead, since `hc` refuses the ROM rather than take the fallback.
+unsafe extern "C" fn report_error(
+    message: *const c_char,
+    iterator: *const rcheevos::rc_hash_iterator_t,
+) {
+    // SAFETY: rcheevos passes a NUL-terminated string valid for this call,
+    // and an iterator whose `userdata` it copied from the one `HashIterator`
+    // set up, pointing to that iterator's live flag.
+    unsafe {
+        if !message.is_null()
+            && !iterator.is_null()
+            && CStr::from_ptr(message)
+                .to_bytes()
+                .starts_with(NO_CONSOLE_MAPPING)
+        {
+            let flag = (*iterator).userdata as *const Cell<bool>;
+            if !flag.is_null() {
+                (*flag).set(true);
+                return;
+            }
+        }
+        report_message(message, iterator);
     }
 }
 
