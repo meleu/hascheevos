@@ -10,6 +10,7 @@ const NINTENDO_64: &str = "2";
 const NES: &str = "7";
 const ATARI_2600: &str = "25";
 const ARCADE: &str = "27";
+const MS_DOS: &str = "26";
 
 /// The NES fixture's hash, as computed by the `go` branch.
 const ZOOMING_SECRETARY: &str = "bed0f7b12673dd762eed665c5c61927b";
@@ -472,14 +473,12 @@ fn arcade_7z_hashes_as_its_name_without_extension() {
 #[test]
 fn verbose_adds_a_trace_on_stderr_and_leaves_stdout_unchanged() {
     let rom = fixture("nes/Zooming-Secretary.zip");
-    let with_console: &[&str] = &["--console", NES, &rom];
-    let without_console: &[&str] = &[&rom];
-    for args in [with_console, without_console] {
-        let quiet = hc().arg("hash").args(args).assert().success().stderr("");
+    for args in with_and_without_nes_console(&rom) {
+        let quiet = hc().arg("hash").args(&args).assert().success().stderr("");
         let quiet_stdout = quiet.get_output().stdout.clone();
         for flag in ["-v", "--verbose"] {
             hc().args(["hash", flag])
-                .args(args)
+                .args(&args)
                 .assert()
                 .success()
                 .stdout(quiet_stdout.clone())
@@ -547,6 +546,12 @@ fn guess_warning() -> impl Predicate<str> {
     predicate::str::contains("hc: warning: ")
 }
 
+/// `hc hash` arguments for `rom`: first with `--console` NES, then without
+/// a console.
+fn with_and_without_nes_console(rom: &str) -> [Vec<&str>; 2] {
+    [vec!["--console", NES, rom], vec![rom]]
+}
+
 #[test]
 fn multi_file_archive_hashes_its_first_file_and_warns_of_the_guess() {
     let files = nes_rom_then_readme();
@@ -555,8 +560,7 @@ fn multi_file_archive_hashes_its_first_file_and_warns_of_the_guess() {
         zip_of("rom-then-readme.zip", &files),
         seven_zip_of("rom-then-readme.7z", &files),
     ] {
-        let with_console: &[&str] = &["--console", NES, &archive];
-        let without_console: &[&str] = &[&archive];
+        let [with_console, without_console] = with_and_without_nes_console(&archive);
         for (args, stdout) in [
             (with_console, format!("{ZOOMING_SECRETARY}\n")),
             (
@@ -581,9 +585,7 @@ fn single_file_archive_gives_no_warning() {
         zip_of("rom-alone.zip", files),
         seven_zip_of("rom-alone.7z", files),
     ] {
-        let with_console: &[&str] = &["--console", NES, &archive];
-        let without_console: &[&str] = &[&archive];
-        for args in [with_console, without_console] {
+        for args in with_and_without_nes_console(&archive) {
             hc().arg("hash").args(args).assert().success().stderr("");
         }
     }
@@ -604,6 +606,17 @@ fn arcade_multi_file_archive_gives_no_warning() {
             .stdout("b43c8b4ec999588c04dad79bb8bcc745\n")
             .stderr("");
     }
+}
+
+#[test]
+fn ms_dos_multi_file_zip_gives_no_warning() {
+    // MS-DOS's official method reads the zip's files itself, so no file
+    // inside is picked.
+    let zip = zip_of("ms-dos.zip", &nes_rom_then_readme());
+    hc().args(["hash", "--console", MS_DOS, &zip])
+        .assert()
+        .success()
+        .stderr("");
 }
 
 #[test]
@@ -642,31 +655,13 @@ fn rom_without_an_extension_and_without_a_console_is_refused() {
 
 #[test]
 fn archive_whose_first_entry_has_an_unmapped_extension_is_refused() {
-    let readme = std::fs::read(fixture("generic-file.rom")).expect("read the generic-file fixture");
-
-    let zip = scratch("readme-first.zip");
-    let mut writer = zip::ZipWriter::new(std::fs::File::create(&zip).expect("create the zip"));
-    writer
-        .start_file(
-            "notes.txt",
-            zip::write::SimpleFileOptions::default()
-                .compression_method(zip::CompressionMethod::Stored),
-        )
-        .expect("start the zip entry");
-    std::io::Write::write_all(&mut writer, &readme).expect("write the zip entry");
-    writer.finish().expect("finish the zip");
-
-    let seven_zip = scratch("readme-first.7z");
-    let mut archive = sevenz_rust2::ArchiveWriter::create(&seven_zip).expect("create the 7z");
-    archive
-        .push_archive_entry(
-            sevenz_rust2::ArchiveEntry::new_file("notes.txt"),
-            Some(readme.as_slice()),
-        )
-        .expect("pack the entry into the 7z");
-    archive.finish().expect("finish the 7z");
-
-    for rom in [zip, seven_zip] {
+    let generic_file =
+        std::fs::read(fixture("generic-file.rom")).expect("read the generic-file fixture");
+    let files = [("notes.txt".to_owned(), generic_file)];
+    for rom in [
+        zip_of("readme-first.zip", &files),
+        seven_zip_of("readme-first.7z", &files),
+    ] {
         hc().args(["hash", &rom])
             .assert()
             .failure()
