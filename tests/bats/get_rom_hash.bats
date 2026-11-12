@@ -12,7 +12,8 @@
 bats_require_minimum_version 1.5.0
 
 readonly NES_ZIP="${BATS_TEST_DIRNAME}/../fixtures/nes/Zooming-Secretary.zip"
-readonly NES_CONSOLE_ID=7
+# the NES ROM's hash; the same value as ZOOMING_SECRETARY in tests/hash.rs
+readonly NES_ROM_HASH=bed0f7b12673dd762eed665c5c61927b
 
 setup() {
   load 'test_helper/bats-support/load'
@@ -60,26 +61,21 @@ assert_no_archive_tool_called() {
 }
 
 @test "get_rom_hash on a zipped ROM prints the hash of the ROM inside" {
-  local expected
-  expected="$("$HC" hash --console "$NES_CONSOLE_ID" "$NES_ROM")"
-
   run get_rom_hash "$NES_ZIP"
 
   assert_success
-  assert_output "$expected"
+  assert_output "$NES_ROM_HASH"
   assert_no_archive_tool_called
 }
 
 @test "get_rom_hash on a 7zipped ROM prints the hash of the ROM inside" {
-  local expected
   local archive="${BATS_TEST_TMPDIR}/Zooming-Secretary.7z"
-  expected="$("$HC" hash --console "$NES_CONSOLE_ID" "$NES_ROM")"
   "$REAL_7Z" a -bd -t7z "$archive" "$NES_ROM" > /dev/null
 
   run get_rom_hash "$archive"
 
   assert_success
-  assert_output "$expected"
+  assert_output "$NES_ROM_HASH"
   assert_no_archive_tool_called
 }
 
