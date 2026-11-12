@@ -164,7 +164,7 @@ function help_message() {
 function check_dependencies() {
     local cmd
     local answer
-    local deps=(jq curl unzip 7z)
+    local deps=(jq curl)
 
     for cmd in "${deps[@]}"; do
         if ! which "$cmd" >/dev/null 2>&1; then
@@ -182,7 +182,6 @@ function check_dependencies() {
                 safe_exit 1
             fi
 
-            [[ "$cmd" == 7z ]] && cmd=p7zip-full
             sudo apt-get install "$cmd"
         fi
     done
@@ -494,34 +493,13 @@ function game_has_cheevos() {
 function get_rom_hash() {
     local rom="$1"
     local hashes
-    local entry
     local console_args=()
 
+    # arcade: rcheevos hashes the file name, whatever the archive holds.
+    # Otherwise hc unpacks zip and 7z in memory and refuses a first file
+    # whose extension rcheevos can't map to a console.
     if [[ "$ARCADE_FLAG" == 1 ]]; then
-        # arcade: rcheevos hashes the file name, whatever the archive holds
         console_args=(--console "${CONSOLE_IDS[arcade]}")
-    else
-        # hc unpacks zip and 7z in memory; list the first entry only to check
-        # its extension against the ones this script supports.
-        case "$rom" in
-            *.zip|*.ZIP)
-                entry="$(unzip -Z1 "$rom" | head -1)"
-                ;;
-            *.7z|*.7Z)
-                # the first "Path =" line is the archive itself; the second
-                # is its first entry
-                entry="$(7z l -slt "$rom" | sed -n 's/^Path = //p' | sed '2q;d')"
-                ;;
-        esac
-        case "$rom" in
-            *.zip|*.ZIP|*.7z|*.7Z)
-                if [[ -z "$entry" ]]; then
-                    echo "ERROR: \"$rom\": cannot list the archive's entries." >&2
-                    return 1
-                fi
-                validate_rom_extension "$entry" || return 1
-                ;;
-        esac
     fi
 
     hashes="$("$SCRIPT_DIR/hc" hash "${console_args[@]}" "$rom")" || return 1

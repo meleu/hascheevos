@@ -5,6 +5,9 @@
 # branch and are removed before merging into master.
 #
 # Needs bin/hc built (`make hc`) and 7z installed. Never touches the network.
+#
+# The script must not call unzip or 7z: fakes that fail and record any call
+# are put first on PATH, and every test checks they were never called.
 
 bats_require_minimum_version 1.5.0
 
@@ -18,11 +21,27 @@ setup() {
   HC="${BATS_TEST_DIRNAME}/../../bin/hc"
   [[ -x "$HC" ]] || fail "bin/hc not found; run 'make hc' first"
 
+  # the tests build archives with the real 7z, called by its absolute path,
+  # so that only the script's own calls reach the fakes below
+  REAL_7Z="$(command -v 7z)" || fail "7z not found"
+
   # unpack the NES ROM, to hash it directly and to build other archives
   ROM_DIR="${BATS_TEST_TMPDIR}/rom"
   mkdir -p "$ROM_DIR"
-  7z e -bd -y -o"$ROM_DIR" "$NES_ZIP" > /dev/null
+  "$REAL_7Z" e -bd -y -o"$ROM_DIR" "$NES_ZIP" > /dev/null
   NES_ROM="$(find "$ROM_DIR" -type f -name '*.nes')"
+
+  # fake unzip and 7z, first on PATH: they record any call and fail
+  ARCHIVE_TOOL_CALLS="${BATS_TEST_TMPDIR}/archive-tool-calls"
+  local fake_bin="${BATS_TEST_TMPDIR}/fake-bin"
+  local tool
+  mkdir -p "$fake_bin"
+  for tool in unzip 7z; do
+    printf '#!/usr/bin/env bash\necho "%s $*" >> "%s"\nexit 1\n' \
+      "$tool" "$ARCHIVE_TOOL_CALLS" > "${fake_bin}/${tool}"
+    chmod +x "${fake_bin}/${tool}"
+  done
+  PATH="${fake_bin}:${PATH}"
 
   # shellcheck source-path=SCRIPTDIR source=../../bin/hascheevos.sh
   source "${BATS_TEST_DIRNAME}/../../bin/hascheevos.sh"
@@ -34,6 +53,12 @@ teardown() {
   rm -rf "$TMP_DIR"
 }
 
+# fails if the script called the fake unzip or 7z
+assert_no_archive_tool_called() {
+  [[ ! -e "$ARCHIVE_TOOL_CALLS" ]] \
+    || fail "the script called an archive tool: $(cat "$ARCHIVE_TOOL_CALLS")"
+}
+
 @test "get_rom_hash on a zipped ROM prints the hash of the ROM inside" {
   local expected
   expected="$("$HC" hash --console "$NES_CONSOLE_ID" "$NES_ROM")"
@@ -42,18 +67,20 @@ teardown() {
 
   assert_success
   assert_output "$expected"
+  assert_no_archive_tool_called
 }
 
 @test "get_rom_hash on a 7zipped ROM prints the hash of the ROM inside" {
   local expected
   local archive="${BATS_TEST_TMPDIR}/Zooming-Secretary.7z"
   expected="$("$HC" hash --console "$NES_CONSOLE_ID" "$NES_ROM")"
-  7z a -bd -t7z "$archive" "$NES_ROM" > /dev/null
+  "$REAL_7Z" a -bd -t7z "$archive" "$NES_ROM" > /dev/null
 
   run get_rom_hash "$archive"
 
   assert_success
   assert_output "$expected"
+  assert_no_archive_tool_called
 }
 
 @test "get_rom_hash on a zip whose first file is readme.txt fails with empty stdout" {
@@ -63,15 +90,16 @@ teardown() {
   echo "not a ROM" > "${src}/readme.txt"
   # 7z sorts entries by name: a lowercase "z" keeps the ROM after readme.txt
   cp "$NES_ROM" "${src}/zooming-secretary.nes"
-  (cd "$src" && 7z a -bd -tzip "$archive" readme.txt zooming-secretary.nes > /dev/null)
+  (cd "$src" && "$REAL_7Z" a -bd -tzip "$archive" readme.txt zooming-secretary.nes > /dev/null)
   # the first "Path =" is the archive itself; the second is its first entry
-  [[ "$(7z l -slt "$archive" | sed -n 's/^Path = //p' | sed -n 2p)" == readme.txt ]] \
+  [[ "$("$REAL_7Z" l -slt "$archive" | sed -n 's/^Path = //p' | sed -n 2p)" == readme.txt ]] \
     || fail "readme.txt is not the archive's first entry"
 
   run --separate-stderr get_rom_hash "$archive"
 
   assert_failure
   assert_output ''
+  assert_no_archive_tool_called
 }
 
 @test "get_rom_hash with the arcade flag hashes an arcade zip by its file name" {
@@ -86,4 +114,5 @@ teardown() {
   assert_success
   # md5 of "Zooming-Secretary"
   assert_output '2f3f193d054f32d38dbbec6d7ce5d79c'
+  assert_no_archive_tool_called
 }
