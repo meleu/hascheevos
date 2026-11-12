@@ -2,8 +2,7 @@
 //! library (ADR-0001). Everything about rcheevos is hidden behind
 //! [`console_hashes`] and [`ConsoleHash::console_name`].
 
-use std::cell::Cell;
-use std::ffi::{c_char, c_void, CStr, CString};
+use std::ffi::{c_char, CStr, CString};
 use std::fs::{self, File};
 use std::io::Read;
 use std::marker::PhantomData;
@@ -91,16 +90,16 @@ pub fn console_hashes(rom: &Path, console: Option<u32>, verbose: bool) -> Result
         _ => Content::File(rom),
     };
 
-    let mut iterator = HashIterator::new(&content, verbose)?;
+    let iterator = HashIterator::new(&content, verbose)?;
     let Some(console) = console else {
-        let console_hashes: Vec<ConsoleHash> = iterator.by_ref().collect();
-        if iterator.found_no_console_mapping() {
+        if !iterator.maps_extension_to_a_console() {
             bail!(
                 "rcheevos maps no console to the extension of {}; \
                  give --console to hash it anyway",
                 content.describe(rom)
             );
         }
+        let console_hashes: Vec<ConsoleHash> = iterator.collect();
         if console_hashes.is_empty() {
             bail!("no console produced a hash for '{}'", rom.display());
         }
@@ -259,15 +258,9 @@ impl Content<'_> {
 
 /// An initialised `rc_hash_iterator_t`, destroyed on drop. It points into the
 /// bytes of the [`Content`] it was made from, so it must not outlive them.
-///
-/// Its `userdata` points to the boxed flag, which rcheevos' error callback
-/// raises when rcheevos maps no console to the ROM's extension. The box keeps
-/// the flag's address fixed while the iterator moves.
 struct HashIterator<'content> {
     /// The rcheevos iterator itself.
     iterator: rcheevos::rc_hash_iterator_t,
-    /// Raised when rcheevos maps no console to the ROM's extension.
-    no_console_mapping: Box<Cell<bool>>,
     /// Ties the iterator to the bytes it points into.
     content: PhantomData<&'content [u8]>,
 }
@@ -300,23 +293,50 @@ impl<'content> HashIterator<'content> {
         };
         // rcheevos sends no message while initialising, so setting the
         // callbacks afterwards misses none.
-        let no_console_mapping = Box::new(Cell::new(false));
-        iterator.userdata = no_console_mapping.as_ref() as *const Cell<bool> as *mut c_void;
-        iterator.callbacks.error_message = Some(report_error);
+        iterator.callbacks.error_message = Some(report_message);
         if verbose {
             iterator.callbacks.verbose_message = Some(report_message);
         }
         Ok(Self {
             iterator,
-            no_console_mapping,
             content: PhantomData,
         })
     }
 
-    /// Whether rcheevos, while iterating, found no console mapped to the ROM's
-    /// extension and fell back to a full-file hash.
-    fn found_no_console_mapping(&self) -> bool {
-        self.no_console_mapping.get()
+    /// Whether rcheevos' extension table maps the extension of the name it
+    /// hashes under to any console. When it doesn't, iterating falls back to a
+    /// full-file hash under an unrelated console.
+    ///
+    /// The lookup reads rcheevos' own table (ADR-0001) and copies only how
+    /// `rc_hash_initialize_iterator_from_path` in `hash.c` normalises the
+    /// extension before searching it: lowercased, cut to what fits the table's
+    /// `ext` field.
+    fn maps_extension_to_a_console(&self) -> bool {
+        let mut count = 0;
+        // SAFETY: `path` is the NUL-terminated copy of the name rcheevos made
+        // when initialising, alive until the iterator is destroyed; the
+        // extension it returns points into it. The table is static, and
+        // `count` is the number of its entries.
+        let (extension, table) = unsafe {
+            let extension = CStr::from_ptr(rcheevos::rc_path_get_extension(self.iterator.path));
+            let table = rcheevos::rc_hash_get_iterator_ext_handlers(&mut count);
+            (extension, std::slice::from_raw_parts(table, count))
+        };
+        let Some(entry) = table.first() else {
+            return false;
+        };
+        let room = entry.ext.len() - 1;
+        let extension: Vec<u8> = extension
+            .to_bytes()
+            .iter()
+            .take(room)
+            .map(u8::to_ascii_lowercase)
+            .collect();
+        table.iter().any(|entry| {
+            // SAFETY: each `ext` is a NUL-terminated string within its array.
+            let ext = unsafe { CStr::from_ptr(entry.ext.as_ptr()) };
+            ext.to_bytes() == extension.as_slice()
+        })
     }
 
     /// The hash of the ROM by one console's official method, if it has one.
@@ -368,39 +388,6 @@ impl Drop for HashIterator<'_> {
     fn drop(&mut self) {
         // SAFETY: the iterator was initialised in `new` and is not used again.
         unsafe { rcheevos::rc_hash_destroy_iterator(&mut self.iterator) }
-    }
-}
-
-/// How rcheevos' error message begins when it maps no console to a ROM's
-/// extension, just before falling back to a full-file hash (see
-/// `rc_hash_initialize_iterator_from_path` in `hash.c`). It is rcheevos' only
-/// signal of that case.
-const NO_CONSOLE_MAPPING: &[u8] = b"No console mapping specified for ";
-
-/// Sends an rcheevos error message to stderr, except the one saying it maps no
-/// console to the ROM's extension: that one raises the iterator's flag
-/// instead, since `hc` refuses the ROM rather than take the fallback.
-unsafe extern "C" fn report_error(
-    message: *const c_char,
-    iterator: *const rcheevos::rc_hash_iterator_t,
-) {
-    // SAFETY: rcheevos passes a NUL-terminated string valid for this call,
-    // and an iterator whose `userdata` it copied from the one `HashIterator`
-    // set up, pointing to that iterator's live flag.
-    unsafe {
-        if !message.is_null()
-            && !iterator.is_null()
-            && CStr::from_ptr(message)
-                .to_bytes()
-                .starts_with(NO_CONSOLE_MAPPING)
-        {
-            let flag = (*iterator).userdata as *const Cell<bool>;
-            if !flag.is_null() {
-                (*flag).set(true);
-                return;
-            }
-        }
-        report_message(message, iterator);
     }
 }
 

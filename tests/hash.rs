@@ -631,6 +631,16 @@ fn unmapped_extension_without_a_console_is_refused() {
 }
 
 #[test]
+fn mapped_extension_in_upper_case_without_a_console_is_hashed() {
+    // rcheevos lowercases the extension before looking it up: `.MD` is Mega
+    // Drive's `.md`.
+    hc().args(["hash", &generic_file_named("SHOUTING.MD")])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("6ed56530d641cd3cc1c9921fe3327b4a"));
+}
+
+#[test]
 fn unmapped_extension_with_a_console_hashes_by_its_official_method() {
     // MD5 of the whole fixture: Mega Drive's official method.
     hc().args([

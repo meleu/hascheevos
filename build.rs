@@ -24,15 +24,20 @@ const SOURCES: &[&str] = &[
     "src/rhash/md5.c",
 ];
 
-/// Only the non-deprecated iterator API and the console-name function are
-/// declared, so the deprecated global-callback functions cannot be called by
-/// accident.
+/// Only the non-deprecated iterator API, the console-name function and the
+/// extension table are declared, so the deprecated global-callback functions
+/// cannot be called by accident.
 const FUNCTIONS: &[&str] = &[
     "rc_hash_initialize_iterator",
     "rc_hash_generate",
     "rc_hash_iterate",
     "rc_hash_destroy_iterator",
     "rc_console_name",
+    // Declared in rcheevos' internal header: the table that maps a file
+    // extension to the consoles rcheevos tries, and the extension rcheevos
+    // reads from a path. `hc` asks them whether an extension is mapped at all.
+    "rc_hash_get_iterator_ext_handlers",
+    "rc_path_get_extension",
 ];
 
 fn main() {
@@ -67,9 +72,12 @@ fn main() {
     }
     build.compile("rcheevos_hash");
 
+    let internal_header = rcheevos.join("src/rhash/rc_hash_internal.h");
     let mut bindings = bindgen::Builder::default()
         .header(header.to_str().expect("header path is UTF-8"))
+        .header(internal_header.to_str().expect("header path is UTF-8"))
         .clang_arg(format!("-I{}", rcheevos.join("include").display()))
+        .clang_arg(format!("-I{}", rcheevos.join("src/rhash").display()))
         .clang_args(DEFINES.iter().map(|define| format!("-D{define}")))
         .parse_callbacks(Box::new(bindgen::CargoCallbacks::new()));
     for function in FUNCTIONS {
@@ -79,7 +87,7 @@ fn main() {
     let out_dir = PathBuf::from(env::var("OUT_DIR").expect("cargo sets OUT_DIR"));
     bindings
         .generate()
-        .expect("generate declarations from rc_hash.h")
+        .expect("generate declarations from rc_hash.h and rc_hash_internal.h")
         .write_to_file(out_dir.join("rcheevos.rs"))
         .expect("write generated declarations");
 }
