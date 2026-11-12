@@ -241,8 +241,8 @@ function update() {
     fi
 
     # after updating, silently check hascheevos-local.txt files
-    check_hascheevos_file >/dev/null 2>&1
-    rm "$DATA_DIR/*.bkp" 2> /dev/null
+    check_hascheevos_files >/dev/null 2>&1
+    rm -f "$DATA_DIR"/*.bkp
 
     echo
     echo "UPDATE: The files have been successfully updated."
