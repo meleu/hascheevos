@@ -4,9 +4,9 @@ Uma maneira de checar se sua ROM está boa para RetroAchievements.
 
 ## instalação
 
-0. **Dependências**: `jq`, `curl`, `unzip`, `gzip` e `p7zip-full`. Em uma distribuição Linux típica você provavelmente já terá a maioria destes pacotes instalados e a única novidade será o `jq` (uma ferramenta para analisar dados JSON). Em um sistema baseado em Debian o comando abaixo deve instalar tudo que você precisa:
+0. **Dependências**: `jq`, `curl`, `unzip`, `gzip` e `p7zip-full`. Compilar o calculador de hash também requer as ferramentas do Rust (`cargo`, veja <https://rustup.rs>), um compilador C e a libclang. Em uma distribuição Linux típica você provavelmente já terá a maioria destes pacotes instalados e a única novidade será o `jq` (uma ferramenta para analisar dados JSON). Em um sistema baseado em Debian o comando abaixo deve instalar tudo que você precisa:
 ```
-sudo apt-get install jq unzip gzip p7zip-full curl
+sudo apt-get install jq unzip gzip p7zip-full curl build-essential libclang-dev
 ```
 
 Se você está usando outra distribuição (ou até mesmo Cygwin no Windows), o script ainda pode ser útil pra você. Apenas certifique-se de instalar os pacotes equivalentes.
@@ -20,7 +20,7 @@ cd # /path/to/the/chosen/directory
 2. Clone o repositório e vá para o diretório criado:
 
 ```
-git clone --depth 1 https://github.com/meleu/hascheevos
+git clone --depth 1 --recursive https://github.com/meleu/hascheevos
 cd hascheevos
 ```
 
@@ -28,7 +28,7 @@ cd hascheevos
 ```
 make
 ```
-(sim, o comando está correto: apenas `make` e nada mais! Isto compila o `src/cheevoshash.c` e cria o executável `bin/cheevoshash`.)
+(sim, o comando está correto: apenas `make` e nada mais! Isto compila o calculador de hash em Rust, que usa a biblioteca oficial [rcheevos](https://github.com/RetroAchievements/rcheevos), e o instala como `bin/hc`.)
 
 4. **[OPCIONAL]** Inclua o diretório da ferramento no seu `PATH`:
 

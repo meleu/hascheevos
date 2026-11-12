@@ -1,7 +1,12 @@
-default: cheevoshash
+.PHONY: default hc clean
 
-cheevoshash:
-	gcc src/cheevoshash.c -o bin/cheevoshash
-	
+default: hc
+
+# cargo decides whether a rebuild is needed; the copy puts hc where
+# hascheevos.sh looks for it
+hc:
+	cargo build --release
+	install -m 755 target/release/hc bin/hc
+
 clean:
-	-rm -f bin/cheevoshash
+	-rm -f bin/hc
