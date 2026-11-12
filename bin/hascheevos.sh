@@ -485,41 +485,38 @@ function game_has_cheevos() {
 # print the hash of a given rom file
 function get_rom_hash() {
     local rom="$1"
-    local hash
     local hashes
     local entry
+    local console_args=()
 
     if [[ "$ARCADE_FLAG" == 1 ]]; then
-        rom="$(basename "$rom")"
-        hash="$(echo -n "${rom%.*}" | md5sum | grep -Eo "^$HASH_REGEX")"
-        [[ "$hash" =~ ^$HASH_REGEX$ ]] || return 1
-        echo "$hash"
-        return 0
+        # arcade: rcheevos hashes the file name, whatever the archive holds
+        console_args=(--console "${CONSOLE_IDS[arcade]}")
+    else
+        # hc unpacks zip and 7z in memory; list the first entry only to check
+        # its extension against the ones this script supports.
+        case "$rom" in
+            *.zip|*.ZIP)
+                entry="$(unzip -Z1 "$rom" | head -1)"
+                ;;
+            *.7z|*.7Z)
+                # the first "Path =" line is the archive itself; the second
+                # is its first entry
+                entry="$(7z l -slt "$rom" | sed -n 's/^Path = //p' | sed '2q;d')"
+                ;;
+        esac
+        case "$rom" in
+            *.zip|*.ZIP|*.7z|*.7Z)
+                if [[ -z "$entry" ]]; then
+                    echo "ERROR: \"$rom\": cannot list the archive's entries." >&2
+                    return 1
+                fi
+                validate_rom_extension "$entry" || return 1
+                ;;
+        esac
     fi
 
-    # hc unpacks zip and 7z in memory; list the first entry only to check
-    # its extension against the ones this script supports.
-    case "$rom" in
-        *.zip|*.ZIP)
-            entry="$(unzip -Z1 "$rom" | head -1)"
-            ;;
-        *.7z|*.7Z)
-            # the first "Path =" line is the archive itself; the second is
-            # its first entry
-            entry="$(7z l -slt "$rom" | sed -n 's/^Path = //p' | sed '2q;d')"
-            ;;
-    esac
-    case "$rom" in
-        *.zip|*.ZIP|*.7z|*.7Z)
-            if [[ -z "$entry" ]]; then
-                echo "ERROR: \"$rom\": cannot list the archive's entries." >&2
-                return 1
-            fi
-            validate_rom_extension "$entry" || return 1
-            ;;
-    esac
-
-    hashes="$("$SCRIPT_DIR/hc" hash "$rom")" || return 1
+    hashes="$("$SCRIPT_DIR/hc" hash "${console_args[@]}" "$rom")" || return 1
     # column 1 is the hash; keep rcheevos' order, drop repeated hashes
     hashes="$(cut -f1 <<< "$hashes" | awk '!seen[$0]++')"
     grep -Eqvx "$HASH_REGEX" <<< "$hashes" && return 1
