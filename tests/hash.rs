@@ -488,6 +488,124 @@ fn verbose_adds_a_trace_on_stderr_and_leaves_stdout_unchanged() {
     }
 }
 
+/// The name and bytes of the first entry of a fixture zip.
+fn first_entry_of(rom: &str) -> (String, Vec<u8>) {
+    let file = std::fs::File::open(fixture(rom)).expect("open the fixture zip");
+    let mut archive = zip::ZipArchive::new(file).expect("read the fixture zip");
+    let mut entry = archive.by_index(0).expect("the fixture zip has an entry");
+    let name = entry.name().expect("the entry has a name").into_owned();
+    let mut bytes = Vec::new();
+    std::io::Read::read_to_end(&mut entry, &mut bytes).expect("read the ROM");
+    (name, bytes)
+}
+
+/// The NES fixture's ROM first, then a readme: an archive whose first file
+/// is the right guess.
+fn nes_rom_then_readme() -> Vec<(String, Vec<u8>)> {
+    vec![
+        first_entry_of("nes/Zooming-Secretary.zip"),
+        ("readme.txt".to_owned(), b"not a ROM\n".to_vec()),
+    ]
+}
+
+/// Packs `files`, in order, into a zip named `name` in a scratch directory,
+/// returning the path of the zip.
+fn zip_of(name: &str, files: &[(String, Vec<u8>)]) -> String {
+    let path = scratch(name);
+    let mut zip = zip::ZipWriter::new(std::fs::File::create(&path).expect("create the zip"));
+    for (entry_name, bytes) in files {
+        zip.start_file(
+            entry_name.as_str(),
+            zip::write::SimpleFileOptions::default(),
+        )
+        .expect("start a zip entry");
+        std::io::Write::write_all(&mut zip, bytes).expect("write a zip entry");
+    }
+    zip.finish().expect("finish the zip");
+    path
+}
+
+/// Packs `files`, in order, into a 7z named `name` in a scratch directory,
+/// returning the path of the 7z.
+fn seven_zip_of(name: &str, files: &[(String, Vec<u8>)]) -> String {
+    let path = scratch(name);
+    let mut archive = sevenz_rust2::ArchiveWriter::create(&path).expect("create the 7z");
+    for (entry_name, bytes) in files {
+        archive
+            .push_archive_entry(
+                sevenz_rust2::ArchiveEntry::new_file(entry_name),
+                Some(bytes.as_slice()),
+            )
+            .expect("pack a file into the 7z");
+    }
+    archive.finish().expect("finish the 7z");
+    path
+}
+
+/// The warning `hc` gives when it guesses which file in an archive to hash.
+fn guess_warning() -> impl Predicate<str> {
+    predicate::str::contains("hc: warning: ")
+}
+
+#[test]
+fn multi_file_archive_hashes_its_first_file_and_warns_of_the_guess() {
+    let files = nes_rom_then_readme();
+    let rom_name = files[0].0.clone();
+    for archive in [
+        zip_of("rom-then-readme.zip", &files),
+        seven_zip_of("rom-then-readme.7z", &files),
+    ] {
+        let with_console: &[&str] = &["--console", NES, &archive];
+        let without_console: &[&str] = &[&archive];
+        for (args, stdout) in [
+            (with_console, format!("{ZOOMING_SECRETARY}\n")),
+            (
+                without_console,
+                format!("{ZOOMING_SECRETARY}\t{NES}\tNintendo Entertainment System\n"),
+            ),
+        ] {
+            hc().arg("hash")
+                .args(args)
+                .assert()
+                .success()
+                .stdout(stdout)
+                .stderr(guess_warning().and(predicate::str::contains(format!("'{rom_name}'"))));
+        }
+    }
+}
+
+#[test]
+fn single_file_archive_gives_no_warning() {
+    let files = &nes_rom_then_readme()[..1];
+    for archive in [
+        zip_of("rom-alone.zip", files),
+        seven_zip_of("rom-alone.7z", files),
+    ] {
+        let with_console: &[&str] = &["--console", NES, &archive];
+        let without_console: &[&str] = &[&archive];
+        for args in [with_console, without_console] {
+            hc().arg("hash").args(args).assert().success().stderr("");
+        }
+    }
+}
+
+#[test]
+fn arcade_multi_file_archive_gives_no_warning() {
+    // Arcade's official method reads the archive's name, so no file inside
+    // is picked. MD5 of "mslug".
+    let files = nes_rom_then_readme();
+    for archive in [
+        zip_of("mslug.zip", &files),
+        seven_zip_of("mslug.7z", &files),
+    ] {
+        hc().args(["hash", "--console", ARCADE, &archive])
+            .assert()
+            .success()
+            .stdout("b43c8b4ec999588c04dad79bb8bcc745\n")
+            .stderr("");
+    }
+}
+
 #[test]
 fn unmapped_extension_without_a_console_is_refused() {
     // rcheevos maps no console to `.txt`: it would fall back to a full-file

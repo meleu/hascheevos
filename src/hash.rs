@@ -151,6 +151,9 @@ impl Archive {
     }
 
     /// The first entry of the archive at `path`, unpacked in memory.
+    ///
+    /// When the archive holds several files, taking the first is a guess, so
+    /// a warning naming it goes to stderr.
     fn first_entry(self, path: &Path) -> Result<Content<'static>> {
         let format = self.extension();
         let entry = match self {
@@ -158,33 +161,50 @@ impl Archive {
             Archive::SevenZip => first_7z_entry(path),
         }
         .with_context(|| format!("cannot read {format} '{}'", path.display()))?;
-        entry.with_context(|| format!("{format} '{}' is empty", path.display()))
+        let (entry, files) =
+            entry.with_context(|| format!("{format} '{}' is empty", path.display()))?;
+        if files > 1 {
+            eprintln!(
+                "hc: warning: {format} '{}' holds {files} files; guessing the first, '{}', is the ROM",
+                path.display(),
+                entry.name()
+            );
+        }
+        Ok(entry)
     }
 }
 
-/// The first entry of the zip at `zip`, or `None` if it has no entries.
-fn first_zip_entry(zip: &Path) -> Result<Option<Content<'static>>> {
+/// The first entry of the zip at `zip` and how many files the zip holds, or
+/// `None` if it has no entries.
+fn first_zip_entry(zip: &Path) -> Result<Option<(Content<'static>, usize)>> {
     let mut archive = zip::ZipArchive::new(File::open(zip)?)?;
     if archive.is_empty() {
         return Ok(None);
     }
+    let files = archive
+        .file_names_raw()
+        .filter(|name| !name.ends_with(b"/"))
+        .count();
     let mut entry = archive.by_index(0)?;
     let name = entry.name()?.into_owned();
     let mut bytes = Vec::new();
     entry.read_to_end(&mut bytes)?;
-    Ok(Some(Content::InMemory { name, bytes }))
+    Ok(Some((Content::InMemory { name, bytes }, files)))
 }
 
-/// The first entry of the 7z at `seven_zip`, or `None` if it has no entries.
-fn first_7z_entry(seven_zip: &Path) -> Result<Option<Content<'static>>> {
+/// The first entry of the 7z at `seven_zip` and how many files the 7z holds,
+/// or `None` if it has no entries.
+fn first_7z_entry(seven_zip: &Path) -> Result<Option<(Content<'static>, usize)>> {
     let mut archive =
         sevenz_rust2::ArchiveReader::open(seven_zip, sevenz_rust2::Password::empty())?;
-    let Some(entry) = archive.archive().files.first() else {
+    let entries = &archive.archive().files;
+    let Some(entry) = entries.first() else {
         return Ok(None);
     };
     let name = entry.name().to_owned();
+    let files = entries.iter().filter(|entry| !entry.is_directory()).count();
     let bytes = archive.read_file(&name)?;
-    Ok(Some(Content::InMemory { name, bytes }))
+    Ok(Some((Content::InMemory { name, bytes }, files)))
 }
 
 /// What rcheevos hashes. Its name's extension drives which consoles rcheevos
