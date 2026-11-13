@@ -1,5 +1,9 @@
 This project is being rewritten in Rust.
 
+## Before reporting work done
+
+Run `make check`; it must pass.
+
 ## Agent skills
 
 ### Issue tracker
